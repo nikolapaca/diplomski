@@ -1,0 +1,6 @@
+@FakeTrello_HostAddress = http://localhost:5241
+
+GET {{FakeTrello_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

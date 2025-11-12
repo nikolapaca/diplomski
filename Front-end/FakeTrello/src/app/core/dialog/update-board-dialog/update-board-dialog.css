@@ -1,0 +1,90 @@
+:host {
+  display: block;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-content {
+  padding: 8px 24px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.board-name-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board-name-prefix {
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
+.board-name-field {
+  flex-grow: 1;
+  width: auto;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+textarea.mat-mdc-input-element {
+  resize: vertical;
+}
+
+
+div[mat-dialog-actions] {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: #f7f7f7;
+  border-top: 1px solid #e0e0e0;
+}
+
+.mat-mdc-stroked-button {
+  border-radius: 8px !important;
+  padding: 18px 20px !important;
+  min-width: 110px !important;
+  border-color: #d0d0d0 !important;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out !important;
+}
+
+.mat-mdc-stroked-button:hover {
+  background-color: #f0f0f0 !important;
+  border-color: #b0b0b0 !important;
+}
+
+.mat-mdc-flat-button.mat-primary {
+  border-radius: 8px !important;
+  padding: 18px 20px !important;
+  min-width: 110px !important;
+  color: white !important;
+  background-color: #3f51b5 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out !important;
+  transform: translateY(0);
+}
+
+.mat-mdc-flat-button.mat-primary:hover {
+  background-color: #36469e !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+
+.mat-mdc-button-base[disabled] {
+  background-color: #e0e0e0 !important;
+  color: #a0a0a0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: not-allowed;
+  border-color: transparent !important;
+}

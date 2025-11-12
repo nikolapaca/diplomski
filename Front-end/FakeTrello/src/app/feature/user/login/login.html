@@ -1,0 +1,38 @@
+<div class="login-form-container">
+  <div class="login-card">
+    <h2 class="login-title">Login Here</h2>
+    <form [formGroup]="loginForm" (ngSubmit)="OnSubmit()">
+      <mat-form-field appearance="fill" class="full-width-field">
+        <mat-label>Username</mat-label>
+        <input matInput formControlName="username">
+        @if(loginForm.get('username')?.invalid && loginForm.get('username')?.touched){
+        <mat-error>
+          @if(loginForm.get('username')?.errors?.['required']) {
+          <span>
+            Username is required.
+          </span>
+          }
+        </mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width-field">
+        <mat-label>Password</mat-label>
+        <input matInput formControlName="password" type="password">
+        @if(loginForm.get('password')?.invalid && loginForm.get('password')?.touched){
+        <mat-error>
+          @if(loginForm.get('password')?.errors?.['required']) {
+          <span>
+            Password is required.
+          </span>
+          }
+        </mat-error>
+        }
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid">Login</button>
+    </form>
+    <p class="register-link">
+      Need an account? <a [routerLink]="['/register']">Register Here</a>
+    </p>
+  </div>
+</div>

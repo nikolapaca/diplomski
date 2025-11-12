@@ -1,0 +1,68 @@
+.not-found-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    background-color: #f0f2f5;
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    padding-top: 60px;
+    box-sizing: border-box;
+}
+
+.not-found-container h1 {
+    font-size: 10rem;
+    font-weight: 700;
+    margin: 0 0 80px 0; /* VEĆI razmak do teksta */
+    color: #4a4a4a;
+    letter-spacing: -3px;
+}
+
+.not-found-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* veći razmak između h2 i p */
+    margin-bottom: 60px; /* razmak do dugmeta */
+}
+
+.not-found-container h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin: 0;
+    color: #666;
+}
+
+.not-found-container p {
+    font-size: 1.2rem;
+    color: #888;
+    margin: 0;
+    max-width: 600px;
+    line-height: 1.5;
+}
+
+.not-found-container button {
+    background-color: #3f51b5;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.not-found-container button:hover {
+    background-color: #303f9f;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.not-found-container button:active {
+    transform: translateY(0);
+}

@@ -1,0 +1,19 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="welcome-section">
+      <h1>Your boards</h1>
+    </div>
+  </div>
+  <mat-divider></mat-divider>
+
+  <div class="boards-container">
+    <div *ngIf="(boards$ | async)?.length === 0" class="no-boards-message">
+      <p>You don't have any boards yet. Create a new board to get started!</p>
+    </div>
+
+    <app-board-card 
+      *ngFor="let board of (boards$ | async)" 
+      [board]="board">
+    </app-board-card>
+  </div>
+</div>

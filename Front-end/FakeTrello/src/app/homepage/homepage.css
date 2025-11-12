@@ -1,0 +1,49 @@
+.page-container {
+  padding: 40px;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 150px);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.welcome-section h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.welcome-section p {
+  font-size: 1rem;
+  color: #777;
+  margin: 0;
+}
+
+mat-divider {
+  margin-bottom: 24px;
+}
+
+.boards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+}
+
+.no-boards-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+  padding: 50px;
+}
+
+::ng-deep app-board-card {
+  width: 300px;
+  flex-shrink: 0;
+}

@@ -1,0 +1,22 @@
+<h2 mat-dialog-title>Add collaborator</h2>
+
+<div mat-dialog-content>
+  <mat-form-field class="search-input">
+    <mat-label>Search users</mat-label>
+    <input matInput [formControl]="searchControl">
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <mat-list role="list" class="user-list">
+    <mat-list-item role="listitem" *ngFor="let user of users">
+      <span class="username">{{ user.username }}</span>
+      <button mat-icon-button class="add-button" (click)="addCollaborator(user)">
+        <mat-icon>add</mat-icon>
+      </button>
+    </mat-list-item>
+  </mat-list>
+  
+  <div *ngIf="users.length === 0" class="no-users-found">
+    No users found.
+  </div>
+</div>

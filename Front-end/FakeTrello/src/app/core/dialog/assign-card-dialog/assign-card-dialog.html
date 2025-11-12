@@ -1,0 +1,39 @@
+<div class="dialog-header">
+  <h2 mat-dialog-title>{{ assignedMessage }}</h2>
+
+  <button
+    *ngIf="assignedMessage !== 'Unassigned'"
+    mat-icon-button
+    (click)="unassignFromCollaborator()"
+    class="remove-button"
+  >
+    <mat-icon>person_remove</mat-icon>
+  </button>
+  <button *ngIf="assignedMessage === 'Unassigned'"
+    mat-icon-button
+    (click)="closeDialog()"
+    class="remove-button">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div mat-dialog-content>
+  <mat-form-field class="search-input">
+    <mat-label>Search users</mat-label>
+    <input matInput [formControl]="searchControl">
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <mat-list role="list" class="user-list">
+    <mat-list-item role="listitem" *ngFor="let user of users()">
+      <span class="username">{{ user.username }}</span>
+      <button mat-icon-button class="add-button" (click)="assignToCollaborator(user)">
+        <mat-icon>add</mat-icon>
+      </button>
+    </mat-list-item>
+  </mat-list>
+  
+  <div *ngIf="users().length === 0" class="no-users-found">
+    No users found.
+  </div>
+</div>

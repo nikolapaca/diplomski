@@ -1,0 +1,49 @@
+<h2 mat-dialog-title>Hello {{username}}, create your board!</h2>
+
+<form [formGroup]="createBoardForm" (ngSubmit)="onSubmit()">
+  <div class="dialog-content">
+    <div class="board-name-container">
+      <span class="board-name-prefix">{{username}}/</span>
+      <mat-form-field appearance="fill" class="board-name-field">
+        <mat-label>Board Name</mat-label>
+        <input matInput formControlName="boardName" />
+        @if(createBoardForm.get('boardName')?.hasError('backendError')){
+        <mat-error>
+          <span>
+            {{errorMessage}}
+          </span>
+        </mat-error>
+        }
+        @if(createBoardForm.get('boardName')?.hasError('maxlength')){
+          <mat-error>
+            <span>
+              Board name cannot exceed 50 characters.
+            </span>
+          </mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Board Description</mat-label>
+      <textarea
+        matInput
+        formControlName="boardDescription"
+        placeholder="A few words about your new board..."
+        rows="4"
+      ></textarea>
+    </mat-form-field>
+  </div>
+
+  <div mat-dialog-actions>
+    <button mat-stroked-button mat-dialog-close type="button">Cancel</button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      [disabled]="createBoardForm.invalid"
+    >
+      Create Board
+    </button>
+  </div>
+</form>

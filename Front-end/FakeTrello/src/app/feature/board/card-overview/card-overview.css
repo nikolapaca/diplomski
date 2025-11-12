@@ -1,0 +1,65 @@
+.app-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background: #fff;
+  min-width: 220px;   
+  max-width: 240px;   
+}
+
+mat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 14px;
+  padding-left: 16px;
+}
+
+mat-card-header mat-card-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #34495e;
+  margin: 0;
+  padding-left: 0;
+  flex-grow: 1;
+}
+
+.update-card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.update-card-form .full-width {
+  width: 100%;
+}
+
+.update-card-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+
+.update-card-form .form-actions .close-icon {
+  cursor: pointer;
+  font-size: 20px;
+  color: #888;
+  transition: color 0.2s ease;
+}
+
+.update-card-form .form-actions .close-icon:hover {
+  color: #333;
+}
+
+.card-footer {
+  margin-top: auto;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-align: right;
+}

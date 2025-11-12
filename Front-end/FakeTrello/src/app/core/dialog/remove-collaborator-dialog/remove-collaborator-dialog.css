@@ -1,0 +1,174 @@
+.mat-dialog-container {
+  background-color: #f5f5f5 !important;
+  border-radius: 20px !important;
+  padding: 32px !important;
+  max-width: 500px !important;
+  min-width: 400px !important;
+}
+
+h2.mat-dialog-title {
+  font-size: 24px !important;
+  font-weight: 500 !important;
+  color: #333 !important;
+  margin-bottom: 32px !important;
+  text-align: left !important;
+  margin-left: 32px !important;
+  padding-left: 0 !important;
+  transform: translateX(0) !important;
+}
+
+.mat-dialog-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-height: none !important;
+}
+
+.search-input {
+  width: calc(100% - 32px) !important;
+  margin: 0 16px 32px 16px !important;
+  display: block !important;
+}
+
+.search-input .mat-form-field-wrapper {
+  background-color: #e8e8e8 !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+}
+
+.search-input .mat-form-field-infix {
+  border: none !important;
+  padding: 12px 0 !important;
+}
+
+.search-input .mat-form-field-underline {
+  display: none !important;
+}
+
+.search-input .mat-form-field-ripple {
+  display: none !important;
+}
+
+.search-input .mat-form-field-label {
+  color: #666 !important;
+  font-size: 14px !important;
+}
+
+.search-input input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #333 !important;
+}
+
+.search-input .mat-icon {
+  color: #666 !important;
+}
+
+.user-list {
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding: 0 !important;
+  margin: 0 16px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  width: calc(100% - 32px) !important;
+}
+
+.user-list .mat-list-item {
+  border-bottom: 1px solid #e0e0e0 !important;
+  padding: 16px 20px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.user-list .mat-list-item:last-child {
+  border-bottom: none !important;
+}
+
+.user-list .mat-list-item:hover {
+  background-color: #f8f9fa !important;
+}
+
+.username {
+  font-size: 14px !important;
+  color: #333 !important;
+  flex: 1 !important;
+  text-align: left !important;
+  margin-right: auto !important;
+}
+
+.add-button {
+  color: #1976d2 !important;
+  background-color: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  position: absolute !important;
+  right: 20px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+.user-list .mat-list-item {
+  position: relative !important;
+}
+
+.add-button:hover {
+  background-color: #e3f2fd !important;
+}
+
+.no-users-found {
+  text-align: center !important;
+  padding: 32px 20px !important;
+  color: #666 !important;
+  font-size: 14px !important;
+  background-color: white !important;
+  border-radius: 8px !important;
+  margin: 0 16px !important;
+}
+
+.mat-dialog-actions {
+  justify-content: flex-end !important;
+  padding: 32px 16px 0 16px !important;
+  margin: 0 !important;
+}
+
+.mat-dialog-actions button {
+  margin-left: 12px !important;
+  min-width: 100px !important;
+  height: 40px !important;
+  border-radius: 20px !important;
+  font-weight: 500 !important;
+}
+
+.mat-dialog-actions .mat-button {
+  background-color: transparent !important;
+  color: #666 !important;
+  border: 1px solid #ddd !important;
+}
+
+.mat-dialog-actions .mat-raised-button {
+  background-color: #1976d2 !important;
+  color: white !important;
+}
+
+@media (max-width: 600px) {
+  .mat-dialog-container {
+    min-width: 300px !important;
+    max-width: 90vw !important;
+    padding: 24px !important;
+  }
+  
+  .search-input {
+    margin: 0 8px 24px 8px !important;
+  }
+  
+  .user-list, .no-users-found {
+    margin: 0 8px !important;
+  }
+  
+  .mat-dialog-title {
+    font-size: 20px !important;
+  }
+}

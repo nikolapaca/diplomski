@@ -1,0 +1,33 @@
+<mat-card (click)="navigateToBoard()">
+  <mat-card-header class="flex-header">
+    <mat-card-title matTooltip="{{ board.ownerUsername }}/{{ board.name }}"
+      matTooltipPosition="below">
+      {{ board.ownerUsername }}/{{ board.name }}
+    </mat-card-title>
+
+    <button mat-icon-button [matMenuTriggerFor]="cardMenu" aria-label="Toggle card menu" (click)="$event.stopPropagation()">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+
+    <mat-menu #cardMenu="matMenu">
+      @if(loggedInUsername === board.ownerUsername){
+      <button mat-menu-item (click)="deleteBoard()">
+        <mat-icon>delete</mat-icon>
+        <span>Delete board</span>
+      </button>
+      <button mat-menu-item (click)="updateBoard()">
+        <mat-icon>edit</mat-icon>
+        <span>Update board</span>
+      </button>
+      }@else{
+      <button mat-menu-item (click)="leaveBoard()">
+        <mat-icon>exit_to_app</mat-icon>
+        <span>Leave board</span>
+      </button>
+      }
+    </mat-menu>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="board-description">{{ board.description }}</p>
+  </mat-card-content>
+</mat-card>

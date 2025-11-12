@@ -1,0 +1,240 @@
+<div class="page-container">
+  <div class="page-header">
+    @if(board){
+    <div class="board-name-section">
+      <h1>{{ boardOwnerUsername }}/{{ board.name }}</h1>
+      <h2>{{ board.description }}</h2>
+    </div>
+    }
+    <div class="header-actions">
+      @if(board){
+      @if(loggedInUsername === board.ownerUsername){
+      <button mat-flat-button color="primary" (click)="updateBoard()">
+        <mat-icon>edit</mat-icon>
+        Update board
+      </button>
+      <button mat-flat-button color="primary" [matMenuTriggerFor]="manageMenu">
+        <mat-icon>settings</mat-icon>
+        Manage
+      </button>
+      <button mat-flat-button color="warn" (click)="deleteBoard()">
+        <mat-icon>delete_forever</mat-icon>
+        Delete board
+      </button>
+      }@else{
+      <button mat-flat-button color="primary" (click)="leaveBoard()">
+        <mat-icon>delete_forever</mat-icon>
+        Leave board
+      </button>
+      }
+      }
+    </div>
+  </div>
+  <mat-divider></mat-divider>
+
+  <mat-menu #manageMenu="matMenu">
+    <button mat-menu-item (click)="addCollaborator()">
+      <mat-icon>person_add</mat-icon>
+      <span>Add collaborator</span>
+    </button>
+    <button mat-menu-item (click)="removeCollaborator()">
+      <mat-icon>person_remove</mat-icon>
+      <span>Remove collaborator</span>
+    </button>
+  </mat-menu>
+
+  <div
+    class="list-container"
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    cdkScrollable
+    cdkDropListGroup
+    (cdkDropListDropped)="dropList($event)"
+  >
+    @for (list of cardLists; track list) {
+    <mat-card class="list-card" (cdkDragStarted)="onListDragStarted(list)"
+          (cdkDragEnded)="onListDragEnded()" cdkDrag [cdkDragDisabled]="isDraggingCard">
+      <mat-card-header class="list-header-flex">
+        @if (!list.showUpdateListForm) {
+        <mat-card-title class="list-title">{{ list.name }}</mat-card-title>
+        } @else {
+        <form
+          [formGroup]="list.updateListForm"
+          (submit)="updateList(list)"
+          class="update-list-form"
+        >
+          <mat-form-field appearance="outline" class="full-width">
+            <input
+              matInput
+              type="text"
+              placeholder="Enter card name..."
+              formControlName="name"
+              (keyup.enter)="updateList(list)"
+            />
+            @if(list.updateListForm.get('name')?.errors?.['required'] &&
+            list.updateListForm.get('name')?.touched){
+            <mat-error>Name is required!!</mat-error>
+            }
+          </mat-form-field>
+        </form>
+        }
+        @if(list.showUpdateListForm){
+        <div class="update-list-actions">
+        <button mat-icon-button (click)="updateList(list)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="closeUpdateListForm(list)">
+          <mat-icon>cancel</mat-icon>
+        </button>
+        </div>
+        }@else{
+        <button mat-icon-button [matMenuTriggerFor]="listMenu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        }
+      </mat-card-header>
+
+      <mat-card-content class="list-body">
+        <div
+          class="drop-zone"
+          cdkDropList
+          [cdkDropListData]="list.cards"
+          [cdkDropListConnectedTo]="connectedLists"
+          [id]="'list-' + list.id"
+          (cdkDropListDropped)="dropCard($event)"
+        >
+          @if(board){
+            @if (list.cards.length === 0) {
+              <div class="empty-placeholder">
+                Drop card here
+              </div>
+            }
+          @for (card of list.cards; track card.id) {
+          <app-card-overview
+            cdkDrag
+            (cdkDragStarted)="onCardDragStarted(card)"
+            (cdkDragEnded)="onCardDragEnded()"
+            (cardDeleted)="onCardDeleted(list.id)"
+            (cardUpdated)="onCardUpdated(list.id)"
+            [card]="card"
+            [board]="board"
+          ></app-card-overview>
+          }
+          }
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions class="list-footer">
+        @if (!list.showAddCardForm) {
+        <button
+          mat-button
+          class="add-card-button"
+          (click)="toggleAddCardForm(list)"
+        >
+          <mat-icon>add</mat-icon>
+          <span>Add card</span>
+        </button>
+        }
+        @if (list.showAddCardForm && list.addCardForm) {
+        <form [formGroup]="list.addCardForm" class="add-card-form">
+          <mat-form-field appearance="outline" class="full-width">
+            <input
+              required
+              matInput
+              type="text"
+              placeholder="Enter card title..."
+              formControlName="name"
+              (keyup.enter)="addCard(list)"
+            />
+            @if(list.addCardForm.get('name')?.errors?.['required'] &&
+            list.addCardForm.get('name')?.touched){
+            <mat-error>Name is required!</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <textarea
+              required
+              matInput
+              placeholder="Enter description..."
+              formControlName="description"
+            >
+            @if(list.addCardForm.get('description')?.errors?.['required'] &&
+            list.addCardForm.get('description')?.touched){
+            <mat-error>Description is required!</mat-error>
+            }
+            </textarea>
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button
+              mat-flat-button
+              color="primary"
+              [disabled]="!list.addCardForm.valid"
+              (click)="addCard(list)"
+            >
+              Add
+            </button>
+            <mat-icon
+              class="close-icon"
+              (click)="closeAddCardForm(list)"
+              >close</mat-icon
+            >
+          </div>
+        </form>
+        }
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-menu #listMenu="matMenu">
+      <button mat-menu-item (click)="deleteList(list)">
+        <mat-icon>delete</mat-icon>
+        <span>Delete list</span>
+      </button>
+      <button mat-menu-item (click)="toggleUpdateListForm(list)">
+        <mat-icon>edit</mat-icon>
+        <span>Update list</span>
+      </button>
+    </mat-menu>
+    }
+
+    <div class="add-list-wrapper">
+      @if(!showAddListForm){
+      <div class="add-list-card" (click)="toggleAddListForm()">
+        <mat-icon>add</mat-icon>
+        <span>Add another list</span>
+      </div>
+      }
+      @if(showAddListForm && addListForm) {
+      <form [formGroup]="addListForm" class="add-list-form">
+        <mat-form-field class="full-width" appearance="outline">
+          <input
+            required
+            matInput
+            type="text"
+            placeholder="Enter list name.."
+            formControlName="name"
+            (keyup.enter)="addList()"
+          />
+          @if(addListForm.get('name')?.errors?.['required'] &&
+          addListForm.get('name')?.touched){
+          <mat-error>Name is required!</mat-error>
+          }
+        </mat-form-field>
+        <div class="form-actions">
+          <button
+            class="add-button"
+            [disabled]="!addListForm.valid"
+            (click)="addList()"
+          >
+            Add list
+          </button>
+          <mat-icon class="close-icon" (click)="closeAddListForm()"
+            >close</mat-icon
+          >
+        </div>
+      </form>
+      }
+    </div>
+  </div>
+</div>

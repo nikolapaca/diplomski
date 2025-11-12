@@ -1,0 +1,114 @@
+<div class="register-form-container">
+  <div class="register-card">
+    <h2 class="register-title">Register Here</h2>
+    <form [formGroup]="registerForm" (ngSubmit)="OnSubmit()">
+      <div class="form-grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name">
+          @if(registerForm.get('name')?.invalid && registerForm.get('name')?.touched){
+          <mat-error>
+            @if(registerForm.get('name')?.errors?.['required']) {
+            <span>
+              Name is required.
+            </span>
+            }
+          </mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Surname</mat-label>
+          <input matInput formControlName="surname">
+          @if(registerForm.get('surname')?.invalid && registerForm.get('surname')?.touched){
+          <mat-error>
+            @if(registerForm.get('surname')?.errors?.['required']) {
+            <span>
+              Surname is required.
+            </span>
+            }
+          </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email">
+          @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+            <mat-error>
+              @if (registerForm.get('email')?.errors?.['required']) {
+                <span>
+                  Email is required!
+                </span>
+              } @else if (registerForm.get('email')?.errors?.['email']) {
+                <span>
+                  Please enter a valid email.
+                </span>
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+          
+        <mat-form-field appearance="fill">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username">
+          @if(registerForm.get('username')?.invalid && registerForm.get('username')?.touched){
+          <mat-error>
+            @if(registerForm.get('username')?.errors?.['required']) {
+            <span>
+              Username is required!
+            </span>
+            }
+            @if(registerForm.get('username')?.errors?.['email']) {
+            <span>
+              Please enter a valid email.
+            </span>
+            }
+          </mat-error>
+          
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" type="password">
+          @if(registerForm.get('password')?.invalid && registerForm.get('password')?.touched){
+          <mat-error>
+            @if(registerForm.get('password')?.errors?.['required']){
+            <span>
+              Password is required.
+            </span>
+            }
+            @if(registerForm.get('password')?.errors?.['minlength']){
+            <span>
+              Password must be at least 6 characters long.
+            </span>
+            }
+          </mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Confirm Password</mat-label>
+          <input matInput formControlName="confirmPassword" type="password">
+          @if(registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched){
+          <mat-error>
+            @if(registerForm.get('confirmPassword')?.errors?.['required']) {
+            <span>
+              This field is required.
+            </span>
+            }
+          </mat-error>
+        }
+        </mat-form-field>
+      </div>
+      @if(registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched){
+      <mat-error>
+        Passwords do not match.
+      </mat-error>
+      }
+      <button mat-raised-button color="primary" type="submit" [disabled]="!registerForm.valid">Register</button>
+    </form>
+    <p class="login-link">
+      Already have an account? <a [routerLink]="['']">Login Here</a>
+    </p>
+  </div>
+</div>

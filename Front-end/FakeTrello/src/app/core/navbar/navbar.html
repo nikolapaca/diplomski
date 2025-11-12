@@ -1,0 +1,25 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <a routerLink="/home" class="logo-link">
+      <img (click)="returnToHome()" src="assets/images/trello.png" alt="FakeTrello Logo" class="logo" />
+    </a>
+  </div>
+
+  <div class="navbar-center">
+    @if(isLoggedIn && !hideSearch){
+    <div class="search-bar">
+      <input type="text" [formControl]="searchControl" placeholder="Search..." />
+      <i class="fas fa-search"></i>
+    </div>
+    }
+  </div>
+
+  <div class="navbar-right">
+    @if(isLoggedIn){
+    <button class="create-button" (click)="createBoard()">Create board</button>
+    }
+    @if(isLoggedIn){
+    <button class="sign-out-button" (click)="signOut()">Sign out</button>
+    }
+  </div>
+</nav>

@@ -1,0 +1,57 @@
+<mat-card class="app-card">
+  <mat-card-header>
+    @if (!showUpdateCardForm){
+      <mat-card-title> {{ card.name }} </mat-card-title>
+      <button mat-icon-button [matMenuTriggerFor]="cardMenu" aria-label="Toggle card menu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #cardMenu="matMenu">
+        <button mat-menu-item (click)="deleteCard()">
+          <mat-icon>delete</mat-icon>
+          <span>Delete card</span>
+        </button>
+        <button mat-menu-item (click)="toggleUpdateCardForm()">
+          <mat-icon>edit</mat-icon>
+          <span>Update card</span>
+        </button>
+        <button mat-menu-item (click)="openAssingCardDialog()">
+          <mat-icon>add</mat-icon>
+          <span>Assign card</span>
+        </button>
+      </mat-menu>
+    }
+    @else {
+      <form [formGroup]="updateCardForm" (ngSubmit)="updateCard()" class="update-card-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <input required matInput
+                 type="text"
+                 placeholder="Enter card title..."
+                 formControlName="name"
+                 (keyup.enter)="updateCard()">
+          @if(updateCardForm.get('name')?.errors?.['required'] && updateCardForm.get('name')?.touched) {
+            <mat-error>Name is required!</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <textarea matInput
+                    placeholder="Enter description..."
+                    formControlName="description">
+          </textarea>
+        </mat-form-field>
+        <div class="form-actions">
+          <button mat-flat-button
+                  color="primary"
+                  [disabled]="!updateCardForm.valid"
+                  (click)="updateCard()">Update</button>
+          <mat-icon class="close-icon" (click)="closeUpdateCardForm()">close</mat-icon>
+        </div>
+      </form>
+    }
+  </mat-card-header>
+  @if(card.description && !showUpdateCardForm) {
+    <mat-card-content>
+      <p>{{ card.description }}</p>
+    </mat-card-content>
+  }
+  <mat-card-footer class="card-footer">Assigned to: {{card.assignedUserUsername}}</mat-card-footer>
+</mat-card>
