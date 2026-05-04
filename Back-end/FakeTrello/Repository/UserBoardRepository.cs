@@ -68,5 +68,10 @@ namespace FakeTrello.Repository
             _context.UserBoards.Remove(ub);
             await _context.SaveChangesAsync();
         }
+
+        public void RemoveRange(IEnumerable<UserBoard> userBoards)
+        {
+            _context.UserBoards.RemoveRange(userBoards);
+        }
     }
 }

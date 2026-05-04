@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { Card } from '../../../core/model/card.model';
 import { CommonModule } from '@angular/common';
@@ -13,6 +13,7 @@ import { Board } from '../../../core/model/board.model';
 import { MatDialog } from '@angular/material/dialog';
 import { AssignCardDialog } from '../../../core/dialog/assign-card-dialog/assign-card-dialog';
 import { UserService } from '../../../core/service/user-service';
+import { CardDetailsDialogComponent } from '../../../core/dialog/card-details-dialog.component/card-details-dialog.component';
 
 @Component({
   selector: 'app-card-overview',
@@ -30,7 +31,7 @@ export class CardOverview implements OnInit {
   public errorMessage = '';
   public loggedInUsername = '';
 
-  public constructor(private cardService: CardService, private userService: UserService, private matDialog: MatDialog) {
+  public constructor(private cardService: CardService, private userService: UserService, private matDialog: MatDialog, private cdr: ChangeDetectorRef) {
   }
 
   public ngOnInit(): void 
@@ -119,4 +120,34 @@ export class CardOverview implements OnInit {
       }
     });
   }
+
+  public openCardDetails(event?: MouseEvent): void {
+  if (event) event.stopPropagation();
+
+  const dialogRef = this.matDialog.open(CardDetailsDialogComponent, {
+    data: { card: this.card, board: this.board },
+    width: '720px',
+    maxWidth: '95vw'
+  });
+
+  const inst = dialogRef.componentInstance;
+    inst.changed.subscribe((patch: Partial<Card>) => {
+      this.card = { ...this.card, ...patch }; // promeni referencu
+      this.cardUpdated.emit();                // obavesti roditelje ako treba
+      this.cdr.markForCheck();                // gurni OnPush change detection
+    });
+
+    // ✅ final sync na Save/Delete (posle zatvaranja)
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result === null) {
+        this.cardDeleted.emit(this.card.cardListId);
+        return;
+      }
+      if (result) {
+        this.card = result;
+        this.cardUpdated.emit();
+        this.cdr.markForCheck();
+      }
+    });
+}
 }

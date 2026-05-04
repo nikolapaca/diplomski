@@ -110,7 +110,7 @@ namespace FakeTrello.Service
         {
             var list = await _cardListRepository.GetById(cardList.Id);
             if (list == null)
-                throw new Exception("Card not found");
+                throw new Exception("List not found");
 
             var lists = await _cardListRepository.GetByBoardId(list.BoardId);
             int oldIndex = list.Index;

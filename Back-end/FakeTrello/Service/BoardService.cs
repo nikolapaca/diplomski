@@ -89,11 +89,10 @@ namespace FakeTrello.Service
                 {
                     return Result.Fail("This board doesn't exist!");
                 }
-                foreach(var ub in board.UserBoards)
-                {
-                    await _unitOfWork.UserBoards.DeleteAsync(ub.UserId, ub.BoardId);
-                }
-                foreach(var list in board.Lists)
+
+                _unitOfWork.UserBoards.RemoveRange(board.UserBoards);
+
+                foreach (var list in board.Lists)
                 {
                     foreach(var card in list.Cards)
                     {

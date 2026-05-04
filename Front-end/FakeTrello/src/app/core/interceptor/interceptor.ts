@@ -11,6 +11,13 @@ export class JwtInterceptor implements HttpInterceptor {
     request: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
+    const publicRoutes = ['/users/register', '/users/login']
+
+    const isPublicRoute = publicRoutes.some(url => request.url.includes(url))
+
+    if(isPublicRoute){
+      return next.handle(request);
+    }
     const accessTokenRequest = request.clone({
       setHeaders: {
         Authorization: `Bearer ` + localStorage.getItem("access-token"),

@@ -1,6 +1,5 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { CardList } from "../model/cardList.model";
 import { Observable } from "rxjs";
 import { environment } from "../../../environment";
 import { Card } from "../model/card.model";

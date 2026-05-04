@@ -172,13 +172,13 @@ namespace FakeTrello.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FakeTrello.Model.User", "AssignedUser")
+                    b.HasOne("FakeTrello.Model.User", "User")
                         .WithMany("Cards")
                         .HasForeignKey("UserId");
 
-                    b.Navigation("AssignedUser");
-
                     b.Navigation("CardList");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FakeTrello.Model.CardList", b =>

@@ -1,24 +1,7 @@
-<mat-card class="app-card">
+<mat-card class="app-card" (click)="openCardDetails($event)">
   <mat-card-header>
     @if (!showUpdateCardForm){
       <mat-card-title> {{ card.name }} </mat-card-title>
-      <button mat-icon-button [matMenuTriggerFor]="cardMenu" aria-label="Toggle card menu">
-        <mat-icon>more_vert</mat-icon>
-      </button>
-      <mat-menu #cardMenu="matMenu">
-        <button mat-menu-item (click)="deleteCard()">
-          <mat-icon>delete</mat-icon>
-          <span>Delete card</span>
-        </button>
-        <button mat-menu-item (click)="toggleUpdateCardForm()">
-          <mat-icon>edit</mat-icon>
-          <span>Update card</span>
-        </button>
-        <button mat-menu-item (click)="openAssingCardDialog()">
-          <mat-icon>add</mat-icon>
-          <span>Assign card</span>
-        </button>
-      </mat-menu>
     }
     @else {
       <form [formGroup]="updateCardForm" (ngSubmit)="updateCard()" class="update-card-form">

@@ -48,6 +48,7 @@ builder.Services.AddSwaggerGen(c => {
     });
 });
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddHttpClient();
 builder.Services.ConfigureAuth();
 
 builder.Services.AddCors(options =>

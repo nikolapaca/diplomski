@@ -1,0 +1,101 @@
+<header class="dlg-header mat-elevation-z1">
+  <div class="hdr-left">
+    <mat-icon class="hdr-icon" color="primary">view_kanban</mat-icon>
+    <h2 class="hdr-title">Card details</h2>
+  </div>
+
+  <button mat-icon-button (click)="close()" aria-label="Close dialog">
+    <mat-icon>close</mat-icon>
+  </button>
+</header>
+
+<mat-divider></mat-divider>
+
+<section class="dlg-content">
+  <form [formGroup]="form" class="form">
+    
+    <mat-form-field appearance="outline" class="w100">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="name" placeholder="Enter card title..." required />
+      <mat-error *ngIf="titleCtrl.hasError('required')">Title is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w100">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="6" placeholder="Add a short description..."></textarea>
+    </mat-form-field>
+
+    <div class="ai-actions">
+      <button 
+        mat-stroked-button 
+        color="accent" 
+        (click)="suggestTasks()" 
+        [disabled]="saving || aiGenerating || form.controls['description'].value.length < 20"
+        matTooltip="Generiraj listu zadataka iz opisa koristeći AI (Ollama)"
+      >
+        <mat-icon>auto_fix_high</mat-icon>
+        AI Predloži Zadatke
+      </button>
+
+      <mat-spinner *ngIf="aiGenerating" diameter="20" color="accent"></mat-spinner>
+    </div>
+    <div *ngIf="aiGeneratedTasks" class="ai-result mat-elevation-z1">
+      <h4><mat-icon color="accent" style="vertical-align: middle;">check_box</mat-icon> Predloženi zadaci:</h4>
+      <div [innerHTML]="aiGeneratedTasks"></div> 
+      
+      <button mat-flat-button color="primary" class="mt-8">
+        <mat-icon>add</mat-icon> Dodaj kao Checklistu
+      </button>
+      <button mat-button class="mt-8 ml-8" (click)="aiGeneratedTasks = ''">
+        Zatvori
+      </button>
+    </div>
+    <div class="assigned-section mat-elevation-z1">
+      <div class="assigned-header">
+        <mat-icon color="primary">person</mat-icon>
+        <span class="assigned-title">Assigned to</span>
+      </div>
+
+      <div class="assigned-body">
+        <ng-container *ngIf="assignedUserUsername; else notAssigned">
+          <mat-chip-listbox>
+            <mat-chip-option class="assignee-chip" [selected]="true" removable>
+              <mat-icon matChipAvatar>person</mat-icon>
+              {{ assignedUserUsername }}
+              <button mat-icon-button matChipRemove class="chip-remove" matTooltip="Unassign" (click)="unassign()">
+                <mat-icon>person_remove</mat-icon>
+              </button>
+            </mat-chip-option>
+          </mat-chip-listbox>
+        </ng-container>
+
+        <ng-template #notAssigned>
+          <p class="muted">Not assigned</p>
+        </ng-template>
+
+        <button mat-stroked-button color="primary" (click)="assign()" [disabled]="saving">
+          <mat-icon>person_add</mat-icon>
+          Assign
+        </button>
+      </div>
+    </div>
+    </form>
+
+  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+</section>
+
+<mat-divider></mat-divider>
+
+<footer class="dlg-footer mat-elevation-z2">
+  <button mat-button color="warn" (click)="delete()" [disabled]="saving">
+    <mat-icon>delete</mat-icon>
+    Delete
+  </button>
+
+  <span class="spacer"></span>
+
+  <button mat-stroked-button (click)="close()" [disabled]="saving">Close</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="saving || form.invalid">
+    Save
+  </button>
+</footer>

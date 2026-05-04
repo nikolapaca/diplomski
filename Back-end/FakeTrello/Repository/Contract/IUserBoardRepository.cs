@@ -12,5 +12,6 @@ namespace FakeTrello.Repository.Contract
         Task<UserBoard> UpdateAsync(UserBoard userBoard);
         Task<UserBoard?> GetByUserAndBoardId(int userId, int boardId);
         Task DeleteAsync(int userId, int boardId);
+        void RemoveRange(IEnumerable<UserBoard> userBoards);
     }
 }

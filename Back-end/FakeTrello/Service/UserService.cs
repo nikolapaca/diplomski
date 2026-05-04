@@ -23,9 +23,10 @@ namespace FakeTrello.Service
 
         public async Task<Result<UserDTO>> Create(UserDTO userDto)
         {
-            var existingUser = await _repository.GetByUsername(userDto.Email);
-            if (existingUser != null)
-                return Result.Fail("User with this username already exists!");
+            var existingUserUsername = await _repository.GetByUsername(userDto.Username);
+            var existingUserEmail = await _repository.GetByEmail(userDto.Email);
+            if (existingUserUsername != null || existingUserEmail != null)
+                return Result.Fail("User already exists!");
 
             var newUser = _mapper.Map<UserDTO, User>(userDto);
             newUser.Password = _passwordHasher.HashPassword(newUser, newUser.Password);
@@ -67,6 +68,13 @@ namespace FakeTrello.Service
         {
             var user = await _repository.GetByUsername(username);
             return user;
+        }
+
+        public async Task<Result<UserDTO>> GetUserDTOByUsername(string username)
+        {
+            var user = await _repository.GetByUsername(username);
+            var userDto = _mapper.Map<User, UserDTO>(user);
+            return Result.Ok(userDto);
         }
     }
 }

@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FakeTrello.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250918203049_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260504002539_Migracija")]
+    partial class Migracija
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -175,13 +175,13 @@ namespace FakeTrello.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FakeTrello.Model.User", "AssignedUser")
+                    b.HasOne("FakeTrello.Model.User", "User")
                         .WithMany("Cards")
                         .HasForeignKey("UserId");
 
-                    b.Navigation("AssignedUser");
-
                     b.Navigation("CardList");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FakeTrello.Model.CardList", b =>

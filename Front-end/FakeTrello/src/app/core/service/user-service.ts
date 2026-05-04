@@ -23,18 +23,24 @@ export class UserService {
   }
 
   public getUsersNotAssignedToThisBoard(searchTerm: string | null, boardName: string, boardOwnerUsername: string) : Observable<User[]> {
-    let params = new HttpParams()
-      .set('searchTerm', searchTerm || '')
+      let params = new HttpParams()
       .set('boardName', boardName)
       .set('boardOwnerUsername', boardOwnerUsername);
+
+    if (searchTerm && searchTerm.trim() !== '') {
+      params = params.set('searchTerm', searchTerm);
+    }
     return this.http.get<User[]>(`${environment.api}/users/search/offBoard`, { params })
   }
 
   public getUsersAssignedToThisBoard(searchTerm: string | null, boardName: string, boardOwnerUsername: string) : Observable<User[]> {
     let params = new HttpParams()
-      .set('searchTerm', searchTerm || '')
       .set('boardName', boardName)
       .set('boardOwnerUsername', boardOwnerUsername);
+
+    if (searchTerm && searchTerm.trim() !== '') {
+      params = params.set('searchTerm', searchTerm);
+    }
     return this.http.get<User[]>(`${environment.api}/users/search/onBoard`, { params })
   }
 
@@ -46,4 +52,8 @@ export class UserService {
       .set('cardId', cardId);
     return this.http.get<User[]>(`${environment.api}/users/search/assignableOnBoard`, { params })
   }
+
+  public getProfile() : Observable<User> {
+    return this.http.get<User>(`${environment.api}/users/profile`);
+}
 }

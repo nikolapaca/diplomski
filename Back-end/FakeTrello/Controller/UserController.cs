@@ -1,10 +1,14 @@
 ﻿using FakeTrello.DTO;
 using FakeTrello.Service.Contract;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FakeTrello.Controller
 {
-    [Route("api/users/")]
+    [Authorize]
+    [ApiController]
+    [Route("api/users")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -46,6 +50,7 @@ namespace FakeTrello.Controller
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<ActionResult<UserDTO>> Create([FromBody] UserDTO userdto)
         {
             if (!ModelState.IsValid)
@@ -73,10 +78,10 @@ namespace FakeTrello.Controller
             return Ok(user.Value);
         }
         [HttpGet("search/offBoard")]
-        public async Task<ActionResult<List<UserDTO>>> GetUsersNotOnBoard([FromQuery] string searchTerm,
+        public async Task<ActionResult<List<UserDTO>>> GetUsersNotOnBoard([FromQuery] string? searchTerm,
             [FromQuery] string boardName,
             [FromQuery] string boardOwnerUsername)
-        {
+       {
             if(string.IsNullOrEmpty(boardName) || string.IsNullOrEmpty(boardOwnerUsername)){
                 return BadRequest();
             }
@@ -97,7 +102,7 @@ namespace FakeTrello.Controller
         }
 
         [HttpGet("search/onBoard")]
-        public async Task<ActionResult<List<UserDTO>>> GetUsersOnBoard([FromQuery] string searchTerm,
+        public async Task<ActionResult<List<UserDTO>>> GetUsersOnBoard([FromQuery] string? searchTerm,
             [FromQuery] string boardName,
             [FromQuery] string boardOwnerUsername)
         {
@@ -122,7 +127,7 @@ namespace FakeTrello.Controller
         }
 
         [HttpGet("search/assignableOnBoard")]
-        public async Task<ActionResult<List<UserDTO>>> GetAssignableUsersOnBoard([FromQuery] string searchTerm,
+        public async Task<ActionResult<List<UserDTO>>> GetAssignableUsersOnBoard([FromQuery] string? searchTerm,
             [FromQuery] string boardName,
             [FromQuery] string boardOwnerUsername,
             [FromQuery] int cardId)
@@ -135,6 +140,30 @@ namespace FakeTrello.Controller
             {
                 var users = await _collaboratorService.GetAssignableUsersOnBoard(searchTerm, boardName, boardOwnerUsername, cardId);
                 return Ok(users.Value);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("profile")]
+        public async Task<ActionResult<UserDTO>> GetUserByUsername()
+        {
+            var usernameClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(usernameClaim))
+            {
+                return Unauthorized("Token does not contain required user identifier.");
+            }
+            try
+            {
+                var user = await _userService.GetUserByUsername(usernameClaim);
+                return Ok(user);
             }
             catch (InvalidOperationException ex)
             {
