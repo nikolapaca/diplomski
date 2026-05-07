@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../service/auth-service';
 import { MatDialog } from '@angular/material/dialog';
 import { CreateBoardDialog } from '../dialog/create-board-dialog/create-board-dialog';
@@ -7,10 +7,14 @@ import { FormControl, ReactiveFormsModule, ɵInternalFormsSharedModule } from "@
 import { debounceTime, distinctUntilChanged, filter } from 'rxjs';
 import { BoardService } from '../service/board.service';
 import { Board } from '../model/board.model';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-navbar',
-  imports: [ɵInternalFormsSharedModule, ReactiveFormsModule],
+  imports: [ɵInternalFormsSharedModule, ReactiveFormsModule, 
+    MatToolbarModule, MatButtonModule, MatIconModule, RouterModule],
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css']
 })

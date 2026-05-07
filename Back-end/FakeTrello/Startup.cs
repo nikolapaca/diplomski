@@ -30,6 +30,7 @@ namespace FakeTrello
             services.AddScoped<ICardService, CardService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICollaboratorService, CollaboratorService>();
+            services.AddScoped<ICardAssigneeService, CardAssigneeService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)
@@ -39,6 +40,7 @@ namespace FakeTrello
             services.AddScoped(typeof(IUserBoardRepository), typeof(UserBoardRepository));
             services.AddScoped(typeof(ICardListRepository), typeof(CardListRepository));
             services.AddScoped(typeof(ICardRepository), typeof(CardRepository));
+            services.AddScoped(typeof(ICardAssigneeRepository), typeof(CardAssigneeRepository));
         }
     }
 }

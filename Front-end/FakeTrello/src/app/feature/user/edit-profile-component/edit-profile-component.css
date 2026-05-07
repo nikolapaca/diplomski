@@ -1,0 +1,100 @@
+.page {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 16px;
+  background: #f5f6fa;
+}
+
+.profile-layout {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-card {
+  width: 100%;
+  padding: 28px;
+  border-radius: 18px;
+}
+
+.password-card {
+  margin-bottom: 32px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.password-header {
+  align-items: flex-start;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.header p {
+  margin: 4px 0 0;
+  color: #666;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loading {
+  padding: 24px 0;
+  color: #666;
+}
+
+.message {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.error {
+  background: #ffe5e5;
+  color: #b00020;
+}
+
+.success {
+  background: #e6f7ec;
+  color: #176b36;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+button mat-icon {
+  margin-right: 6px;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 24px 12px;
+  }
+
+  .profile-card {
+    padding: 22px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+}

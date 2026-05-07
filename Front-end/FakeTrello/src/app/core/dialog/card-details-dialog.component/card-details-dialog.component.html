@@ -57,12 +57,25 @@
       </div>
 
       <div class="assigned-body">
-        <ng-container *ngIf="assignedUserUsername; else notAssigned">
+        <ng-container *ngIf="assignedUserUsernames.length > 0; else notAssigned">
           <mat-chip-listbox>
-            <mat-chip-option class="assignee-chip" [selected]="true" removable>
+            <mat-chip-option 
+              *ngFor="let username of assignedUserUsernames"
+              class="assignee-chip" 
+              [selected]="true" 
+              removable
+            >
               <mat-icon matChipAvatar>person</mat-icon>
-              {{ assignedUserUsername }}
-              <button mat-icon-button matChipRemove class="chip-remove" matTooltip="Unassign" (click)="unassign()">
+
+              {{ username }}
+
+              <button 
+                mat-icon-button 
+                matChipRemove 
+                class="chip-remove" 
+                matTooltip="Unassign"
+                (click)="unassign(username)"
+              >
                 <mat-icon>person_remove</mat-icon>
               </button>
             </mat-chip-option>

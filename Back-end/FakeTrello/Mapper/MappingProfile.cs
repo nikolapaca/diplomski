@@ -11,8 +11,8 @@ namespace FakeTrello.Mapper
             CreateMap<BoardDTO, Board>().ReverseMap();
             CreateMap<CardListDTO, CardList>().ReverseMap();
             CreateMap<CardDTO, Card>().ReverseMap().ForMember(
-                dest => dest.AssignedUserUsername,
-                opt => opt.MapFrom(src => src.User.Username)
+                dest => dest.AssignedUserUsernames,
+                opt => opt.MapFrom(src => src.Assignees.Select(a => a.UserBoard.User.Username).ToList())
             );
         }
     }

@@ -36,5 +36,12 @@
       <p>{{ card.description }}</p>
     </mat-card-content>
   }
-  <mat-card-footer class="card-footer">Assigned to: {{card.assignedUserUsername}}</mat-card-footer>
+  <mat-card-footer class="card-footer">
+    Assigned to:
+    @if (card.assignedUserUsernames?.length) {
+      {{ (card.assignedUserUsernames || []).join(', ') }}
+    } @else {
+      Unassigned
+    }
+  </mat-card-footer>
 </mat-card>

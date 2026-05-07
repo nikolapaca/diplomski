@@ -2,14 +2,6 @@
   <h2 mat-dialog-title>{{ assignedMessage }}</h2>
 
   <button
-    *ngIf="assignedMessage !== 'Unassigned'"
-    mat-icon-button
-    (click)="unassignFromCollaborator()"
-    class="remove-button"
-  >
-    <mat-icon>person_remove</mat-icon>
-  </button>
-  <button *ngIf="assignedMessage === 'Unassigned'"
     mat-icon-button
     (click)="closeDialog()"
     class="remove-button">
@@ -27,7 +19,11 @@
   <mat-list role="list" class="user-list">
     <mat-list-item role="listitem" *ngFor="let user of users()">
       <span class="username">{{ user.username }}</span>
-      <button mat-icon-button class="add-button" (click)="assignToCollaborator(user)">
+
+      <button
+        mat-icon-button
+        class="add-button"
+        (click)="assignToCollaborator(user)">
         <mat-icon>add</mat-icon>
       </button>
     </mat-list-item>

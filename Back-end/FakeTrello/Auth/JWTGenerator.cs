@@ -19,6 +19,7 @@ namespace FakeTrello.Auth
             var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new("userId", user.Id.ToString()),
             new("username", user.Username),
         };
 

@@ -10,7 +10,8 @@ namespace FakeTrello.Service.Contract
         Task<Result<UserDTO>> GetById(int? id);
         Task<User> GetUserByUsername(string username);
         Task<Result<UserDTO>> Create(UserDTO userDTO);
-        Task<Result<UserDTO>> Update(UserDTO userDTO);
+        Task<Result<UserDTO>> Update(string username, UserDTO userDTO);
+        Task<Result> ChangePassword(string username, PasswordChangeDTO dto);
 
     }
 }

@@ -6,6 +6,7 @@ using FakeTrello.Repository.Contract;
 using FakeTrello.Service.Contract;
 using FluentResults;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.IdentityModel.Tokens;
 
 namespace FakeTrello.Service
 {
@@ -14,17 +15,19 @@ namespace FakeTrello.Service
         private readonly ICardRepository _cardRepository;
         private readonly ICardListService _cardListService;
         private readonly IUserService _userService;
+        private readonly ICardAssigneeService _cardAssigneeService;
         private readonly IMapper _mapper;
 
-        public CardService(ICardRepository cardRepository, IMapper mapper, ICardListService cardListService, IUserService userService)
+        public CardService(ICardRepository cardRepository, IMapper mapper, ICardListService cardListService, IUserService userService, ICardAssigneeService cardAssigneeService)
         {
             _cardRepository = cardRepository;
             _mapper = mapper;
             _cardListService = cardListService;
             _userService = userService;
+            _cardAssigneeService = cardAssigneeService;
         }
 
-        public async Task<Result<CardDTO>> Create(int cardListId, CardDTO cardDTO)
+        public async Task<Result<CardDTO>> Create(int cardListId, CardDTO cardDTO, int userId)
         {
             var listResult = await _cardListService.GetById(cardListId);
             if (listResult.IsFailed)
@@ -38,6 +41,7 @@ namespace FakeTrello.Service
             card.Status = EntityStatus.ACTIVE;
             var maxIndex = await _cardRepository.GetMaxIndexForCardAsync(list.Id);
             card.Index = (maxIndex ?? 0) + 1;
+            card.CreatedByUserId = userId;
 
             await _cardRepository.Create(card);
 
@@ -47,29 +51,31 @@ namespace FakeTrello.Service
         public async Task<Result> ReorderCardInsideList(int cardId, int newIndex)
         {
             var card = await _cardRepository.GetById(cardId);
-            if (card == null) 
+            if (card == null)
                 throw new Exception("Card not found");
 
             var cards = await _cardRepository.GetByListId(card.CardListId);
 
             int oldIndex = card.Index;
+            newIndex = Math.Clamp(newIndex, 1, cards.Count);
 
-            if (oldIndex == newIndex) return Result.Fail("");
+            if (oldIndex == newIndex)
+                return Result.Ok();
 
             if (oldIndex < newIndex)
             {
-                foreach (var c in cards.Where(c => c.Index > oldIndex && c.Index <= newIndex))
+                foreach (var c in cards.Where(c => c.Id != card.Id && c.Index > oldIndex && c.Index <= newIndex))
                     c.Index--;
             }
             else
             {
-                foreach (var c in cards.Where(c => c.Index >= newIndex && c.Index < oldIndex))
+                foreach (var c in cards.Where(c => c.Id != card.Id && c.Index >= newIndex && c.Index < oldIndex))
                     c.Index++;
             }
 
             card.Index = newIndex;
 
-            await _cardRepository.UpdateRangeAsync(cards.Append(card).ToList());
+            await _cardRepository.UpdateRangeAsync(cards);
             return Result.Ok();
         }
 
@@ -79,15 +85,35 @@ namespace FakeTrello.Service
             if (card == null)
                 throw new Exception("Card not found");
 
-            await _cardRepository.MoveToAnotherList(card.Id, targetListId);
+            int oldListId = card.CardListId;
 
-            var cards = await _cardRepository.GetByListId(targetListId);
-            targetIndex = Math.Clamp(targetIndex, 1, cards.Count + 1);
+            var oldListCards = (await _cardRepository.GetByListId(oldListId))
+                .Where(c => c.Id != card.Id)
+                .OrderBy(c => c.Index)
+                .ToList();
+
+            var targetListCards = (await _cardRepository.GetByListId(targetListId))
+                .Where(c => c.Id != card.Id)
+                .OrderBy(c => c.Index)
+                .ToList();
+
+            targetIndex = Math.Clamp(targetIndex, 1, targetListCards.Count + 1);
+
+            for (int i = 0; i < oldListCards.Count; i++)
+                oldListCards[i].Index = i + 1;
+
+            foreach (var c in targetListCards.Where(c => c.Index >= targetIndex))
+                c.Index++;
+
+            card.CardListId = targetListId;
             card.Index = targetIndex;
 
-            for (int i = 0; i < cards.Count; i++)
-                cards[i].Index = i + 1;
-            await _cardRepository.UpdateRangeAsync(cards);
+            var cardsToUpdate = oldListCards
+                .Concat(targetListCards)
+                .Append(card)
+                .ToList();
+
+            await _cardRepository.UpdateRangeAsync(cardsToUpdate);
 
             return Result.Ok();
         }
@@ -109,8 +135,7 @@ namespace FakeTrello.Service
             foreach (var card in cards)
             {
                 var cardDTO = _mapper.Map<Card, CardDTO>(card);
-                if(card.UserId != null)
-                    cardDTO.AssignedUserUsername = card.User.Username;
+                cardDTO.AssignedUserUsernames = card.Assignees.Select(a => a.UserBoard.User.Username).ToList();
                 cardsDTO.Add(cardDTO);
             }
             return cardsDTO;
@@ -123,72 +148,80 @@ namespace FakeTrello.Service
             {
                 return Result.Fail("This user doesn't exist!");
             }
+
             var card = await _cardRepository.GetById(cardDto.Id);
             if (card == null)
             {
                 return Result.Fail("This card doesn't exist!");
             }
+
             try
             {
-                card.UserId = user.Id;
-                var updatedCard = await _cardRepository.Update(card);
-                if (updatedCard == null)
-                {
-                    return Result.Fail("Failed to update the Card.");
-                }
+                var boardId = card.CardList.BoardId;
+
+                CardAssignee ca = new CardAssignee(card.Id, user.Id, boardId);
+                await _cardAssigneeService.Create(ca);
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                return Result.Fail($"An error occurred during update: {ex.Message}");
+                return Result.Fail($"An error occurred during assignment: {ex.Message}");
             }
         }
 
-        public async Task<Result> UnassignCardToUser(CardDTO cardDto)
+        public async Task<Result> UnassignCardToUser(CardDTO cardDto, string username)
         {
+            var user = await _userService.GetUserByUsername(username);
+            if (user == null)
+            {
+                return Result.Fail("This user doesn't exist!");
+            }
+
             var card = await _cardRepository.GetById(cardDto.Id);
             if (card == null)
             {
                 return Result.Fail("This card doesn't exist!");
             }
+
             try
             {
-                card.UserId = null;
-                var updatedCard = await _cardRepository.Update(card);
-                if (updatedCard == null)
+                var boardId = card.CardList.BoardId;
+
+                var cardAssignee = await _cardAssigneeService.GetById(card.Id, user.Id, boardId);
+                if (cardAssignee == null)
                 {
-                    return Result.Fail("Failed to update the Card.");
+                    return Result.Fail("This user is not assigned to this card!");
                 }
+
+                await _cardAssigneeService.Delete(cardAssignee.CardId, cardAssignee.UserId, cardAssignee.BoardId);
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
-                return Result.Fail($"An error occurred during update: {ex.Message}");
+                return Result.Fail($"An error occurred during unassignment: {ex.Message}");
             }
         }
 
-        public async Task<Result<UserDTO>> GetUserAssignedToCard(int cardId)
+        public async Task<Result<List<UserDTO>>> GetUsersAssignedToCard(int cardId)
         {
             var card = await _cardRepository.GetById(cardId);
-            if(card == null)
+            if (card == null)
             {
                 return Result.Fail("This card doesn't exist!");
             }
-            if (card.UserId.HasValue) 
+
+            if (card.Assignees == null || !card.Assignees.Any())
             {
-                var user = await _userService.GetById(card.UserId);
-                if(user == null)
-                {
-                    return Result.Fail("This user doesn't exist!");
-                }
-                return user;
+                return Result.Ok(new List<UserDTO>());
             }
-            else
-            {
-                return Result.Ok();
-            }
+
+            var users = card.Assignees
+                .Select(a => a.UserBoard.User)
+                .ToList();
+
+            return Result.Ok(_mapper.Map<List<UserDTO>>(users));
         }
 
         public async Task<Result<CardDTO>> Update(CardDTO cardDTO)

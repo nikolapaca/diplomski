@@ -3,5 +3,5 @@ export interface Card {
     name: string,
     description: string,
     cardListId: number,
-    assignedUserUsername?: string
+    assignedUserUsernames?: string[]
 }

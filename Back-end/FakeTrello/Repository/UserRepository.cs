@@ -89,16 +89,23 @@ namespace FakeTrello.Repository
 
         public async Task<List<User>> GetAssignableUsersOnTheBoard(string searchTerm, int boardId, int cardId)
         {
-            if (searchTerm == null || searchTerm == "")
-            {
-                return await _context.Users.Where(u => _context.UserBoards.Any(ub => ub.BoardId == boardId && ub.UserId == u.Id && ub.UserRole != UserRole.OWNER) && 
-                !u.Cards.Any(c => c.Id == cardId)).ToListAsync();
-            }
-            else
-            {
-                return await _context.Users.Where(u => _context.UserBoards.Any(ub => ub.BoardId == boardId && ub.UserId == u.Id && ub.UserRole != UserRole.OWNER) && 
-                u.Username.Contains(searchTerm) && !u.Cards.Any(c => c.Id == cardId)).ToListAsync();
-            }
+            return await _context.Users
+                .Where(u =>
+                    _context.UserBoards.Any(ub =>
+                        ub.BoardId == boardId &&
+                        ub.UserId == u.Id &&
+                        ub.UserRole != UserRole.OWNER
+                    )
+                    &&
+                    !_context.CardAssignees.Any(ca =>
+                        ca.CardId == cardId &&
+                        ca.UserId == u.Id &&
+                        ca.BoardId == boardId
+                    )
+                    &&
+                    (string.IsNullOrEmpty(searchTerm) || u.Username.Contains(searchTerm))
+                )
+                .ToListAsync();
         }
     }
 }

@@ -102,6 +102,7 @@ namespace FakeTrello.Migrations
                     CardListId = table.Column<int>(type: "integer", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: true),
                     Index = table.Column<int>(type: "integer", nullable: false),
+                    CreatedByUserId = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -114,11 +115,42 @@ namespace FakeTrello.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Cards_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Cards_Users_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "CardAssignees",
+                columns: table => new
+                {
+                    CardId = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    BoardId = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CardAssignees", x => new { x.CardId, x.UserId, x.BoardId });
+                    table.ForeignKey(
+                        name: "FK_CardAssignees_Cards_CardId",
+                        column: x => x.CardId,
+                        principalTable: "Cards",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CardAssignees_UserBoards_UserId_BoardId",
+                        columns: x => new { x.UserId, x.BoardId },
+                        principalTable: "UserBoards",
+                        principalColumns: new[] { "UserId", "BoardId" },
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CardAssignees_UserId_BoardId",
+                table: "CardAssignees",
+                columns: new[] { "UserId", "BoardId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_CardLists_BoardId",
@@ -131,9 +163,9 @@ namespace FakeTrello.Migrations
                 column: "CardListId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Cards_UserId",
+                name: "IX_Cards_CreatedByUserId",
                 table: "Cards",
-                column: "UserId");
+                column: "CreatedByUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserBoards_BoardId",
@@ -144,6 +176,9 @@ namespace FakeTrello.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "CardAssignees");
+
             migrationBuilder.DropTable(
                 name: "Cards");
 

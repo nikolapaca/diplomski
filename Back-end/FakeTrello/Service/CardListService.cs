@@ -113,24 +113,27 @@ namespace FakeTrello.Service
                 throw new Exception("List not found");
 
             var lists = await _cardListRepository.GetByBoardId(list.BoardId);
+
             int oldIndex = list.Index;
 
-            if (oldIndex == targetIndex) return Result.Fail("");
+            if (oldIndex == targetIndex)
+                return Result.Ok();
 
             if (oldIndex < targetIndex)
             {
-                foreach (var c in lists.Where(c => c.Index > oldIndex && c.Index <= targetIndex))
-                    c.Index--;
+                foreach (var l in lists.Where(l => l.Id != list.Id && l.Index > oldIndex && l.Index <= targetIndex))
+                    l.Index--;
             }
             else
             {
-                foreach (var c in lists.Where(c => c.Index >= targetIndex && c.Index < oldIndex))
-                    c.Index++;
+                foreach (var l in lists.Where(l => l.Id != list.Id && l.Index >= targetIndex && l.Index < oldIndex))
+                    l.Index++;
             }
 
             list.Index = targetIndex;
 
-            await _cardListRepository.UpdateRangeAsync(lists.Append(list).ToList());
+            await _cardListRepository.UpdateRangeAsync(lists);
+
             return Result.Ok();
         }
     }

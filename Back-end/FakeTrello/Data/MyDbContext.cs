@@ -15,11 +15,25 @@ namespace FakeTrello.Data
         public DbSet<UserBoard> UserBoards { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<CardList> CardLists { get; set; }
+        public DbSet<CardAssignee> CardAssignees { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UserBoard>()
                 .HasKey(ub => new { ub.UserId, ub.BoardId });
+
+            modelBuilder.Entity<CardAssignee>()
+                .HasKey(ca => new { ca.CardId, ca.UserId, ca.BoardId });
+
+            modelBuilder.Entity<CardAssignee>()
+                .HasOne(ca => ca.UserBoard)
+                .WithMany(ub => ub.AssignedCards)
+                .HasForeignKey(ca => new { ca.UserId, ca.BoardId });
+
+            modelBuilder.Entity<CardAssignee>()
+                .HasOne(ca => ca.Card)
+                .WithMany(c => c.Assignees)
+                .HasForeignKey(ca => ca.CardId);
         }
 
     }

@@ -1,0 +1,178 @@
+<div class="page">
+  <div class="profile-layout">
+    <mat-card class="profile-card">
+      <div class="header">
+        <button mat-icon-button (click)="goBack()" aria-label="Back">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+
+        <div>
+          <h1>Edit profile</h1>
+          <p>Update your personal information.</p>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="loading">
+        Loading profile...
+      </div>
+
+      <form *ngIf="!loading" [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="form">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" placeholder="Enter name">
+          <mat-error *ngIf="profileForm.get('name')?.hasError('required')">
+            Name is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Surname</mat-label>
+          <input matInput formControlName="surname" placeholder="Enter surname">
+          <mat-error *ngIf="profileForm.get('surname')?.hasError('required')">
+            Surname is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" placeholder="Enter email">
+          <mat-error *ngIf="profileForm.get('email')?.hasError('required')">
+            Email is required.
+          </mat-error>
+          <mat-error *ngIf="profileForm.get('email')?.hasError('email')">
+            Email is not valid.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" placeholder="Enter username">
+          <mat-error *ngIf="profileForm.get('username')?.hasError('required')">
+            Username is required.
+          </mat-error>
+        </mat-form-field>
+
+        <div *ngIf="errorMessage" class="message error">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="message success">
+          {{ successMessage }}
+        </div>
+
+        <div class="actions">
+          <button mat-stroked-button type="button" (click)="goBack()" [disabled]="saving">
+            Cancel
+          </button>
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving || profileForm.invalid">
+            <mat-icon>save</mat-icon>
+            {{ saving ? 'Saving...' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="profile-card password-card">
+      <div class="header password-header">
+        <mat-icon color="primary">lock_reset</mat-icon>
+
+        <div>
+          <h1>Change password</h1>
+          <p>Protect your account with a new password.</p>
+        </div>
+      </div>
+
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form">
+        <mat-form-field appearance="outline">
+          <mat-label>Current password</mat-label>
+          <input
+            matInput
+            [type]="hideCurrentPassword ? 'password' : 'text'"
+            formControlName="currentPassword"
+            placeholder="Enter current password">
+
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hideCurrentPassword = !hideCurrentPassword">
+            <mat-icon>{{ hideCurrentPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+
+          <mat-error *ngIf="passwordForm.get('currentPassword')?.hasError('required')">
+            Current password is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>New password</mat-label>
+          <input
+            matInput
+            [type]="hideNewPassword ? 'password' : 'text'"
+            formControlName="newPassword"
+            placeholder="Enter new password">
+
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hideNewPassword = !hideNewPassword">
+            <mat-icon>{{ hideNewPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+
+          <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('required')">
+            New password is required.
+          </mat-error>
+          <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('minlength')">
+            Password must be at least 6 characters.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Confirm new password</mat-label>
+          <input
+            matInput
+            [type]="hideConfirmPassword ? 'password' : 'text'"
+            formControlName="confirmNewPassword"
+            placeholder="Confirm new password">
+
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hideConfirmPassword = !hideConfirmPassword">
+            <mat-icon>{{ hideConfirmPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+
+          <mat-error *ngIf="passwordForm.get('confirmNewPassword')?.hasError('required')">
+            Confirm password is required.
+          </mat-error>
+        </mat-form-field>
+
+        <div *ngIf="passwordsDoNotMatch()" class="message error">
+          New passwords do not match.
+        </div>
+
+        <div *ngIf="passwordErrorMessage" class="message error">
+          {{ passwordErrorMessage }}
+        </div>
+
+        <div *ngIf="passwordSuccessMessage" class="message success">
+          {{ passwordSuccessMessage }}
+        </div>
+
+        <div class="actions">
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            [disabled]="changingPassword || passwordForm.invalid || passwordsDoNotMatch()">
+            <mat-icon>lock_reset</mat-icon>
+            {{ changingPassword ? 'Changing...' : 'Change password' }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+  </div>
+</div>

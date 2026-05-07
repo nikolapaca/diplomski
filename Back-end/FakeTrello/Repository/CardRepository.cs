@@ -4,6 +4,7 @@ using FakeTrello.Model.Enum;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Versioning;
 
 namespace FakeTrello.Repository
 {
@@ -36,12 +37,23 @@ namespace FakeTrello.Repository
 
         public async Task<Card?> GetById(int id)
         {
-            return await _context.Cards.FindAsync(id);
+            return await _context.Cards
+                .Include(c => c.CardList)
+                .Include(c => c.Assignees)
+                    .ThenInclude(a => a.UserBoard)
+                        .ThenInclude(ub => ub.User)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<List<Card>> GetByListId(int listId)
         {
-            return await _context.Cards.Include(c => c.User).Where(c => c.CardListId == listId && c.Status != EntityStatus.DELETED).OrderBy(c => c.Index).ToListAsync();
+            return await _context.Cards
+                .Include(c => c.Assignees)
+                    .ThenInclude(a => a.UserBoard)
+                        .ThenInclude(ub => ub.User)
+                .Where(c => c.CardListId == listId && c.Status != EntityStatus.DELETED)
+                .OrderBy(c => c.Index)
+                .ToListAsync();
         }
 
         public async Task<Card> Update(Card card)

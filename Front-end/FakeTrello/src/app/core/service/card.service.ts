@@ -32,8 +32,8 @@ export class CardService {
         return this.http.post<void>(`${environment.api}/cards/assign/${username}`, card)
     }
 
-    public unassignCard(card: Card) : Observable<void> {
-        return this.http.post<void>(`${environment.api}/cards/unassign`, card)
+    public unassignCard(card: Card, username: string) : Observable<void> {
+        return this.http.post<void>(`${environment.api}/cards/unassign/${username}`, card)
     }
 
     public getUserAssignedToCard(card: Card) : Observable<User> {

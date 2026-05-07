@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, Inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -16,14 +16,16 @@ import { CardService } from '../../service/card.service';
 
 @Component({
   selector: 'app-assign-card-dialog',
-  imports: [ReactiveFormsModule,
+  imports: [
+    ReactiveFormsModule,
     CommonModule,
     MatIconModule,
     MatButtonModule,
     MatFormFieldModule,
     MatDialogModule,
     MatInputModule,
-    MatListModule],
+    MatListModule
+  ],
   templateUrl: './assign-card-dialog.html',
   styleUrl: './assign-card-dialog.css'
 })
@@ -34,6 +36,8 @@ export class AssignCardDialog {
   public user!: User;
   public board: Board | undefined;
   public card: Card | undefined;
+  public changed = new EventEmitter<Partial<Card>>();
+
   private searchSubscription: Subscription | undefined;
 
   public constructor(
@@ -49,7 +53,7 @@ export class AssignCardDialog {
 
   public ngOnInit(): void {
     this.fetchUsers('');
-    console.log('kartica', this.card)
+
     this.searchSubscription = this.searchControl.valueChanges
       .pipe(
         debounceTime(300),
@@ -62,50 +66,37 @@ export class AssignCardDialog {
     this.setAssignedMessage();
   }
 
-  public closeDialog() : void {
-    this.dialogRef.close();
+  public closeDialog(): void {
+    this.dialogRef.close(this.card);
   }
 
   private setAssignedMessage(): void {
-    if (this.card && (this.card.assignedUserUsername === null || this.card.assignedUserUsername === '')) {
+    if (!this.card || !this.card.assignedUserUsernames || this.card.assignedUserUsernames.length === 0) {
       this.assignedMessage = 'Unassigned';
     } else {
-      console.log('karticaaaa', this.card)
-      if (this.card) {
-        this.cardService.getUserAssignedToCard(this.card).subscribe({
-          next: (response) => {
-            this.user = response;
-            console.log('koji je user', this.user);
-            if (this.user) {
-              this.assignedMessage = `Assigned to: ${this.user.username}`;
-            } else {
-              this.assignedMessage = 'Unassigned';
-            }
-            this.cdRef.detectChanges();
-          },
-          error: (error) => {
-            console.error('greskaa', error);
-            this.assignedMessage = 'Unassigned';
-          }
-        });
-      }
+      this.assignedMessage = `Assigned to: ${this.card.assignedUserUsernames.join(', ')}`;
     }
-  }
 
-  /*public addCollaborator(user: User): void {
-    this.boardService.addCollaborator(this.data.board, user.username).subscribe((_) => {
-      this.fetchUsers(this.searchControl.value || '')
-    })
-  }*/
+    this.cdRef.detectChanges();
+  }
 
   public assignToCollaborator(user: User): void {
     this.cardService.assignCard(this.data.card, user.username).subscribe({
       next: (_) => {
         if (this.card) {
-          this.card.assignedUserUsername = user.username;
+          this.card.assignedUserUsernames = [
+            ...(this.card.assignedUserUsernames || []),
+            user.username
+          ];
+
+          this.changed.emit({
+            assignedUserUsernames: this.card.assignedUserUsernames
+          });
         }
+
+        this.setAssignedMessage();
         this.fetchUsers(this.searchControl.value || '');
-        this.dialogRef.close(this.card);
+        this.cdRef.detectChanges();
       },
       error: (err) => {
         console.error('Došlo je do greške prilikom dodeljivanja kartice:', err);
@@ -113,17 +104,24 @@ export class AssignCardDialog {
     });
   }
 
-  public unassignFromCollaborator(): void {
-    this.cardService.unassignCard(this.data.card).subscribe({
+  public unassignFromCollaborator(username: string): void {
+    this.cardService.unassignCard(this.data.card, username).subscribe({
       next: (_) => {
         if (this.card) {
-          this.card.assignedUserUsername = '';
+          this.card.assignedUserUsernames =
+            (this.card.assignedUserUsernames || []).filter(u => u !== username);
+
+          this.changed.emit({
+            assignedUserUsernames: this.card.assignedUserUsernames
+          });
         }
+
+        this.setAssignedMessage();
         this.fetchUsers(this.searchControl.value || '');
-        this.dialogRef.close(this.card);
+        this.cdRef.detectChanges();
       },
       error: (err) => {
-        console.error('Došlo je do greške prilikom dodeljivanja kartice:', err);
+        console.error('Došlo je do greške prilikom skidanja korisnika sa kartice:', err);
       }
     });
   }
@@ -136,7 +134,12 @@ export class AssignCardDialog {
 
   private fetchUsers(searchTerm: string): void {
     if (this.card) {
-      this.userService.getAssignableUsersToThisBoard(searchTerm, this.data.board.name, this.data.board.ownerUsername, this.card.id).subscribe({
+      this.userService.getAssignableUsersToThisBoard(
+        searchTerm,
+        this.data.board.name,
+        this.data.board.ownerUsername,
+        this.card.id
+      ).subscribe({
         next: (users) => {
           this.users.set(users);
         }

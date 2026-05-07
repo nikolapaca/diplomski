@@ -56,6 +56,9 @@ namespace FakeTrello.Migrations
                     b.Property<int>("CardListId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -77,9 +80,27 @@ namespace FakeTrello.Migrations
 
                     b.HasIndex("CardListId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Cards");
+                });
+
+            modelBuilder.Entity("FakeTrello.Model.CardAssignee", b =>
+                {
+                    b.Property<int>("CardId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BoardId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("CardId", "UserId", "BoardId");
+
+                    b.HasIndex("UserId", "BoardId");
+
+                    b.ToTable("CardAssignees");
                 });
 
             modelBuilder.Entity("FakeTrello.Model.CardList", b =>
@@ -172,13 +193,34 @@ namespace FakeTrello.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FakeTrello.Model.User", "User")
+                    b.HasOne("FakeTrello.Model.User", "CreatedByUser")
                         .WithMany("Cards")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("CardList");
 
-                    b.Navigation("User");
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("FakeTrello.Model.CardAssignee", b =>
+                {
+                    b.HasOne("FakeTrello.Model.Card", "Card")
+                        .WithMany("Assignees")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FakeTrello.Model.UserBoard", "UserBoard")
+                        .WithMany("AssignedCards")
+                        .HasForeignKey("UserId", "BoardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Card");
+
+                    b.Navigation("UserBoard");
                 });
 
             modelBuilder.Entity("FakeTrello.Model.CardList", b =>
@@ -218,6 +260,11 @@ namespace FakeTrello.Migrations
                     b.Navigation("UserBoards");
                 });
 
+            modelBuilder.Entity("FakeTrello.Model.Card", b =>
+                {
+                    b.Navigation("Assignees");
+                });
+
             modelBuilder.Entity("FakeTrello.Model.CardList", b =>
                 {
                     b.Navigation("Cards");
@@ -228,6 +275,11 @@ namespace FakeTrello.Migrations
                     b.Navigation("Cards");
 
                     b.Navigation("UserBoards");
+                });
+
+            modelBuilder.Entity("FakeTrello.Model.UserBoard", b =>
+                {
+                    b.Navigation("AssignedCards");
                 });
 #pragma warning restore 612, 618
         }

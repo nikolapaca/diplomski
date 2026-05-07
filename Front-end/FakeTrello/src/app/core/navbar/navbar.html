@@ -16,10 +16,21 @@
 
   <div class="navbar-right">
     @if(isLoggedIn){
-    <button class="create-button" (click)="createBoard()">Create board</button>
+    <button class="create-button" (click)="createBoard()">
+      Create board
+    </button>
     }
+
     @if(isLoggedIn){
-    <button class="sign-out-button" (click)="signOut()">Sign out</button>
+    <button class="edit-profile-button" routerLink="/edit-profile">
+      Edit profile
+    </button>
+    }
+
+    @if(isLoggedIn){
+    <button class="sign-out-button" (click)="signOut()">
+      Sign out
+    </button>
     }
   </div>
 </nav>

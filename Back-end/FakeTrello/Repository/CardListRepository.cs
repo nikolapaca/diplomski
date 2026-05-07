@@ -35,19 +35,19 @@ namespace FakeTrello.Repository
 
         public async Task<CardList?> GetById(int id)
         {
-            return await _context.CardLists.Include(cl => cl.Cards).ThenInclude(c => c.User).FirstOrDefaultAsync(cl => cl.Id == id);
+            return await _context.CardLists.Include(cl => cl.Cards).ThenInclude(c => c.Assignees).FirstOrDefaultAsync(cl => cl.Id == id);
         }
 
         public async Task<List<CardList>> GetByBoardId(int boardId)
         {
-            return await _context.CardLists.Include(cl => cl.Cards).ThenInclude(c => c.User).Where(b => b.BoardId == boardId).OrderBy(cl => cl.Index).ToListAsync();
+            return await _context.CardLists.Include(cl => cl.Cards).ThenInclude(c => c.Assignees).Where(b => b.BoardId == boardId).OrderBy(cl => cl.Index).ToListAsync();
         }
 
         public async Task<List<CardList>> GetByBoardOwnerAndBoardName(string boardName, string boardOwnerUsername)
         {
             var cardLists = await _context.CardLists
                                 .Include(cl => cl.Cards.Where(c => c.Status != EntityStatus.DELETED).OrderBy(c => c.Index))
-                                .ThenInclude(c => c.User) 
+                                .ThenInclude(c => c.Assignees) 
                                 .Include(cl => cl.Board)
                                 .ThenInclude(b => b.UserBoards)
                                 .ThenInclude(ub => ub.User)

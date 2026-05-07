@@ -1,5 +1,6 @@
 ﻿using FakeTrello.DTO;
 using FakeTrello.Service.Contract;
+using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -67,16 +68,22 @@ namespace FakeTrello.Controller
             return Ok(user.Value);
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<UserDTO>> Update([FromBody] UserDTO userdto)
+        [HttpPut("profile")]
+        public async Task<ActionResult<UserDTO>> UpdateProfile([FromBody] UserDTO userDto)
         {
-            var user = await _userService.Update(userdto);
-            if (!user.IsSuccess)
-                return StatusCode(500, "Error on server!");
-            if (user.Value == null)
-                return NotFound("User wasn't updated");
-            return Ok(user.Value);
+            var usernameClaim = HttpContext.User.FindFirst("username")?.Value;
+
+            if (string.IsNullOrEmpty(usernameClaim))
+                return Unauthorized("Token does not contain required username.");
+
+            var result = await _userService.Update(usernameClaim, userDto);
+
+            if (result.IsFailed)
+                return BadRequest(result.Errors.First().Message);
+
+            return Ok(result.Value);
         }
+
         [HttpGet("search/offBoard")]
         public async Task<ActionResult<List<UserDTO>>> GetUsersNotOnBoard([FromQuery] string? searchTerm,
             [FromQuery] string boardName,
@@ -154,7 +161,7 @@ namespace FakeTrello.Controller
         [HttpGet("profile")]
         public async Task<ActionResult<UserDTO>> GetUserByUsername()
         {
-            var usernameClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var usernameClaim = HttpContext.User.FindFirst("username")?.Value;
 
             if (string.IsNullOrEmpty(usernameClaim))
             {
@@ -173,6 +180,22 @@ namespace FakeTrello.Controller
             {
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
+        }
+
+        [HttpPut("changePassword")]
+        public async Task<ActionResult<PasswordChangeDTO>> ChangePassword([FromBody] PasswordChangeDTO dto)
+        {
+            var username = HttpContext.User.FindFirst("username")?.Value;
+
+            if (string.IsNullOrEmpty(username))
+                return Unauthorized("Token does not contain required username.");
+
+            var result = await _userService.ChangePassword(username, dto);
+
+            if (result.IsFailed)
+                return BadRequest(result.Errors.First().Message);
+
+            return Ok();
         }
     }
 }

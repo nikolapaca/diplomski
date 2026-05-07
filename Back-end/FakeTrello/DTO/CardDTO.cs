@@ -11,8 +11,9 @@ namespace FakeTrello.DTO
         public string Name { get; set; }
         public string Description { get; set; }
         public int CardListId { get; set; }
+        public int CreatedByUserId { get; set; }
         public EntityStatus Status { get; set; }
-        public string? AssignedUserUsername { get; set; }
+        public List<string?> AssignedUserUsernames { get; set; } = new();
         public int Index { get; set; }
     }
 }

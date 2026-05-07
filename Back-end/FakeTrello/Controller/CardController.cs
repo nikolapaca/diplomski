@@ -27,8 +27,10 @@ namespace FakeTrello.Controller
             {
                 return BadRequest();
             }
+            if (!int.TryParse(User.FindFirst("userId")?.Value, out var userId))
+                return Unauthorized();
 
-            var cardDto = await _cardService.Create(listId, newCard);
+            var cardDto = await _cardService.Create(listId, newCard, userId);
             if (!cardDto.IsSuccess)
             {
                 return BadRequest();
@@ -138,7 +140,7 @@ namespace FakeTrello.Controller
         }
 
         [HttpGet("assignedUser/{cardId}")]
-        public async Task<ActionResult<UserDTO>> GetUserAssignedToCard(int cardId)
+        public async Task<ActionResult<List<UserDTO>>> GetUsersAssignedToCard(int cardId)
         {
             if(cardId == 0)
             {
@@ -146,7 +148,7 @@ namespace FakeTrello.Controller
             }
             try
             {
-                var user = await _cardService.GetUserAssignedToCard(cardId);
+                var user = await _cardService.GetUsersAssignedToCard(cardId);
                 return Ok(user.Value);
             }
             catch (InvalidOperationException ex)
@@ -159,8 +161,8 @@ namespace FakeTrello.Controller
             }
         }
 
-        [HttpPost("unassign")]
-        public async Task<ActionResult> RemoveAssignee([FromBody] CardDTO cardDto)
+        [HttpPost("unassign/{username}")]
+        public async Task<ActionResult> RemoveAssignee([FromBody] CardDTO cardDto, string username)
         {
             if (!ModelState.IsValid)
             {
@@ -168,7 +170,7 @@ namespace FakeTrello.Controller
             }
             try
             {
-                await _cardService.UnassignCardToUser(cardDto);
+                await _cardService.UnassignCardToUser(cardDto, username);
                 return Ok(new { Message = "Card updated successfully." });
             }
             catch (InvalidOperationException ex)

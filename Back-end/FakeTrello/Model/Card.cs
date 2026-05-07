@@ -9,9 +9,10 @@ namespace FakeTrello.Model
         public string Description { get; set; }
         public int CardListId {  get; set; }
         public CardList CardList {  get; set; }
-        public int? UserId { get; set; }
         public int Index { get; set; }
-        public User User { get; set;}
+        public int CreatedByUserId { get; set; }
+        public User CreatedByUser { get; set; }
+        public ICollection<CardAssignee> Assignees { get; set; } = new List<CardAssignee>();
         public EntityStatus Status {  get; set; }
 
         public Card() { }

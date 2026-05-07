@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environment';
 import { User } from '../model/user.model';
 import { TokenService } from './token-service';
+import { PasswordChange } from '../model/password-change.model';
 
 @Injectable({
   providedIn: 'root'
@@ -55,5 +56,13 @@ export class UserService {
 
   public getProfile() : Observable<User> {
     return this.http.get<User>(`${environment.api}/users/profile`);
-}
+  }
+
+  public updateProfile(user: User) : Observable<User> {
+    return this.http.put<User>(`${environment.api}/users/profile`, user);
+  }
+
+  public changePassword(change: PasswordChange) : Observable<void> {
+    return this.http.put<void>(`${environment.api}/users/changePassword`, change);
+  }
 }

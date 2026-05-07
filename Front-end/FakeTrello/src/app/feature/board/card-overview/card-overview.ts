@@ -111,15 +111,20 @@ export class CardOverview implements OnInit {
       });
   }
 
-  public leaveCard() : void {
-    this.cardService.unassignCard(this.card).subscribe({
-      next: (_) => {
-      },
-      error: (err) => {
-        console.error('Došlo je do greške prilikom dodeljivanja kartice:', err);
-      }
-    });
-  }
+  public leaveCard(): void {
+  this.cardService.unassignCard(this.card, this.loggedInUsername).subscribe({
+    next: (_) => {
+      this.card.assignedUserUsernames =
+        (this.card.assignedUserUsernames || []).filter(u => u !== this.loggedInUsername);
+
+      this.cardUpdated.emit();
+      this.cdr.markForCheck();
+    },
+    error: (err) => {
+      console.error('Došlo je do greške prilikom napuštanja kartice:', err);
+    }
+  });
+}
 
   public openCardDetails(event?: MouseEvent): void {
   if (event) event.stopPropagation();
@@ -134,10 +139,9 @@ export class CardOverview implements OnInit {
     inst.changed.subscribe((patch: Partial<Card>) => {
       this.card = { ...this.card, ...patch }; // promeni referencu
       this.cardUpdated.emit();                // obavesti roditelje ako treba
-      this.cdr.markForCheck();                // gurni OnPush change detection
+      this.cdr.markForCheck();                
     });
 
-    // ✅ final sync na Save/Delete (posle zatvaranja)
     dialogRef.afterClosed().subscribe((result) => {
       if (result === null) {
         this.cardDeleted.emit(this.card.cardListId);
