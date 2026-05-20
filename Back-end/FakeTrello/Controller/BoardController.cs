@@ -1,10 +1,7 @@
 ﻿using FakeTrello.DTO;
-using FakeTrello.Model;
-using FakeTrello.Service;
 using FakeTrello.Service.Contract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FakeTrello.Controller
 {

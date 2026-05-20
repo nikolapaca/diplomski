@@ -126,7 +126,8 @@ namespace FakeTrello.Controller
             }
             try
             {
-                await _cardService.AssignCardToUser(cardDto, username);
+                var creatingUserUsername = HttpContext.User.FindFirst("username")?.Value;
+                await _cardService.AssignCardToUser(cardDto, username, creatingUserUsername);
                 return Ok(new { Message = "Card updated successfully." });
             }
             catch (InvalidOperationException ex)
@@ -170,7 +171,8 @@ namespace FakeTrello.Controller
             }
             try
             {
-                await _cardService.UnassignCardToUser(cardDto, username);
+                var unassigningUserUsername = HttpContext.User.FindFirst("username")?.Value;
+                await _cardService.UnassignCardToUser(cardDto, username, unassigningUserUsername);
                 return Ok(new { Message = "Card updated successfully." });
             }
             catch (InvalidOperationException ex)

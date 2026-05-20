@@ -1,5 +1,6 @@
 using FakeTrello;
 using FakeTrello.Data;
+using FakeTrello.Hub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -49,6 +50,7 @@ builder.Services.AddSwaggerGen(c => {
 });
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddHttpClient();
+builder.Services.AddSignalR();
 builder.Services.ConfigureAuth();
 
 builder.Services.AddCors(options =>
@@ -56,7 +58,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("CorsPolicy",
         builder => builder.WithOrigins("http://localhost:4200")
             .WithMethods("GET", "POST", "DELETE", "PUT")
-            .AllowAnyHeader());
+            .AllowAnyHeader()
+            .AllowCredentials());
 });
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -81,6 +84,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/notificationHub"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 var app = builder.Build();
@@ -99,5 +119,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();

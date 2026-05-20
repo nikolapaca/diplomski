@@ -82,30 +82,66 @@ namespace FakeTrello.Service
         public async Task<Result> Delete(string name, string username)
         {
             await _unitOfWork.BeginTransactionAsync();
-            try 
+
+            try
             {
                 var board = await GetByNameAndOwnerUsername(name, username);
-                if(board == null)
+                if (board == null)
                 {
+                    await _unitOfWork.RollbackAsync();
                     return Result.Fail("This board doesn't exist!");
                 }
+
+                var owner = await _userService.GetUserByUsername(username);
+                if (owner == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Owner doesn't exist!");
+                }
+
+                var boardMembers = board.UserBoards.ToList();
+
+                foreach (var member in boardMembers)
+                {
+                    if (member.UserId == owner.Id)
+                        continue;
+
+                    var notification = new Notification
+                    {
+                        RecipientUserId = member.UserId,
+                        CreatingUserId = owner.Id,
+                        BoardId = board.Id,
+                        Type = NotificationType.BOARD_DELETED,
+                        Message = $"Board '{board.Name}' has been deleted.",
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _unitOfWork.Notifications.Create(notification);
+                }
+
+                await _unitOfWork.SaveChangesAsync();
 
                 _unitOfWork.UserBoards.RemoveRange(board.UserBoards);
 
                 foreach (var list in board.Lists)
                 {
-                    foreach(var card in list.Cards)
+                    foreach (var card in list.Cards)
                     {
                         await _unitOfWork.Cards.Delete(card.Id);
                     }
 
                     await _unitOfWork.CardLists.Delete(list.Id);
                 }
+
                 await _unitOfWork.SaveChangesAsync();
+
                 await _unitOfWork.Boards.Delete(board.Id);
+
                 await _unitOfWork.SaveChangesAsync();
 
                 await _unitOfWork.CommitAsync();
+
                 return Result.Ok();
             }
             catch (Exception)
@@ -178,36 +214,120 @@ namespace FakeTrello.Service
 
         public async Task<Result> AddCollaboratorToBoard(BoardDTO boardDto, string username)
         {
-            var board = await _boardRepository.GetByNameAndOwnerUsername(boardDto.Name, boardDto.OwnerUsername);
-            if (board == null)
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
             {
-                return Result.Fail("This board doesnt exist!");
+                var board = await _boardRepository.GetByNameAndOwnerUsername(boardDto.Name, boardDto.OwnerUsername);
+                if (board == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This board doesnt exist!");
+                }
+
+                var user = await _userService.GetUserByUsername(username);
+                if (user == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This user doesnt exist!");
+                }
+
+                var owner = await _userService.GetUserByUsername(boardDto.OwnerUsername);
+                if (owner == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Owner doesnt exist!");
+                }
+
+                UserBoard ub = new UserBoard(user.Id, board.Id, UserRole.COLLABORATOR);
+                await _unitOfWork.UserBoards.CreateAsync(ub);
+                await _unitOfWork.SaveChangesAsync();
+
+                var notification = new Notification
+                {
+                    RecipientUserId = user.Id,
+                    CreatingUserId = owner.Id,
+                    BoardId = board.Id,
+                    Type = NotificationType.ADDED_TO_BOARD,
+                    Message = $"{owner.Username} added you to board '{board.Name}'.",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.Create(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _unitOfWork.CommitAsync();
+
+                return Result.Ok();
             }
-            var user = await _userService.GetUserByUsername(username);
-            if(user == null)
+            catch (Exception ex)
             {
-                return Result.Fail("This user doesnt exist!");
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail($"An error occurred while adding collaborator: {ex.Message}");
             }
-            UserBoard ub = new UserBoard(user.Id, board.Id, UserRole.COLLABORATOR);
-            await _userBoardService.Create(ub);
-            return Result.Ok();
         }
 
         public async Task<Result> RemoveCollaboratorFromBoard(BoardDTO boardDto, string username)
         {
-            var board = await _boardRepository.GetByNameAndOwnerUsername(boardDto.Name, boardDto.OwnerUsername);
-            if (board == null)
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
             {
-                return Result.Fail("This board doesnt exist!");
+                var board = await _boardRepository.GetByNameAndOwnerUsername(boardDto.Name, boardDto.OwnerUsername);
+                if (board == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This board doesnt exist!");
+                }
+
+                var user = await _userService.GetUserByUsername(username);
+                if (user == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This user doesnt exist!");
+                }
+
+                var owner = await _userService.GetUserByUsername(boardDto.OwnerUsername);
+                if (owner == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Owner doesnt exist!");
+                }
+
+                UserBoard ub = await _userBoardService.GetByUserIdAndBoardId(user.Id, board.Id);
+                if (ub == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This user is not collaborator on this board!");
+                }
+
+                await _unitOfWork.UserBoards.DeleteAsync(ub.UserId, ub.BoardId);
+                await _unitOfWork.SaveChangesAsync();
+
+                var notification = new Notification
+                {
+                    RecipientUserId = user.Id,
+                    CreatingUserId = owner.Id,
+                    BoardId = board.Id,
+                    Type = NotificationType.REMOVED_FROM_BOARD,
+                    Message = $"{owner.Username} removed you from board '{board.Name}'.",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.Notifications.Create(notification);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _unitOfWork.CommitAsync();
+
+                return Result.Ok();
             }
-            var user = await _userService.GetUserByUsername(username);
-            if (user == null)
+            catch (Exception ex)
             {
-                return Result.Fail("This user doesnt exist!");
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail($"An error occurred while removing collaborator: {ex.Message}");
             }
-            UserBoard ub = await _userBoardService.GetByUserIdAndBoardId(user.Id, board.Id);
-            await _userBoardService.Delete(ub);
-            return Result.Ok();
         }
     }
 }

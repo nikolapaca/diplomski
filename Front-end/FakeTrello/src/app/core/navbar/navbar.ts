@@ -10,6 +10,7 @@ import { Board } from '../model/board.model';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { NotificationService } from '../service/notification-service';
 
 @Component({
   selector: 'app-navbar',
@@ -29,7 +30,8 @@ export class Navbar implements OnInit {
     private router: Router,
     private authService: AuthService,
     private matDialog: MatDialog,
-    private boardService: BoardService
+    private boardService: BoardService,
+    private notificationService: NotificationService
   ) {}
 
   public ngOnInit(): void {
@@ -51,6 +53,13 @@ export class Navbar implements OnInit {
         const lowercaseSearchTerms = searchTerm?.toLowerCase().trim();
         this.boardService.search(lowercaseSearchTerms || '');
       });
+    
+    this.notificationService.startConnection();
+
+    this.notificationService.addNotificationListener((notification) => {
+      console.log('NOTIFICATION RECEIVED:', notification);
+    });
+
   }
 
   public createBoard(): void {

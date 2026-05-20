@@ -8,6 +8,8 @@ namespace FakeTrello.Data.Contract
         IUserBoardRepository UserBoards { get; }
         ICardListRepository CardLists { get; }
         ICardRepository Cards { get; }
+        ICardAssigneeRepository CardAssignees { get; }
+        INotificationRepository Notifications { get; }
 
         Task BeginTransactionAsync();
         Task CommitAsync();

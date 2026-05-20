@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -100,7 +101,6 @@ namespace FakeTrello.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     CardListId = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true),
                     Index = table.Column<int>(type: "integer", nullable: false),
                     CreatedByUserId = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false)
@@ -147,6 +147,48 @@ namespace FakeTrello.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RecipientUserId = table.Column<int>(type: "integer", nullable: false),
+                    CreatingUserId = table.Column<int>(type: "integer", nullable: false),
+                    BoardId = table.Column<int>(type: "integer", nullable: true),
+                    CardId = table.Column<int>(type: "integer", nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Message = table.Column<string>(type: "text", nullable: false),
+                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Notifications_Boards_BoardId",
+                        column: x => x.BoardId,
+                        principalTable: "Boards",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Notifications_Cards_CardId",
+                        column: x => x.CardId,
+                        principalTable: "Cards",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Notifications_Users_CreatingUserId",
+                        column: x => x.CreatingUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Notifications_Users_RecipientUserId",
+                        column: x => x.RecipientUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_CardAssignees_UserId_BoardId",
                 table: "CardAssignees",
@@ -168,6 +210,26 @@ namespace FakeTrello.Migrations
                 column: "CreatedByUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Notifications_BoardId",
+                table: "Notifications",
+                column: "BoardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_CardId",
+                table: "Notifications",
+                column: "CardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_CreatingUserId",
+                table: "Notifications",
+                column: "CreatingUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_RecipientUserId",
+                table: "Notifications",
+                column: "RecipientUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserBoards_BoardId",
                 table: "UserBoards",
                 column: "BoardId");
@@ -180,10 +242,13 @@ namespace FakeTrello.Migrations
                 name: "CardAssignees");
 
             migrationBuilder.DropTable(
-                name: "Cards");
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "UserBoards");
+
+            migrationBuilder.DropTable(
+                name: "Cards");
 
             migrationBuilder.DropTable(
                 name: "CardLists");

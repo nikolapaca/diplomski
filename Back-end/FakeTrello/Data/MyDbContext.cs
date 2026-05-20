@@ -15,6 +15,7 @@ namespace FakeTrello.Data
         public DbSet<UserBoard> UserBoards { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<CardList> CardLists { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
         public DbSet<CardAssignee> CardAssignees { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

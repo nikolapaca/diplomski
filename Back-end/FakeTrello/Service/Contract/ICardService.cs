@@ -11,9 +11,9 @@ namespace FakeTrello.Service.Contract
         Task<Result<CardDTO>> Update(CardDTO cardLDTO);
         Task<Result<List<CardDTO>>> GetByListId(int listId);
         Task<Result> Delete(int id);
-        Task<Result> AssignCardToUser(CardDTO cardDto, string username);
+        Task<Result> AssignCardToUser(CardDTO cardDto, string username, string creatingUserUsername);
         Task<Result<List<UserDTO>>> GetUsersAssignedToCard(int cardId);
-        Task<Result> UnassignCardToUser(CardDTO cardDto, string username);
+        Task<Result> UnassignCardToUser(CardDTO cardDto, string username, string unassigningUserUsername);
         Task<Result> ReorderCardInsideList(int cardId, int newIndex);
         Task<Result> ReorderCardOutsideList(int cardId, int targetListId, int targetIndex);
     }

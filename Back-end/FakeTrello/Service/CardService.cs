@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FakeTrello.Data.Contract;
 using FakeTrello.DTO;
 using FakeTrello.Model;
 using FakeTrello.Model.Enum;
@@ -17,14 +18,18 @@ namespace FakeTrello.Service
         private readonly IUserService _userService;
         private readonly ICardAssigneeService _cardAssigneeService;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
 
-        public CardService(ICardRepository cardRepository, IMapper mapper, ICardListService cardListService, IUserService userService, ICardAssigneeService cardAssigneeService)
+        public CardService(ICardRepository cardRepository, IMapper mapper, ICardListService cardListService, IUserService userService, ICardAssigneeService cardAssigneeService, IUnitOfWork unitOfWork, INotificationService notificationService)
         {
             _cardRepository = cardRepository;
             _mapper = mapper;
             _cardListService = cardListService;
             _userService = userService;
             _cardAssigneeService = cardAssigneeService;
+            _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<CardDTO>> Create(int cardListId, CardDTO cardDTO, int userId)
@@ -141,65 +146,131 @@ namespace FakeTrello.Service
             return cardsDTO;
         }
 
-        public async Task<Result> AssignCardToUser(CardDTO cardDto, string username)
+        public async Task<Result> AssignCardToUser(CardDTO cardDto, string username, string creatingUserUsername)
         {
-            var user = await _userService.GetUserByUsername(username);
-            if (user == null)
-            {
-                return Result.Fail("This user doesn't exist!");
-            }
-
-            var card = await _cardRepository.GetById(cardDto.Id);
-            if (card == null)
-            {
-                return Result.Fail("This card doesn't exist!");
-            }
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
+                var user = await _userService.GetUserByUsername(username);
+                if (user == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This user doesn't exist!");
+                }
+
+                var creatingUser = await _userService.GetUserByUsername(creatingUserUsername);
+                if (creatingUser == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Creating user doesn't exist!");
+                }
+
+                var card = await _cardRepository.GetById(cardDto.Id);
+                if (card == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This card doesn't exist!");
+                }
+
                 var boardId = card.CardList.BoardId;
 
-                CardAssignee ca = new CardAssignee(card.Id, user.Id, boardId);
-                await _cardAssigneeService.Create(ca);
+                var cardAssignee = new CardAssignee(card.Id, user.Id, boardId);
+                await _unitOfWork.CardAssignees.CreateAsync(cardAssignee);
+                await _unitOfWork.SaveChangesAsync();
+
+                if (user.Id != creatingUser.Id)
+                {
+                    await _notificationService.Create(
+                        recipientUserId: user.Id,
+                        creatingUserId: creatingUser.Id,
+                        type: NotificationType.ASSIGNED_TO_CARD,
+                        message: $"{creatingUser.Username} assigned you to card '{card.Name}'.",
+                        boardId: boardId,
+                        cardId: card.Id
+                    );
+                }
+
+                await _unitOfWork.CommitAsync();
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackAsync();
                 return Result.Fail($"An error occurred during assignment: {ex.Message}");
             }
         }
 
-        public async Task<Result> UnassignCardToUser(CardDTO cardDto, string username)
+        public async Task<Result> UnassignCardToUser(CardDTO cardDto, string username, string unassigningUserUsername)
         {
-            var user = await _userService.GetUserByUsername(username);
-            if (user == null)
-            {
-                return Result.Fail("This user doesn't exist!");
-            }
-
-            var card = await _cardRepository.GetById(cardDto.Id);
-            if (card == null)
-            {
-                return Result.Fail("This card doesn't exist!");
-            }
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
+                var user = await _userService.GetUserByUsername(username);
+                if (user == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This user doesn't exist!");
+                }
+
+                var unassigningUser = await _userService.GetUserByUsername(unassigningUserUsername);
+                if (unassigningUser == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Unassigning user doesn't exist!");
+                }
+
+                var card = await _cardRepository.GetById(cardDto.Id);
+                if (card == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This card doesn't exist!");
+                }
+
                 var boardId = card.CardList.BoardId;
 
                 var cardAssignee = await _cardAssigneeService.GetById(card.Id, user.Id, boardId);
                 if (cardAssignee == null)
                 {
+                    await _unitOfWork.RollbackAsync();
                     return Result.Fail("This user is not assigned to this card!");
                 }
 
-                await _cardAssigneeService.Delete(cardAssignee.CardId, cardAssignee.UserId, cardAssignee.BoardId);
+                await _unitOfWork.CardAssignees.Delete(
+                    cardAssignee.CardId,
+                    cardAssignee.UserId,
+                    cardAssignee.BoardId
+                );
+
+                await _unitOfWork.SaveChangesAsync();
+
+                if (user.Id != unassigningUser.Id)
+                {
+                    var notification = new Notification
+                    {
+                        RecipientUserId = user.Id,
+                        CreatingUserId = unassigningUser.Id,
+                        BoardId = boardId,
+                        CardId = card.Id,
+                        Type = NotificationType.UNASSIGNED_FROM_CARD,
+                        Message = $"{unassigningUser.Username} unassigned you from card '{card.Name}'.",
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _unitOfWork.Notifications.Create(notification);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                await _unitOfWork.CommitAsync();
 
                 return Result.Ok();
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackAsync();
                 return Result.Fail($"An error occurred during unassignment: {ex.Message}");
             }
         }
