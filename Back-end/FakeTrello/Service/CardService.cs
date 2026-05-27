@@ -248,20 +248,14 @@ namespace FakeTrello.Service
 
                 if (user.Id != unassigningUser.Id)
                 {
-                    var notification = new Notification
-                    {
-                        RecipientUserId = user.Id,
-                        CreatingUserId = unassigningUser.Id,
-                        BoardId = boardId,
-                        CardId = card.Id,
-                        Type = NotificationType.UNASSIGNED_FROM_CARD,
-                        Message = $"{unassigningUser.Username} unassigned you from card '{card.Name}'.",
-                        IsRead = false,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    await _unitOfWork.Notifications.Create(notification);
-                    await _unitOfWork.SaveChangesAsync();
+                    await _notificationService.Create(
+                        recipientUserId: user.Id,
+                        creatingUserId: unassigningUser.Id,
+                        type: NotificationType.UNASSIGNED_FROM_CARD,
+                        message: $"{unassigningUser.Username} unassigned you from card '{card.Name}'.",
+                        boardId: boardId,
+                        cardId: card.Id
+                    );
                 }
 
                 await _unitOfWork.CommitAsync();

@@ -3,7 +3,7 @@ import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../service/auth-service';
 import { MatDialog } from '@angular/material/dialog';
 import { CreateBoardDialog } from '../dialog/create-board-dialog/create-board-dialog';
-import { FormControl, ReactiveFormsModule, ɵInternalFormsSharedModule } from "@angular/forms";
+import { FormControl, ReactiveFormsModule, ɵInternalFormsSharedModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, filter } from 'rxjs';
 import { BoardService } from '../service/board.service';
 import { Board } from '../model/board.model';
@@ -11,11 +11,20 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { NotificationService } from '../service/notification-service';
+import { Notification } from '../model/notification.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
-  imports: [ɵInternalFormsSharedModule, ReactiveFormsModule, 
-    MatToolbarModule, MatButtonModule, MatIconModule, RouterModule],
+  imports: [
+    CommonModule,
+    ɵInternalFormsSharedModule,
+    ReactiveFormsModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    RouterModule
+  ],
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css']
 })
@@ -24,14 +33,14 @@ export class Navbar implements OnInit {
   public searchControl = new FormControl('');
   public errorMessage = '';
   public hideSearch = false;
-
+  public showNotifications = false;
 
   public constructor(
     private router: Router,
     private authService: AuthService,
     private matDialog: MatDialog,
     private boardService: BoardService,
-    private notificationService: NotificationService
+    public notificationService: NotificationService
   ) {}
 
   public ngOnInit(): void {
@@ -41,9 +50,16 @@ export class Navbar implements OnInit {
         const urlSegments = event.url.split('/');
         this.hideSearch = urlSegments[1] === 'boards' && urlSegments.length === 4;
       });
+
     this.authService.isLoggedIn$.subscribe(status => {
       this.isLoggedIn = status;
+
+      if (this.isLoggedIn) {
+        this.notificationService.loadNotifications();
+        this.notificationService.startConnection();
+      }
     });
+
     this.searchControl.valueChanges
       .pipe(
         debounceTime(500),
@@ -53,20 +69,68 @@ export class Navbar implements OnInit {
         const lowercaseSearchTerms = searchTerm?.toLowerCase().trim();
         this.boardService.search(lowercaseSearchTerms || '');
       });
-    
-    this.notificationService.startConnection();
+  }
 
-    this.notificationService.addNotificationListener((notification) => {
-      console.log('NOTIFICATION RECEIVED:', notification);
-    });
+  public toggleNotifications(): void {
+    this.showNotifications = !this.showNotifications;
+  }
 
+  public openNotification(notification: Notification): void {
+    console.log('CLICKED NOTIFICATION:', notification);
+    console.log('NOTIFICATION CLICK:', notification);
+
+    if (!notification.isRead) {
+      this.notificationService.markAsRead(notification.id).subscribe({
+        next: () => {
+          this.notificationService.notifications.update(current =>
+            current.map(n =>
+              n.id === notification.id ? { ...n, isRead: true } : n
+            )
+          );
+
+          this.notificationService.unreadCount.update(count =>
+            count > 0 ? count - 1 : 0
+          );
+        }
+      });
+    }
+
+    this.showNotifications = false;
+
+    if (!notification.boardOwnerUsername || !notification.boardName) {
+      console.log('Missing board redirect data', notification);
+      return;
+    }
+
+    const type = notification.type;
+
+    if (notification.type === 'ADDED_TO_BOARD' || notification.type === 0) {
+      this.router.navigate([
+        '/boards',
+        notification.boardOwnerUsername,
+        notification.boardName
+      ]);
+
+      return;
+    }
+
+    if (type === 'ASSIGNED_TO_CARD' || type === 2) {
+      this.router.navigate(
+        [`/boards/${notification.boardOwnerUsername}/${notification.boardName}`],
+        {
+          queryParams: {
+            cardId: notification.cardId
+          }
+        }
+      );
+      return;
+    }
   }
 
   public createBoard(): void {
     const dialogRef = this.matDialog.open(CreateBoardDialog, {
       width: '1800px'
     });
-    
 
     dialogRef.componentInstance.boardSubmitted.subscribe((board: Board) => {
       this.boardService.createBoard(board).subscribe({
@@ -76,6 +140,7 @@ export class Navbar implements OnInit {
         },
         error: (error) => {
           let errorMessage = 'Something went wrong. Please try again.';
+
           if (error.error && typeof error.error === 'string') {
             errorMessage = error.error;
           } else if (error.error && error.error.errors) {
@@ -84,6 +149,7 @@ export class Navbar implements OnInit {
               errorMessage = firstError[0];
             }
           }
+
           dialogRef.componentInstance.setBackendError(errorMessage);
         }
       });
@@ -91,12 +157,15 @@ export class Navbar implements OnInit {
   }
 
   public signOut(): void {
-    localStorage.removeItem("access-token");
+    localStorage.removeItem('access-token');
     this.isLoggedIn = false;
+    this.showNotifications = false;
+    this.notificationService.notifications.set([]);
+    this.notificationService.unreadCount.set(0);
     this.router.navigate(['']);
   }
 
-  public returnToHome() : void {
-    this.router.navigate(['home'])
+  public returnToHome(): void {
+    this.router.navigate(['home']);
   }
 }

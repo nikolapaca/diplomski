@@ -61,6 +61,7 @@ export class BoardOverview implements OnInit {
   public board: Board | undefined;
   public boardOwnerUsername: string | null = null;
   public boardName: string | null = null;
+  public highlightedCardId: number | null = null;
   public showAddListForm = false;
   public cardLists: CardListView[] = [];
   public addListForm: FormGroup;
@@ -88,6 +89,11 @@ export class BoardOverview implements OnInit {
 
   public ngOnInit(): void {
     this.loggedInUsername = this.authService.getLoggedInUser() || '';
+    this.route.queryParamMap.subscribe(params => {
+      const cardId = params.get('cardId');
+      this.highlightedCardId = cardId ? Number(cardId) : null;
+      this.cd.markForCheck();
+    });
     this.route.paramMap.subscribe(params => {
       this.boardOwnerUsername = params.get('username');
       this.boardName = params.get('boardName');
@@ -256,6 +262,10 @@ export class BoardOverview implements OnInit {
 
   }
 
+  public clearHighlight(): void {
+    this.highlightedCardId = null;
+  }
+
   public toggleAddCardForm(list: CardListView) {
     list.showAddCardForm = true;
   }
@@ -328,7 +338,7 @@ export class BoardOverview implements OnInit {
   }
 
   public leaveBoard(){
-    this.boardService.removeCollaborator(this.board, this.loggedInUsername).subscribe({
+    this.boardService.leaveBoard(this.board).subscribe({
       next: (_) => {
         this.router.navigate(['home'])
       }

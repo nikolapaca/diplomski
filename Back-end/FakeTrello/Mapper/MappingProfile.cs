@@ -21,8 +21,9 @@ namespace FakeTrello.Mapper
                 opt => opt.MapFrom(src =>
                     src.Board != null
                         ? src.Board.UserBoards
-                            .FirstOrDefault(ub => ub.UserRole == UserRole.OWNER)!
-                            .User.Username
+                        .Where(ub => ub.UserRole == UserRole.OWNER)
+                        .Select(ub => ub.User.Username)
+                        .FirstOrDefault()
                         : null)
             );
 

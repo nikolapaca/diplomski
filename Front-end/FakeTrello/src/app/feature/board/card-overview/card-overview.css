@@ -63,3 +63,25 @@ mat-card-header mat-card-title {
   color: #666;
   text-align: right;
 }
+
+.highlighted-card {
+  outline: 3px solid #ffb300;
+  box-shadow: 0 0 0 4px rgba(255, 179, 0, 0.25);
+  animation: pulse-highlight 1.2s ease-in-out 3;
+}
+
+@keyframes pulse-highlight {
+
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.025);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+
+}

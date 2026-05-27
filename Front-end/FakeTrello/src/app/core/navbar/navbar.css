@@ -66,7 +66,8 @@
 
 .create-button,
 .edit-profile-button,
-.sign-out-button {
+.sign-out-button,
+.notification-button {
   padding: 8px 12px;
   border: none;
   border-radius: 4px;
@@ -79,7 +80,95 @@
 
 .create-button:hover,
 .edit-profile-button:hover,
-.sign-out-button:hover {
+.sign-out-button:hover,
+.notification-button:hover {
   background-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
+}
+
+.notification-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notification-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-button mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff3b30;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  width: 360px;
+  max-height: 430px;
+  overflow-y: auto;
+  background: white;
+  color: #222;
+  border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+  z-index: 3000;
+}
+
+.notification-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e5e5;
+  color: #222;
+}
+
+.notification-empty {
+  padding: 18px;
+  text-align: center;
+  color: #777;
+}
+
+.notification-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eeeeee;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.notification-item:hover {
+  background: #f5f7fb;
+}
+
+.notification-item.unread {
+  background: #eaf4ff;
+}
+
+.notification-item p {
+  margin: 0 0 5px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.notification-item span {
+  color: #777;
+  font-size: 12px;
 }

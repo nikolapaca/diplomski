@@ -24,8 +24,12 @@ import { CardDetailsDialogComponent } from '../../../core/dialog/card-details-di
 export class CardOverview implements OnInit {
   @Input() public card!: Card;
   @Input() public board!: Board;
+  @Input() public highlightedCardId: number | null = null;
+
   @Output() public cardDeleted = new EventEmitter<number>();
   @Output() public cardUpdated = new EventEmitter<void>();
+  @Output() public highlightCleared = new EventEmitter<void>();
+
   public showUpdateCardForm = false;
   public updateCardForm!: FormGroup;
   public errorMessage = '';
@@ -37,6 +41,14 @@ export class CardOverview implements OnInit {
   public ngOnInit(): void 
   {
     this.loggedInUsername = this.userService.getUsername();
+  }
+
+  public onCardClick(event: MouseEvent): void {
+    if (this.highlightedCardId === this.card.id) {
+    this.highlightCleared.emit();
+    }
+
+    this.openCardDetails(event);
   }
 
   public deleteCard() : void {

@@ -71,6 +71,10 @@ export class BoardService {
     return this.http.post<void>(`${environment.api}/boards/collaborator/add/${username}`, board);
   }
 
+  public leaveBoard(board: Board | undefined): Observable<void> {
+    return this.http.post<void>(`${environment.api}/boards/leave`, board);
+  }
+
   public deleteBoard(name: string | null, username: string | null): Observable<void> {
     return this.http.delete<void>(`${environment.api}/boards/${name}/${username}`).pipe(
       tap(() => {

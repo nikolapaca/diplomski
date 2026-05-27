@@ -16,15 +16,17 @@ namespace FakeTrello.Service
         private readonly IUserService _userService;
         private readonly IUserBoardService _userBoardService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
         private readonly IMapper _mapper;
 
-        public BoardService(IBoardRepository boardRepository, IMapper mapper, IUserService userService, IUserBoardService userBoardService, IUnitOfWork uow)
+        public BoardService(IBoardRepository boardRepository, IMapper mapper, IUserService userService, IUserBoardService userBoardService, IUnitOfWork uow, INotificationService notificationService)
         {
             _boardRepository = boardRepository;
             _mapper = mapper;
             _userService = userService;
             _userBoardService = userBoardService;
             _unitOfWork = uow;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<BoardDTO>> Create(BoardDTO boardDto, string username)
@@ -243,19 +245,13 @@ namespace FakeTrello.Service
                 await _unitOfWork.UserBoards.CreateAsync(ub);
                 await _unitOfWork.SaveChangesAsync();
 
-                var notification = new Notification
-                {
-                    RecipientUserId = user.Id,
-                    CreatingUserId = owner.Id,
-                    BoardId = board.Id,
-                    Type = NotificationType.ADDED_TO_BOARD,
-                    Message = $"{owner.Username} added you to board '{board.Name}'.",
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _unitOfWork.Notifications.Create(notification);
-                await _unitOfWork.SaveChangesAsync();
+                await _notificationService.Create(
+                    recipientUserId: user.Id,
+                    creatingUserId: owner.Id,
+                    type: NotificationType.ADDED_TO_BOARD,
+                    message: $"{owner.Username} added you to board '{board.Name}'.",
+                    boardId: board.Id
+                );
 
                 await _unitOfWork.CommitAsync();
 
@@ -305,19 +301,13 @@ namespace FakeTrello.Service
                 await _unitOfWork.UserBoards.DeleteAsync(ub.UserId, ub.BoardId);
                 await _unitOfWork.SaveChangesAsync();
 
-                var notification = new Notification
-                {
-                    RecipientUserId = user.Id,
-                    CreatingUserId = owner.Id,
-                    BoardId = board.Id,
-                    Type = NotificationType.REMOVED_FROM_BOARD,
-                    Message = $"{owner.Username} removed you from board '{board.Name}'.",
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _unitOfWork.Notifications.Create(notification);
-                await _unitOfWork.SaveChangesAsync();
+                await _notificationService.Create(
+                    recipientUserId: user.Id,
+                    creatingUserId: owner.Id,
+                    type: NotificationType.REMOVED_FROM_BOARD,
+                    message: $"{owner.Username} removed you from board '{board.Name}'.",
+                    boardId: board.Id
+                );
 
                 await _unitOfWork.CommitAsync();
 
@@ -327,6 +317,59 @@ namespace FakeTrello.Service
             {
                 await _unitOfWork.RollbackAsync();
                 return Result.Fail($"An error occurred while removing collaborator: {ex.Message}");
+            }
+        }
+
+        public async Task<Result> LeaveBoard(BoardDTO boardDto, string username)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
+            {
+                var board = await _boardRepository.GetByNameAndOwnerUsername(
+                    boardDto.Name,
+                    boardDto.OwnerUsername
+                );
+
+                if (board == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This board doesnt exist!");
+                }
+
+                var user = await _userService.GetUserByUsername(username);
+
+                if (user == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This user doesnt exist!");
+                }
+
+                var userBoard = await _userBoardService.GetByUserIdAndBoardId(user.Id, board.Id);
+
+                if (userBoard == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("User is not on this board!");
+                }
+
+                if (userBoard.UserRole == UserRole.OWNER)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Owner cannot leave his own board!");
+                }
+
+                await _unitOfWork.UserBoards.DeleteAsync(userBoard.UserId, userBoard.BoardId);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _unitOfWork.CommitAsync();
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail($"Failed to leave board: {ex.Message}");
             }
         }
     }

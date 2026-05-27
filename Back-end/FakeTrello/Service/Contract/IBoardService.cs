@@ -16,5 +16,6 @@ namespace FakeTrello.Service.Contract
         Task<Result> Delete(string name, string username);
         Task<Result> AddCollaboratorToBoard(BoardDTO boardDto, string username);
         Task<Result> RemoveCollaboratorFromBoard(BoardDTO boardDto, string username);
+        Task<Result> LeaveBoard(BoardDTO boardDto, string username);
     }
 }

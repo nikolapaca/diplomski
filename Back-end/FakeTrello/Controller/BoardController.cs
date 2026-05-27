@@ -208,5 +208,25 @@ namespace FakeTrello.Controller
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+        [HttpPost("leave")]
+        public async Task<ActionResult> LeaveBoard([FromBody] BoardDTO boardDto)
+        {
+            var username = HttpContext.User.FindFirst("username")?.Value;
+
+            if (string.IsNullOrEmpty(username))
+            {
+                return Unauthorized("Token does not contain required username.");
+            }
+
+            var result = await _boardService.LeaveBoard(boardDto, username);
+
+            if (result.IsFailed)
+            {
+                return BadRequest(result.Errors.First().Message);
+            }
+
+            return Ok();
+        }
     }
 }

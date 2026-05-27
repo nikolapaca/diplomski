@@ -28,6 +28,44 @@
     }
 
     @if(isLoggedIn){
+    <div class="notification-wrapper">
+      <button class="notification-button" (click)="toggleNotifications()">
+        <mat-icon>notifications</mat-icon>
+
+        @if(notificationService.unreadCount() > 0){
+        <span class="notification-badge">
+          {{ notificationService.unreadCount() }}
+        </span>
+        }
+      </button>
+
+      @if(showNotifications){
+      <div class="notification-dropdown">
+        <div class="notification-header">
+          <strong>Notifications</strong>
+        </div>
+
+        @if(notificationService.notifications().length === 0){
+        <div class="notification-empty">
+          No notifications.
+        </div>
+        }
+
+        @for(notification of notificationService.notifications(); track notification.id){
+        <div
+          class="notification-item"
+          [class.unread]="!notification.isRead"
+          (click)="openNotification(notification)">
+          <p>{{ notification.message }}</p>
+          <span>{{ notification.createdAt | date:'short' }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    @if(isLoggedIn){
     <button class="sign-out-button" (click)="signOut()">
       Sign out
     </button>

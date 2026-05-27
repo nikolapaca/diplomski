@@ -116,8 +116,10 @@
             (cdkDragEnded)="onCardDragEnded()"
             (cardDeleted)="onCardDeleted(list.id)"
             (cardUpdated)="onCardUpdated(list.id)"
+            (highlightCleared)="clearHighlight()"
             [card]="card"
             [board]="board"
+            [highlightedCardId]="highlightedCardId"
           ></app-card-overview>
           }
           }
