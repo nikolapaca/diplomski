@@ -19,4 +19,8 @@
   <div *ngIf="users.length === 0" class="no-users-found">
     No users found.
   </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
 </div>

@@ -1,0 +1,30 @@
+<div class="activity-wrapper">
+  <button class="activity-button" (click)="toggleActivity()">
+    <mat-icon>history</mat-icon>
+    Activity
+  </button>
+
+  @if(showActivity){
+  <div class="activity-dropdown">
+    <div class="activity-header">
+      <strong>Board activity</strong>
+    </div>
+
+    @if(boardActivityService.activities().length === 0){
+    <div class="activity-empty">
+      No activity yet.
+    </div>
+    }
+
+    @for(activity of boardActivityService.activities(); track activity.id){
+    <div class="activity-item">
+      <mat-icon class="activity-icon">{{ iconFor(activity.type) }}</mat-icon>
+      <div class="activity-content">
+        <p>{{ activity.message }}</p>
+        <span>{{ activity.createdAt | date:'short' }}</span>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>

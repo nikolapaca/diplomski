@@ -43,11 +43,17 @@
       <div class="notification-dropdown">
         <div class="notification-header">
           <strong>Notifications</strong>
+          @if(notificationService.unreadCount() > 0){
+          <button class="mark-all-read-button" (click)="markAllNotificationsAsRead()">
+            Mark all as read
+          </button>
+          }
         </div>
 
         @if(notificationService.notifications().length === 0){
         <div class="notification-empty">
-          No notifications.
+          <mat-icon>notifications_none</mat-icon>
+          <span>No notifications yet.</span>
         </div>
         }
 
@@ -56,8 +62,14 @@
           class="notification-item"
           [class.unread]="!notification.isRead"
           (click)="openNotification(notification)">
-          <p>{{ notification.message }}</p>
-          <span>{{ notification.createdAt | date:'short' }}</span>
+          <mat-icon class="notification-icon">{{ iconFor(notification.type) }}</mat-icon>
+          <div class="notification-content">
+            <p>{{ notification.message }}</p>
+            <span>{{ notification.createdAt | date:'short' }}</span>
+          </div>
+          @if(!notification.isRead){
+          <span class="unread-dot"></span>
+          }
         </div>
         }
       </div>

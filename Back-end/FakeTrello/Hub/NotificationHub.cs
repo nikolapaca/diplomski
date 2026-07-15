@@ -31,5 +31,20 @@ namespace FakeTrello.Hub
 
             await base.OnDisconnectedAsync(exception);
         }
+
+        public async Task JoinBoardGroup(string ownerUsername, string boardName)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, GetBoardGroupName(ownerUsername, boardName));
+        }
+
+        public async Task LeaveBoardGroup(string ownerUsername, string boardName)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, GetBoardGroupName(ownerUsername, boardName));
+        }
+
+        public static string GetBoardGroupName(string ownerUsername, string boardName)
+        {
+            return $"board-{ownerUsername}-{boardName}";
+        }
     }
 }

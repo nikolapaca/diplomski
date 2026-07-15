@@ -104,7 +104,7 @@ namespace FakeTrello.Controller
 
         [HttpGet("{name}/{username}")]
         public async Task<ActionResult<List<BoardDTO>>> GetByNameAndUsername(string name, string username)
-            {
+        {
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(username))
             {
                 return BadRequest("");
@@ -168,13 +168,19 @@ namespace FakeTrello.Controller
         [HttpPost("collaborator/add/{username}")]
         public async Task<ActionResult> AddCollaboratorToBoard([FromBody] BoardDTO boardDto, string username)
         {
-            if(!ModelState.IsValid || string.IsNullOrEmpty(username))
+            if (!ModelState.IsValid || string.IsNullOrEmpty(username))
             {
                 return BadRequest();
             }
             try
             {
-                await _boardService.AddCollaboratorToBoard(boardDto, username);
+                var result = await _boardService.AddCollaboratorToBoard(boardDto, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Collaborator added successfully." });
             }
             catch (InvalidOperationException ex)
@@ -196,7 +202,13 @@ namespace FakeTrello.Controller
             }
             try
             {
-                await _boardService.RemoveCollaboratorFromBoard(boardDto, username);
+                var result = await _boardService.RemoveCollaboratorFromBoard(boardDto, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Collaborator deleted successfully." });
             }
             catch (InvalidOperationException ex)

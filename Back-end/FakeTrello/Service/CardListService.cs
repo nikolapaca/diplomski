@@ -12,22 +12,28 @@ namespace FakeTrello.Service
     {
         private readonly ICardListRepository _cardListRepository;
         private readonly IBoardService _boardService;
+        private readonly IUserService _userService;
+        private readonly IUserBoardService _userBoardService;
+        private readonly IBoardActivityService _boardActivityService;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
 
-        public CardListService(ICardListRepository cardListRepository, IMapper mapper, IBoardService boardService, IUnitOfWork unitOfWork)
+        public CardListService(ICardListRepository cardListRepository, IMapper mapper, IBoardService boardService, IUnitOfWork unitOfWork, IUserService userService, IUserBoardService userBoardService, IBoardActivityService boardActivityService)
         {
             _cardListRepository = cardListRepository;
             _mapper = mapper;
             _boardService = boardService;
             _unitOfWork = unitOfWork;
+            _userService = userService;
+            _userBoardService = userBoardService;
+            _boardActivityService = boardActivityService;
         }
 
-        public async Task<Result<CardListDTO>> Create(CardListDTO cardListDTO)
+        public async Task<Result<CardListDTO>> Create(CardListDTO cardListDTO, string username)
         {
             CardList cardList = _mapper.Map<CardListDTO, CardList>(cardListDTO);
             Board? board = await _boardService.GetByNameAndOwnerUsername(cardListDTO.BoardName, cardListDTO.BoardUsername);
-            if(board == null)
+            if (board == null)
             {
                 return Result.Fail("Board doesn't exist!");
             }
@@ -35,6 +41,18 @@ namespace FakeTrello.Service
             var index = await _cardListRepository.GetMaxIndexForCardListAsync(board.Id);
             cardList.Index = index is null ? 1 : (int)index + 1;
             await _cardListRepository.Create(cardList);
+
+            var user = await _userService.GetUserByUsername(username);
+            if (user != null)
+            {
+                await _boardActivityService.Create(
+                    boardId: board.Id,
+                    creatingUserId: user.Id,
+                    type: ActivityType.LIST_CREATED,
+                    message: $"{user.Username} created list '{cardList.Name}'."
+                );
+            }
+
             return Result.Ok(_mapper.Map<CardList, CardListDTO>(cardList));
         }
 
@@ -45,7 +63,22 @@ namespace FakeTrello.Service
 
         public async Task<Result<CardListDTO>> GetById(int id)
         {
-            return _mapper.Map<CardList?, CardListDTO>(await _cardListRepository.GetById(id));
+            var cardList = await _cardListRepository.GetById(id);
+            if (cardList == null)
+            {
+                return Result.Fail("CardList with the given ID was not found.");
+            }
+
+            var cardListDto = _mapper.Map<CardList, CardListDTO>(cardList);
+
+            var boardResult = await _boardService.GetById(cardList.BoardId);
+            if (boardResult.IsSuccess)
+            {
+                cardListDto.BoardName = boardResult.Value.Name;
+                cardListDto.BoardUsername = await _userBoardService.GetUsernameOfBoardOwner(cardList.BoardId);
+            }
+
+            return Result.Ok(cardListDto);
         }
 
         public async Task<Result<List<CardListDTO>>> GetByBoardNameAndBoardOwner(string boardName, string boardOwnerUsername)
@@ -53,7 +86,7 @@ namespace FakeTrello.Service
             return _mapper.Map<List<CardList>, List<CardListDTO>>(await _cardListRepository.GetByBoardOwnerAndBoardName(boardName, boardOwnerUsername));
         }
 
-        public async Task<Result<CardListDTO>> Update(CardListDTO cardListDTO)
+        public async Task<Result<CardListDTO>> Update(CardListDTO cardListDTO, string username)
         {
             CardList cardList = await _cardListRepository.GetById(cardListDTO.Id);
             if (cardList == null)
@@ -70,6 +103,17 @@ namespace FakeTrello.Service
                     return Result.Fail("Failed to update the CardList.");
                 }
 
+                var user = await _userService.GetUserByUsername(username);
+                if (user != null)
+                {
+                    await _boardActivityService.Create(
+                        boardId: updatedCardList.BoardId,
+                        creatingUserId: user.Id,
+                        type: ActivityType.LIST_UPDATED,
+                        message: $"{user.Username} renamed list to '{updatedCardList.Name}'."
+                    );
+                }
+
                 return Result.Ok(_mapper.Map<CardList, CardListDTO>(updatedCardList));
             }
             catch (Exception ex)
@@ -78,7 +122,7 @@ namespace FakeTrello.Service
             }
         }
 
-        public async Task<Result> Delete(int id)
+        public async Task<Result> Delete(int id, string username)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -89,12 +133,27 @@ namespace FakeTrello.Service
                 {
                     return Result.Fail(getByIdResult.Errors.First().Message);
                 }
-                
-                foreach(var card in getByIdResult.Value.Cards)
+
+                var cardListEntity = await _cardListRepository.GetById(id);
+                var boardId = cardListEntity.BoardId;
+                var listName = getByIdResult.Value.Name;
+
+                foreach (var card in getByIdResult.Value.Cards)
                 {
                     await _unitOfWork.Cards.Delete(card.Id);
                 }
                 await _unitOfWork.CardLists.Delete(id);
+
+                var user = await _userService.GetUserByUsername(username);
+                if (user != null)
+                {
+                    await _boardActivityService.Create(
+                        boardId: boardId,
+                        creatingUserId: user.Id,
+                        type: ActivityType.LIST_DELETED,
+                        message: $"{user.Username} deleted list '{listName}'."
+                    );
+                }
 
                 await _unitOfWork.CommitAsync();
                 return Result.Ok();

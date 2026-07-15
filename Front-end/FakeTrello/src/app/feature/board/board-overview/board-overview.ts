@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Board } from '../../../core/model/board.model';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
-
+import { BoardActivityPanel } from '../board-activity/board-activity';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CardList } from '../../../core/model/cardList.model';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -52,7 +52,8 @@ import {
     MatCardHeader,
     MatCardContent,
     MatCardTitle,
-    MatMenuModule
+    MatMenuModule,
+    BoardActivityPanel
   ],
   templateUrl: './board-overview.html',
   styleUrl: './board-overview.css'

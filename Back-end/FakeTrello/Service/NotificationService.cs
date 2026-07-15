@@ -115,5 +115,25 @@ namespace FakeTrello.Service
 
             return Result.Ok();
         }
+
+        public async Task<Result> MarkAllAsRead(string username)
+        {
+            var user = await _userRepository.GetByUsername(username);
+
+            if (user == null)
+            {
+                return Result.Fail("User not found.");
+            }
+
+            var unreadNotifications = await _notificationRepository.GetUnreadByRecipientUserId(user.Id);
+
+            foreach (var notification in unreadNotifications)
+            {
+                notification.IsRead = true;
+                await _notificationRepository.Update(notification);
+            }
+
+            return Result.Ok();
+        }
     }
 }

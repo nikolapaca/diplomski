@@ -1,0 +1,91 @@
+.activity-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.activity-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 36px;
+  border: none;
+  border-radius: 4px;
+  background-color: #1976d2;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.activity-button:hover {
+  background-color: #1565c0;
+  transform: translateY(-1px);
+}
+
+.activity-button mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.activity-dropdown {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  width: 380px;
+  max-height: 460px;
+  overflow-y: auto;
+  background: white;
+  color: #222;
+  border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+  z-index: 3000;
+}
+
+.activity-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e5e5;
+  color: #222;
+}
+
+.activity-empty {
+  padding: 18px;
+  text-align: center;
+  color: #777;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  color: #1976d2;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.activity-content p {
+  margin: 0 0 5px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #222;
+}
+
+.activity-content span {
+  color: #777;
+  font-size: 12px;
+}

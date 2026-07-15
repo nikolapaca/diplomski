@@ -51,10 +51,19 @@ export class AddCollaboratorsDialog implements OnInit, OnDestroy{
       });
   }
 
+  public errorMessage: string | null = null;
+
   public addCollaborator(user: User): void {
-    this.boardService.addCollaborator(this.data, user.username).subscribe((_) => {
-      this.fetchUsers(this.searchControl.value || '')
-    })
+    this.errorMessage = null;
+
+    this.boardService.addCollaborator(this.data, user.username).subscribe({
+      next: () => {
+        this.fetchUsers(this.searchControl.value || '');
+      },
+      error: (err) => {
+        this.errorMessage = typeof err.error === 'string' ? err.error : 'Failed to add collaborator.';
+      }
+    });
   }
   
   public ngOnDestroy(): void {

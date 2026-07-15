@@ -46,6 +46,44 @@ namespace FakeTrello.Migrations
                     b.ToTable("Boards");
                 });
 
+            modelBuilder.Entity("FakeTrello.Model.BoardActivity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoardId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CardId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CreatingUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoardId");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("CreatingUserId");
+
+                    b.ToTable("BoardActivities");
+                });
+
             modelBuilder.Entity("FakeTrello.Model.Card", b =>
                 {
                     b.Property<int>("Id")
@@ -227,6 +265,31 @@ namespace FakeTrello.Migrations
                     b.HasIndex("BoardId");
 
                     b.ToTable("UserBoards");
+                });
+
+            modelBuilder.Entity("FakeTrello.Model.BoardActivity", b =>
+                {
+                    b.HasOne("FakeTrello.Model.Board", "Board")
+                        .WithMany()
+                        .HasForeignKey("BoardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FakeTrello.Model.Card", "Card")
+                        .WithMany()
+                        .HasForeignKey("CardId");
+
+                    b.HasOne("FakeTrello.Model.User", "CreatingUser")
+                        .WithMany()
+                        .HasForeignKey("CreatingUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Board");
+
+                    b.Navigation("Card");
+
+                    b.Navigation("CreatingUser");
                 });
 
             modelBuilder.Entity("FakeTrello.Model.Card", b =>

@@ -26,12 +26,19 @@ namespace FakeTrello.Mapper
                         .FirstOrDefault()
                         : null)
             );
-
             CreateMap<NotificationDTO, Notification>();
+
             CreateMap<CardDTO, Card>().ReverseMap().ForMember(
                 dest => dest.AssignedUserUsernames,
                 opt => opt.MapFrom(src => src.Assignees.Select(a => a.UserBoard.User.Username).ToList())
             );
+
+            CreateMap<BoardActivity, BoardActivityDTO>()
+                .ForMember(
+                    dest => dest.CreatingUsername,
+                    opt => opt.MapFrom(src => src.CreatingUser.Username)
+                );
+            CreateMap<BoardActivityDTO, BoardActivity>();
         }
     }
 }

@@ -123,6 +123,41 @@ namespace FakeTrello.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "BoardActivities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    BoardId = table.Column<int>(type: "integer", nullable: false),
+                    CreatingUserId = table.Column<int>(type: "integer", nullable: false),
+                    CardId = table.Column<int>(type: "integer", nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Message = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BoardActivities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BoardActivities_Boards_BoardId",
+                        column: x => x.BoardId,
+                        principalTable: "Boards",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BoardActivities_Cards_CardId",
+                        column: x => x.CardId,
+                        principalTable: "Cards",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_BoardActivities_Users_CreatingUserId",
+                        column: x => x.CreatingUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CardAssignees",
                 columns: table => new
                 {
@@ -190,6 +225,21 @@ namespace FakeTrello.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_BoardActivities_BoardId",
+                table: "BoardActivities",
+                column: "BoardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BoardActivities_CardId",
+                table: "BoardActivities",
+                column: "CardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BoardActivities_CreatingUserId",
+                table: "BoardActivities",
+                column: "CreatingUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CardAssignees_UserId_BoardId",
                 table: "CardAssignees",
                 columns: new[] { "UserId", "BoardId" });
@@ -238,6 +288,9 @@ namespace FakeTrello.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "BoardActivities");
+
             migrationBuilder.DropTable(
                 name: "CardAssignees");
 

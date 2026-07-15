@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../service/auth-service';
 import { MatDialog } from '@angular/material/dialog';
@@ -40,7 +40,8 @@ export class Navbar implements OnInit {
     private authService: AuthService,
     private matDialog: MatDialog,
     private boardService: BoardService,
-    public notificationService: NotificationService
+    public notificationService: NotificationService,
+    private elementRef: ElementRef
   ) {}
 
   public ngOnInit(): void {
@@ -72,7 +73,67 @@ export class Navbar implements OnInit {
   }
 
   public toggleNotifications(): void {
+    const isOpening = !this.showNotifications;
     this.showNotifications = !this.showNotifications;
+
+    if (!isOpening) {
+      this.clearBadge();
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  public onDocumentClick(event: MouseEvent): void {
+    if (!this.showNotifications) {
+      return;
+    }
+
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.showNotifications = false;
+      this.clearBadge();
+    }
+  }
+
+  private clearBadge(): void {
+    this.notificationService.unreadCount.set(0);
+  }
+
+  public markAllNotificationsAsRead(): void {
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notificationService.notifications.update(current =>
+          current.map(n => ({ ...n, isRead: true }))
+        );
+        this.notificationService.unreadCount.set(0);
+      },
+      error: (err) => {
+        console.error('Failed to mark all notifications as read:', err);
+      }
+    });
+  }
+
+  public iconFor(type: string | number): string {
+    switch (type) {
+      case 'ADDED_TO_BOARD':
+      case 0:
+        return 'dashboard_customize';
+      case 'REMOVED_FROM_BOARD':
+      case 1:
+        return 'person_remove';
+      case 'ASSIGNED_TO_CARD':
+      case 2:
+        return 'person_add';
+      case 'UNASSIGNED_FROM_CARD':
+      case 3:
+        return 'person_off';
+      case 'BOARD_DELETED':
+      case 4:
+        return 'delete_forever';
+      case 'BOARD_ARCHIVED':
+      case 5:
+        return 'archive';
+      default:
+        return 'notifications';
+    }
   }
 
   public openNotification(notification: Notification): void {
@@ -96,6 +157,7 @@ export class Navbar implements OnInit {
     }
 
     this.showNotifications = false;
+    this.clearBadge();
 
     if (!notification.boardOwnerUsername || !notification.boardName) {
       console.log('Missing board redirect data', notification);

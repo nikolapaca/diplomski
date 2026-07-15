@@ -25,6 +25,10 @@ export class NotificationService {
     return this.http.put<void>(`${environment.api}/notifications/${notificationId}/read`, {});
   }
 
+  public markAllAsRead(): Observable<void> {
+    return this.http.put<void>(`${environment.api}/notifications/read-all`, {});
+  }
+
   public getUnreadNotifications(): Observable<Notification[]> {
     return this.http.get<Notification[]>(`${environment.api}/notifications/unread`);
   }

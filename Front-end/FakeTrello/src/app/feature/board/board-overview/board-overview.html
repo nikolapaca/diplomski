@@ -8,6 +8,7 @@
     }
     <div class="header-actions">
       @if(board){
+        <app-board-activity [board]="board"></app-board-activity>
       @if(loggedInUsername === board.ownerUsername){
       <button mat-flat-button color="primary" (click)="updateBoard()">
         <mat-icon>edit</mat-icon>

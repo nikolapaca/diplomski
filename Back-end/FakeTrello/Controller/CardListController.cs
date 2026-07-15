@@ -26,7 +26,8 @@ namespace FakeTrello.Controller
             {
                 return BadRequest(ModelState);
             }
-            var cardListDto = await _cardListService.Create(cardList);
+            var username = HttpContext.User.FindFirst("username")?.Value;
+            var cardListDto = await _cardListService.Create(cardList, username);
             if (!cardListDto.IsSuccess)
             {
                 return BadRequest();
@@ -64,7 +65,8 @@ namespace FakeTrello.Controller
 
             try
             {
-                await _cardListService.Delete(listId);
+                var username = HttpContext.User.FindFirst("username")?.Value;
+                await _cardListService.Delete(listId, username);
                 return Ok(new { Message = "CardList deleted successfully." });
             }
             catch (InvalidOperationException ex)
@@ -87,7 +89,8 @@ namespace FakeTrello.Controller
 
             try
             {
-                await _cardListService.Update(cardListDTO);
+                var username = HttpContext.User.FindFirst("username")?.Value;
+                await _cardListService.Update(cardListDTO, username);
                 return Ok(new { Message = "CardList updated successfully." });
             }
             catch (InvalidOperationException ex)

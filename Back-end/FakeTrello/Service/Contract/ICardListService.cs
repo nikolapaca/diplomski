@@ -7,10 +7,10 @@ namespace FakeTrello.Service.Contract
     {
         Task<Result<List<CardListDTO>>> GetAll();
         Task<Result<List<CardListDTO>>> GetByBoardNameAndBoardOwner(string boardName, string boardOwnerUsername);
-        Task<Result<CardListDTO>> Create(CardListDTO cardListDTO);
+        Task<Result<CardListDTO>> Create(CardListDTO cardListDTO, string username);
         Task<Result<CardListDTO>> GetById(int id);
-        Task<Result<CardListDTO>> Update(CardListDTO cardListDTO);
-        Task<Result> Delete(int id);
+        Task<Result<CardListDTO>> Update(CardListDTO cardListDTO, string username);
+        Task<Result> Delete(int id, string username);
         Task<Result> MoveList(CardListDTO cardList, int targetIndex);
     }
 }

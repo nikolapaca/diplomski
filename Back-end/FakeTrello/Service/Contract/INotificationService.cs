@@ -20,5 +20,7 @@ namespace FakeTrello.Service.Contract
         Task<Result<List<NotificationDTO>>> GetMyUnreadNotifications(string username);
 
         Task<Result> MarkAsRead(int notificationId, string username);
+
+        Task<Result> MarkAllAsRead(string username);
     }
 }
