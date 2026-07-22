@@ -30,7 +30,7 @@ namespace FakeTrello.Controller
             var cardListDto = await _cardListService.Create(cardList, username);
             if (!cardListDto.IsSuccess)
             {
-                return BadRequest();
+                return BadRequest(cardListDto.Errors.First().Message);
             }
             if (cardListDto.Value == null)
                 return NotFound($"Card list wasn't created!");
@@ -40,7 +40,7 @@ namespace FakeTrello.Controller
         [HttpGet("search")]
         public async Task<ActionResult<List<CardListDTO>>> GetAllListsByBoard([FromQuery] string boardName, [FromQuery] string boardOwnerUsername)
         {
-            if(string.IsNullOrEmpty(boardName) && string.IsNullOrEmpty(boardOwnerUsername))
+            if (string.IsNullOrEmpty(boardName) && string.IsNullOrEmpty(boardOwnerUsername))
             {
                 return BadRequest();
             }
@@ -66,7 +66,13 @@ namespace FakeTrello.Controller
             try
             {
                 var username = HttpContext.User.FindFirst("username")?.Value;
-                await _cardListService.Delete(listId, username);
+                var result = await _cardListService.Delete(listId, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "CardList deleted successfully." });
             }
             catch (InvalidOperationException ex)
@@ -82,7 +88,7 @@ namespace FakeTrello.Controller
         [HttpPut]
         public async Task<ActionResult> Update([FromBody] CardListDTO cardListDTO)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest("List is invalid!");
             }
@@ -90,7 +96,13 @@ namespace FakeTrello.Controller
             try
             {
                 var username = HttpContext.User.FindFirst("username")?.Value;
-                await _cardListService.Update(cardListDTO, username);
+                var result = await _cardListService.Update(cardListDTO, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "CardList updated successfully." });
             }
             catch (InvalidOperationException ex)
@@ -113,7 +125,14 @@ namespace FakeTrello.Controller
             }
             try
             {
-                await _cardListService.MoveList(list, targetIndex);
+                var username = HttpContext.User.FindFirst("username")?.Value;
+                var result = await _cardListService.MoveList(list, targetIndex, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Card moved successfully." });
             }
             catch (InvalidOperationException ex)
@@ -125,7 +144,7 @@ namespace FakeTrello.Controller
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
- 
+
 
     }
 }

@@ -37,6 +37,12 @@ namespace FakeTrello.Service
             {
                 return Result.Fail("Board doesn't exist!");
             }
+
+            if (!await _userBoardService.IsUserMemberOfBoard(username, board.Id))
+            {
+                return Result.Fail("You don't have access to this board.");
+            }
+
             cardList.BoardId = board.Id;
             var index = await _cardListRepository.GetMaxIndexForCardListAsync(board.Id);
             cardList.Index = index is null ? 1 : (int)index + 1;
@@ -81,6 +87,12 @@ namespace FakeTrello.Service
             return Result.Ok(cardListDto);
         }
 
+        public async Task<int?> GetBoardIdByListId(int listId)
+        {
+            var cardList = await _cardListRepository.GetById(listId);
+            return cardList?.BoardId;
+        }
+
         public async Task<Result<List<CardListDTO>>> GetByBoardNameAndBoardOwner(string boardName, string boardOwnerUsername)
         {
             return _mapper.Map<List<CardList>, List<CardListDTO>>(await _cardListRepository.GetByBoardOwnerAndBoardName(boardName, boardOwnerUsername));
@@ -93,6 +105,12 @@ namespace FakeTrello.Service
             {
                 return Result.Fail("CardList with the given ID was not found.");
             }
+
+            if (!await _userBoardService.IsUserMemberOfBoard(username, cardList.BoardId))
+            {
+                return Result.Fail("You don't have access to this board.");
+            }
+
             try
             {
                 cardList.Name = cardListDTO.Name;
@@ -138,6 +156,12 @@ namespace FakeTrello.Service
                 var boardId = cardListEntity.BoardId;
                 var listName = getByIdResult.Value.Name;
 
+                if (!await _userBoardService.IsUserMemberOfBoard(username, boardId))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("You don't have access to this board.");
+                }
+
                 foreach (var card in getByIdResult.Value.Cards)
                 {
                     await _unitOfWork.Cards.Delete(card.Id);
@@ -165,11 +189,16 @@ namespace FakeTrello.Service
             }
         }
 
-        public async Task<Result> MoveList(CardListDTO cardList, int targetIndex)
+        public async Task<Result> MoveList(CardListDTO cardList, int targetIndex, string username)
         {
             var list = await _cardListRepository.GetById(cardList.Id);
             if (list == null)
                 throw new Exception("List not found");
+
+            if (!await _userBoardService.IsUserMemberOfBoard(username, list.BoardId))
+            {
+                return Result.Fail("You don't have access to this board.");
+            }
 
             var lists = await _cardListRepository.GetByBoardId(list.BoardId);
 

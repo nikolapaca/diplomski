@@ -7,15 +7,34 @@ namespace FakeTrello.Service
     public class UserBoardService : IUserBoardService
     {
         private readonly IUserBoardRepository _userBoardRepository;
+        private readonly IUserRepository _userRepository;
 
-        public UserBoardService(IUserBoardRepository userBoardRepository)
+        public UserBoardService(IUserBoardRepository userBoardRepository, IUserRepository userRepository)
         {
             _userBoardRepository = userBoardRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<UserBoard?> GetByUserIdAndBoardId(int userId, int boardId)
         {
             return await _userBoardRepository.GetByUserAndBoardId(userId, boardId);
+        }
+
+        public async Task<bool> IsUserMemberOfBoard(string username, int boardId)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return false;
+            }
+
+            var user = await _userRepository.GetByUsername(username);
+            if (user == null)
+            {
+                return false;
+            }
+
+            var membership = await _userBoardRepository.GetByUserAndBoardId(user.Id, boardId);
+            return membership != null;
         }
 
         public async Task<UserBoard> Create(UserBoard userBoard)

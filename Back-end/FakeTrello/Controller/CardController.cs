@@ -73,7 +73,13 @@ namespace FakeTrello.Controller
             try
             {
                 var username = HttpContext.User.FindFirst("username")?.Value;
-                await _cardService.Delete(id, username);
+                var result = await _cardService.Delete(id, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Card deleted successfully." });
             }
             catch (InvalidOperationException ex)
@@ -106,7 +112,13 @@ namespace FakeTrello.Controller
             try
             {
                 var username = HttpContext.User.FindFirst("username")?.Value;
-                await _cardService.Update(cardDto, username);
+                var result = await _cardService.Update(cardDto, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Card updated successfully." });
             }
             catch (InvalidOperationException ex)
@@ -129,7 +141,13 @@ namespace FakeTrello.Controller
             try
             {
                 var creatingUserUsername = HttpContext.User.FindFirst("username")?.Value;
-                await _cardService.AssignCardToUser(cardDto, username, creatingUserUsername);
+                var result = await _cardService.AssignCardToUser(cardDto, username, creatingUserUsername);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Card updated successfully." });
             }
             catch (InvalidOperationException ex)
@@ -174,7 +192,13 @@ namespace FakeTrello.Controller
             try
             {
                 var unassigningUserUsername = HttpContext.User.FindFirst("username")?.Value;
-                await _cardService.UnassignCardToUser(cardDto, username, unassigningUserUsername);
+                var result = await _cardService.UnassignCardToUser(cardDto, username, unassigningUserUsername);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Card updated successfully." });
             }
             catch (InvalidOperationException ex)
@@ -197,7 +221,13 @@ namespace FakeTrello.Controller
             try
             {
                 var username = HttpContext.User.FindFirst("username")?.Value;
-                await _cardService.ReorderCardInsideList(cardDto.Id, newIndex, username);
+                var result = await _cardService.ReorderCardInsideList(cardDto.Id, newIndex, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Card moved successfully." });
             }
             catch (InvalidOperationException ex)
@@ -220,7 +250,13 @@ namespace FakeTrello.Controller
             try
             {
                 var username = HttpContext.User.FindFirst("username")?.Value;
-                await _cardService.ReorderCardOutsideList(cardDto.Id, targetListId, targetIndex, username);
+                var result = await _cardService.ReorderCardOutsideList(cardDto.Id, targetListId, targetIndex, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
                 return Ok(new { Message = "Card moved successfully." });
             }
             catch (InvalidOperationException ex)

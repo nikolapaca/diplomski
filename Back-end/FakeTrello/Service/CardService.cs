@@ -20,6 +20,7 @@ namespace FakeTrello.Service
         private readonly INotificationService _notificationService;
         private readonly IBoardActivityService _boardActivityService;
         private readonly IBoardService _boardService;
+        private readonly IUserBoardService _userBoardService;
 
         public CardService(
             ICardRepository cardRepository,
@@ -30,7 +31,8 @@ namespace FakeTrello.Service
             IUnitOfWork unitOfWork,
             INotificationService notificationService,
             IBoardActivityService boardActivityService,
-            IBoardService boardService)
+            IBoardService boardService,
+            IUserBoardService userBoardService)
         {
             _cardRepository = cardRepository;
             _mapper = mapper;
@@ -41,6 +43,7 @@ namespace FakeTrello.Service
             _notificationService = notificationService;
             _boardActivityService = boardActivityService;
             _boardService = boardService;
+            _userBoardService = userBoardService;
         }
 
         public async Task<Result<CardDTO>> Create(int cardListId, CardDTO cardDTO, int userId)
@@ -74,6 +77,12 @@ namespace FakeTrello.Service
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("Board doesn't exist.");
+                }
+
+                if (!await _userBoardService.IsUserMemberOfBoard(userResult.Value.Username, board.Id))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("You don't have access to this board.");
                 }
 
                 Card card = _mapper.Map<CardDTO, Card>(cardDTO);
@@ -124,6 +133,12 @@ namespace FakeTrello.Service
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("Card not found.");
+                }
+
+                if (!await _userBoardService.IsUserMemberOfBoard(username, card.CardList.BoardId))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("You don't have access to this board.");
                 }
 
                 var cards = await _cardRepository.GetByListId(card.CardListId);
@@ -196,11 +211,24 @@ namespace FakeTrello.Service
                 string oldListName = card.CardList.Name;
                 int boardId = card.CardList.BoardId;
 
+                if (!await _userBoardService.IsUserMemberOfBoard(username, boardId))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("You don't have access to this board.");
+                }
+
                 var targetListResult = await _cardListService.GetById(targetListId);
                 if (targetListResult.IsFailed)
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("Target list doesn't exist.");
+                }
+
+                var targetListBoardId = await _cardListService.GetBoardIdByListId(targetListId);
+                if (targetListBoardId == null || targetListBoardId != boardId)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Cannot move a card to a list on a different board.");
                 }
 
                 string targetListName = targetListResult.Value.Name;
@@ -307,6 +335,18 @@ namespace FakeTrello.Service
 
                 var boardId = card.CardList.BoardId;
 
+                if (!await _userBoardService.IsUserMemberOfBoard(creatingUserUsername, boardId))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("You don't have access to this board.");
+                }
+
+                if (!await _userBoardService.IsUserMemberOfBoard(username, boardId))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail($"{user.Username} is not a member of this board.");
+                }
+
                 var cardAssignee = new CardAssignee(card.Id, user.Id, boardId);
                 await _unitOfWork.CardAssignees.CreateAsync(cardAssignee);
                 await _unitOfWork.SaveChangesAsync();
@@ -370,6 +410,12 @@ namespace FakeTrello.Service
                 }
 
                 var boardId = card.CardList.BoardId;
+
+                if (!await _userBoardService.IsUserMemberOfBoard(unassigningUserUsername, boardId))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("You don't have access to this board.");
+                }
 
                 var cardAssignee = await _cardAssigneeService.GetById(card.Id, user.Id, boardId);
                 if (cardAssignee == null)
@@ -445,6 +491,11 @@ namespace FakeTrello.Service
                 return Result.Fail("Card with the given ID was not found.");
             }
 
+            if (!await _userBoardService.IsUserMemberOfBoard(username, existingCard.CardList.BoardId))
+            {
+                return Result.Fail("You don't have access to this board.");
+            }
+
             try
             {
                 existingCard.Name = cardDTO.Name;
@@ -484,6 +535,11 @@ namespace FakeTrello.Service
             if (card == null)
             {
                 return Result.Fail("Card with the given ID was not found.");
+            }
+
+            if (!await _userBoardService.IsUserMemberOfBoard(username, card.CardList.BoardId))
+            {
+                return Result.Fail("You don't have access to this board.");
             }
 
             try

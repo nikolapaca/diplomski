@@ -11,6 +11,7 @@ namespace FakeTrello.Service.Contract
         Task<UserBoard?> GetByUserIdAndBoardId(int userId, int boardId);
         Task<List<UserBoard>> GetAllByUserId(int userId);
         Task<UserBoard> Create(UserBoard userBoard);
+        Task<bool> IsUserMemberOfBoard(string username, int boardId);
         Task<UserBoard> Update(UserBoard userBoard);
         Task Delete(UserBoard userBoard);
     }
