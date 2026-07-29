@@ -12,5 +12,6 @@ namespace FakeTrello.DTO
         public string BoardUsername { get; set; }
         public List<CardDTO> Cards { get; set; }
         public int Index { get; set; }
+        public bool IsPinned { get; set; }
     }
 }

@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>
+  <mat-icon class="title-icon">group</mat-icon>
+  Board members
+</h2>
+
+<div mat-dialog-content>
+  <div class="loading-row" *ngIf="loading">
+    <mat-spinner diameter="24"></mat-spinner>
+  </div>
+
+  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <mat-list role="list" class="member-list" *ngIf="!loading && !errorMessage">
+    <mat-list-item role="listitem" *ngFor="let member of members">
+      <mat-icon class="member-icon">{{ isOwner(member) ? 'star' : 'person' }}</mat-icon>
+      <span class="member-info">
+        <span class="member-name">{{ member.name }} {{ member.surname }}</span>
+        <span class="username">&#64;{{ member.username }}</span>
+      </span>
+      <span class="role-badge" [class.role-owner]="isOwner(member)">
+        {{ isOwner(member) ? 'Owner' : 'Collaborator' }}
+      </span>
+    </mat-list-item>
+  </mat-list>
+
+  <div *ngIf="!loading && !errorMessage && members.length === 0" class="no-members-found">
+    No members found.
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="close()">Close</button>
+</div>

@@ -16,5 +16,6 @@ namespace FakeTrello.Service.Contract
         Task<Result> UnassignCardToUser(CardDTO cardDto, string username, string unassigningUserUsername);
         Task<Result> ReorderCardInsideList(int cardId, int newIndex, string username);
         Task<Result> ReorderCardOutsideList(int cardId, int targetListId, int targetIndex, string username);
+        Task<Result> TogglePin(int cardId, string username);
     }
 }

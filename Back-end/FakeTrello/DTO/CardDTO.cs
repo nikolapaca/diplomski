@@ -15,5 +15,6 @@ namespace FakeTrello.DTO
         public EntityStatus Status { get; set; }
         public List<string?> AssignedUserUsernames { get; set; } = new();
         public int Index { get; set; }
+        public bool IsPinned { get; set; }
     }
 }

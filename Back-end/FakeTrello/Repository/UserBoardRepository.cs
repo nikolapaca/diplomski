@@ -43,6 +43,16 @@ namespace FakeTrello.Repository
             return await _context.UserBoards.Where(ub => ub.UserId == userId).OrderBy(ub => ub.UserRole).ToListAsync();
         }
 
+        public async Task<List<UserBoard>> GetByBoardId(int boardId)
+        {
+            return await _context.UserBoards
+                .Include(ub => ub.User)
+                .Where(ub => ub.BoardId == boardId)
+                .OrderBy(ub => ub.UserRole)
+                .ThenBy(ub => ub.User.Username)
+                .ToListAsync();
+        }
+
         public async Task<UserBoard> CreateAsync(UserBoard userBoard)
         {
             await _context.UserBoards.AddAsync(userBoard);

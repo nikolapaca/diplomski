@@ -15,15 +15,17 @@ namespace FakeTrello.Service
         private readonly IBoardRepository _boardRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserBoardService _userBoardService;
+        private readonly ICardRepository _cardRepository;
         private readonly IMapper _mapper;
         private readonly IHubContext<NotificationHub> _hubContext;
 
-        public BoardActivityService(IBoardActivityRepository activityRepository, IBoardRepository boardRepository, IUserRepository userRepository, IUserBoardService userBoardService, IMapper mapper, IHubContext<NotificationHub> hubContext)
+        public BoardActivityService(IBoardActivityRepository activityRepository, IBoardRepository boardRepository, IUserRepository userRepository, IUserBoardService userBoardService, ICardRepository cardRepository, IMapper mapper, IHubContext<NotificationHub> hubContext)
         {
             _activityRepository = activityRepository;
             _boardRepository = boardRepository;
             _userRepository = userRepository;
             _userBoardService = userBoardService;
+            _cardRepository = cardRepository;
             _mapper = mapper;
             _hubContext = hubContext;
         }
@@ -77,6 +79,24 @@ namespace FakeTrello.Service
             }
 
             var activities = await _activityRepository.GetByBoardId(board.Id);
+
+            return Result.Ok(_mapper.Map<List<BoardActivityDTO>>(activities));
+        }
+
+        public async Task<Result<List<BoardActivityDTO>>> GetByCard(int cardId, string username)
+        {
+            var card = await _cardRepository.GetById(cardId);
+            if (card == null)
+            {
+                return Result.Fail("Card doesn't exist.");
+            }
+
+            if (!await _userBoardService.IsUserMemberOfBoard(username, card.CardList.BoardId))
+            {
+                return Result.Fail("You don't have access to this board.");
+            }
+
+            var activities = await _activityRepository.GetByCardId(cardId);
 
             return Result.Ok(_mapper.Map<List<BoardActivityDTO>>(activities));
         }

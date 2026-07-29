@@ -177,6 +177,8 @@ namespace FakeTrello.Service
             {
                 var boardDto = _mapper.Map<Board, BoardDTO>(board);
                 boardDto.OwnerUsername = await _userBoardService.GetUsernameOfBoardOwner(board.Id);
+                var membership = await _userBoardService.GetByUserIdAndBoardId(user.Id, board.Id);
+                boardDto.IsFavorite = membership?.IsFavorite ?? false;
                 boardsDto.Add(boardDto);
             }
             return boardsDto;
@@ -191,6 +193,8 @@ namespace FakeTrello.Service
             {
                 var boardDto = _mapper.Map<Board, BoardDTO>(board);
                 boardDto.OwnerUsername = await _userBoardService.GetUsernameOfBoardOwner(board.Id);
+                var membership = await _userBoardService.GetByUserIdAndBoardId(user.Id, board.Id);
+                boardDto.IsFavorite = membership?.IsFavorite ?? false;
                 boardsDto.Add(boardDto);
             }
             return boardsDto;
@@ -406,6 +410,93 @@ namespace FakeTrello.Service
             {
                 await _unitOfWork.RollbackAsync();
                 return Result.Fail($"Failed to leave board: {ex.Message}");
+            }
+        }
+
+        public async Task<Result> ToggleFavorite(string boardName, string boardOwnerUsername, string username)
+        {
+            var board = await _boardRepository.GetByNameAndOwnerUsername(boardName, boardOwnerUsername);
+            if (board == null)
+            {
+                return Result.Fail("This board doesn't exist!");
+            }
+
+            var user = await _userService.GetUserByUsername(username);
+            if (user == null)
+            {
+                return Result.Fail("This user doesn't exist!");
+            }
+
+            var membership = await _userBoardService.GetByUserIdAndBoardId(user.Id, board.Id);
+            if (membership == null)
+            {
+                return Result.Fail("You don't have access to this board.");
+            }
+
+            membership.IsFavorite = !membership.IsFavorite;
+            await _userBoardService.Update(membership);
+
+            return Result.Ok();
+        }
+
+        public async Task<Result> Archive(string name, string ownerUsername, string requestingUsername)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
+            {
+                var board = await _boardRepository.GetByNameAndOwnerUsername(name, ownerUsername);
+                if (board == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This board doesn't exist!");
+                }
+
+                if (!await _userBoardService.IsUserOwnerOfBoard(requestingUsername, board.Id))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Only the owner can archive this board.");
+                }
+
+                var owner = await _userService.GetUserByUsername(requestingUsername);
+                if (owner == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Owner doesn't exist!");
+                }
+
+                board.Status = BoardStatus.ARCHIVED;
+                await _boardRepository.Update(board);
+
+                foreach (var member in board.UserBoards)
+                {
+                    if (member.UserId == owner.Id)
+                        continue;
+
+                    await _notificationService.Create(
+                        recipientUserId: member.UserId,
+                        creatingUserId: owner.Id,
+                        type: NotificationType.BOARD_ARCHIVED,
+                        message: $"Board '{board.Name}' has been archived.",
+                        boardId: board.Id
+                    );
+                }
+
+                await _boardActivityService.Create(
+                    boardId: board.Id,
+                    creatingUserId: owner.Id,
+                    type: ActivityType.BOARD_ARCHIVED,
+                    message: $"{owner.Username} archived board '{board.Name}'."
+                );
+
+                await _unitOfWork.CommitAsync();
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail($"Failed to archive the board: {ex.Message}");
             }
         }
     }

@@ -2,11 +2,17 @@
   <div class="hdr-left">
     <mat-icon class="hdr-icon" color="primary">view_kanban</mat-icon>
     <h2 class="hdr-title">Card details</h2>
+    <mat-icon *ngIf="isPinned" class="pin-indicator" matTooltip="Pinned">push_pin</mat-icon>
   </div>
 
-  <button mat-icon-button (click)="close()" aria-label="Close dialog">
-    <mat-icon>close</mat-icon>
-  </button>
+  <div class="hdr-right">
+    <button *ngIf="isOwner" mat-icon-button (click)="togglePin()" [matTooltip]="isPinned ? 'Unpin card' : 'Pin card'">
+      <mat-icon [class.pin-active]="isPinned">push_pin</mat-icon>
+    </button>
+    <button mat-icon-button (click)="close()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
 </header>
 
 <mat-divider></mat-divider>
@@ -93,6 +99,28 @@
       </div>
     </div>
     </form>
+
+  <div class="history-section mat-elevation-z1">
+    <button class="history-toggle" (click)="toggleHistory()">
+      <mat-icon>history</mat-icon>
+      <span>Card history</span>
+      <mat-icon class="history-caret">{{ showHistory ? 'expand_less' : 'expand_more' }}</mat-icon>
+    </button>
+
+    <div class="history-body" *ngIf="showHistory">
+      <mat-spinner *ngIf="loadingHistory" diameter="20"></mat-spinner>
+
+      <p class="muted" *ngIf="!loadingHistory && history.length === 0">No history yet for this card.</p>
+
+      <div class="activity-item" *ngFor="let activity of history">
+        <mat-icon class="activity-icon">{{ iconFor(activity.type) }}</mat-icon>
+        <div class="activity-content">
+          <p>{{ activity.message }}</p>
+          <span>{{ activity.createdAt | date:'short' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
 </section>

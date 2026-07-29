@@ -149,8 +149,8 @@ export class CardOverview implements OnInit {
 
   const inst = dialogRef.componentInstance;
     inst.changed.subscribe((patch: Partial<Card>) => {
-      this.card = { ...this.card, ...patch }; // promeni referencu
-      this.cardUpdated.emit();                // obavesti roditelje ako treba
+      this.card = { ...this.card, ...patch }; 
+      this.cardUpdated.emit();
       this.cdr.markForCheck();                
     });
 

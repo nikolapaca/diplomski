@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FakeTrello.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20260602230100_Migracija")]
-    partial class Migracija
+    [Migration("20260728204821_FakeTrello")]
+    partial class FakeTrello
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -108,6 +108,9 @@ namespace FakeTrello.Migrations
                     b.Property<int>("Index")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -155,6 +158,9 @@ namespace FakeTrello.Migrations
 
                     b.Property<int>("Index")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -259,6 +265,9 @@ namespace FakeTrello.Migrations
 
                     b.Property<int>("BoardId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("UserRole")
                         .HasColumnType("integer");

@@ -3,5 +3,6 @@ export interface Card {
     name: string,
     description: string,
     cardListId: number,
-    assignedUserUsernames?: string[]
+    assignedUserUsernames?: string[],
+    isPinned?: boolean
 }

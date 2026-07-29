@@ -1,5 +1,3 @@
-// src/app/pages/profile-page/profile-page.component.ts
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, Validators, FormGroup } from '@angular/forms';
@@ -31,7 +29,6 @@ import { User } from '../../../core/model/user.model';
 })
 export class ProfileComponent implements OnInit {
   
-  // Kontrole za formu
   usernameCtrl = new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.minLength(3)] });
   emailCtrl = new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.email] });
   nameCtrl = new FormControl<string>('', { nonNullable: true });
@@ -48,7 +45,7 @@ export class ProfileComponent implements OnInit {
 
   loading = false;
   saving = false;
-  userId!: number; // ID trenutnog korisnika
+  userId!: number;
 
   constructor(
     private userService: UserService,
@@ -90,11 +87,11 @@ export class ProfileComponent implements OnInit {
       password: this.passwordCtrl.value
     };
 
-    /*this.userService.updateProfile(updatedProfile).subscribe({
+    this.userService.updateProfile(updatedProfile).subscribe({
       next: () => {
         this.saving = false;
         this.snackBar.open('Profil uspješno ažuriran!', 'OK', { duration: 3000, panelClass: ['snackbar-success'] });
-        this.form.markAsPristine(); // Označi formu kao čistu nakon spremanja
+        this.form.markAsPristine();
       },
       error: (err) => {
         this.saving = false;
@@ -102,6 +99,6 @@ export class ProfileComponent implements OnInit {
         this.snackBar.open(errorMessage, 'Zatvori', { duration: 5000 });
         console.error(err);
       }
-    });*/
+    });
   }
 }

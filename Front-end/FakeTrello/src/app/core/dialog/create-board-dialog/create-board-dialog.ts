@@ -48,7 +48,8 @@ export class CreateBoardDialog {
       name: this.createBoardForm.value.boardName,
       description: this.createBoardForm.value.boardDescription,
       status: BoardStatus.ACTIVE,
-      ownerUsername: ''
+      ownerUsername: this.username,
+      isFavorite: false
     }
     this.boardSubmitted.emit(board);
   }

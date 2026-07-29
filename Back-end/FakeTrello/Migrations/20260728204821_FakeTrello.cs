@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FakeTrello.Migrations
 {
     /// <inheritdoc />
-    public partial class Migracija : Migration
+    public partial class FakeTrello : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -54,7 +54,8 @@ namespace FakeTrello.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     BoardId = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    Index = table.Column<int>(type: "integer", nullable: false)
+                    Index = table.Column<int>(type: "integer", nullable: false),
+                    IsPinned = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -73,7 +74,8 @@ namespace FakeTrello.Migrations
                 {
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     BoardId = table.Column<int>(type: "integer", nullable: false),
-                    UserRole = table.Column<int>(type: "integer", nullable: false)
+                    UserRole = table.Column<int>(type: "integer", nullable: false),
+                    IsFavorite = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -103,7 +105,8 @@ namespace FakeTrello.Migrations
                     CardListId = table.Column<int>(type: "integer", nullable: false),
                     Index = table.Column<int>(type: "integer", nullable: false),
                     CreatedByUserId = table.Column<int>(type: "integer", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false)
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    IsPinned = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {

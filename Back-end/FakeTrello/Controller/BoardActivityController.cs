@@ -31,5 +31,24 @@ namespace FakeTrello.Controller
 
             return Ok(result.Value);
         }
+
+        [HttpGet("card/{cardId:int}")]
+        public async Task<ActionResult<List<BoardActivityDTO>>> GetByCard(int cardId)
+        {
+            var username = User.FindFirst("username")?.Value;
+            if (string.IsNullOrEmpty(username))
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var result = await _activityService.GetByCard(cardId, username);
+
+            if (result.IsFailed)
+            {
+                return BadRequest(result.Errors.First().Message);
+            }
+
+            return Ok(result.Value);
+        }
     }
 }

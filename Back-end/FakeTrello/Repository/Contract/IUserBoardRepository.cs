@@ -6,6 +6,7 @@ namespace FakeTrello.Repository.Contract
     {
         Task<List<UserBoard>> GetAll();
         Task<List<UserBoard>> GetAllByUserId(int userId);
+        Task<List<UserBoard>> GetByBoardId(int boardId);
         Task<string> GetUsernameOfBoardOwner(int boardId);
         Task<UserBoard> GetByOwnerRoleAndBoardId(int boardId);
         Task<UserBoard> CreateAsync(UserBoard userBoard);

@@ -13,5 +13,6 @@ namespace FakeTrello.Service.Contract
         Task<Result<CardListDTO>> Update(CardListDTO cardListDTO, string username);
         Task<Result> Delete(int id, string username);
         Task<Result> MoveList(CardListDTO cardList, int targetIndex, string username);
+        Task<Result> TogglePin(int listId, string username);
     }
 }

@@ -9,6 +9,14 @@
     <div class="header-actions">
       @if(board){
         <app-board-activity [board]="board"></app-board-activity>
+        <button mat-icon-button
+          matTooltip="{{ board.isFavorite ? 'Unfavorite' : 'Mark as favorite' }}"
+          (click)="toggleFavorite()">
+          <mat-icon [class.favorite-active]="board.isFavorite">{{ board.isFavorite ? 'star' : 'star_border' }}</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="View board members" (click)="openMembersDialog()">
+          <mat-icon>group</mat-icon>
+        </button>
       @if(loggedInUsername === board.ownerUsername){
       <button mat-flat-button color="primary" (click)="updateBoard()">
         <mat-icon>edit</mat-icon>
@@ -17,6 +25,10 @@
       <button mat-flat-button color="primary" [matMenuTriggerFor]="manageMenu">
         <mat-icon>settings</mat-icon>
         Manage
+      </button>
+      <button mat-flat-button color="accent" (click)="archiveBoard()">
+        <mat-icon>archive</mat-icon>
+        Archive board
       </button>
       <button mat-flat-button color="warn" (click)="deleteBoard()">
         <mat-icon>delete_forever</mat-icon>
@@ -57,7 +69,10 @@
           (cdkDragEnded)="onListDragEnded()" cdkDrag [cdkDragDisabled]="isDraggingCard">
       <mat-card-header class="list-header-flex">
         @if (!list.showUpdateListForm) {
-        <mat-card-title class="list-title">{{ list.name }}</mat-card-title>
+        <mat-card-title class="list-title">
+          @if(list.isPinned){<mat-icon class="pin-badge" matTooltip="Pinned">push_pin</mat-icon>}
+          {{ list.name }}
+        </mat-card-title>
         } @else {
         <form
           [formGroup]="list.updateListForm"
@@ -198,6 +213,12 @@
         <mat-icon>edit</mat-icon>
         <span>Update list</span>
       </button>
+      @if(board && loggedInUsername === board.ownerUsername){
+      <button mat-menu-item (click)="togglePinList(list)">
+        <mat-icon>push_pin</mat-icon>
+        <span>{{ list.isPinned ? 'Unpin list' : 'Pin list' }}</span>
+      </button>
+      }
     </mat-menu>
     }
 

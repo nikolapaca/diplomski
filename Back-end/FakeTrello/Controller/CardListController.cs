@@ -116,6 +116,36 @@ namespace FakeTrello.Controller
 
         }
 
+        [HttpPost("pin/{listId:int}")]
+        public async Task<ActionResult> TogglePin(int listId)
+        {
+            if (listId == 0)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var username = HttpContext.User.FindFirst("username")?.Value;
+                var result = await _cardListService.TogglePin(listId, username);
+
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
+
+                return Ok(new { Message = "CardList pin toggled successfully." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         [HttpPost("reorderList/{targetIndex}")]
         public async Task<ActionResult> MoveList([FromBody] CardListDTO list, int targetIndex)
         {

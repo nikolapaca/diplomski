@@ -11,10 +11,12 @@ namespace FakeTrello.Controller
     public class BoardController : ControllerBase
     {
         private readonly IBoardService _boardService;
+        private readonly IUserBoardService _userBoardService;
 
-        public BoardController(IBoardService boardService)
+        public BoardController(IBoardService boardService, IUserBoardService userBoardService)
         {
             _boardService = boardService;
+            _userBoardService = userBoardService;
         }
 
         [HttpGet]
@@ -122,6 +124,35 @@ namespace FakeTrello.Controller
             return Ok(board.Value);
         }
 
+        [HttpGet("{name}/{ownerUsername}/members")]
+        public async Task<ActionResult<List<BoardMemberDTO>>> GetMembers(string name, string ownerUsername)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(ownerUsername))
+            {
+                return BadRequest("");
+            }
+
+            var requestingUsername = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (requestingUsername is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var board = await _boardService.GetByNameAndOwnerUsername(name, ownerUsername);
+            if (board == null)
+            {
+                return NotFound("Board doesn't exist.");
+            }
+
+            if (!await _userBoardService.IsUserMemberOfBoard(requestingUsername, board.Id))
+            {
+                return BadRequest("You don't have access to this board.");
+            }
+
+            var members = await _userBoardService.GetMembers(board.Id);
+            return Ok(members);
+        }
+
         [HttpDelete("{name}/{username}")]
         public async Task<ActionResult> Delete(string name, string username)
         {
@@ -219,6 +250,54 @@ namespace FakeTrello.Controller
             {
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
+        }
+
+        [HttpPost("favorite/{name}/{ownerUsername}")]
+        public async Task<ActionResult> ToggleFavorite(string name, string ownerUsername)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(ownerUsername))
+            {
+                return BadRequest();
+            }
+
+            var username = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (username is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var result = await _boardService.ToggleFavorite(name, ownerUsername, username);
+
+            if (result.IsFailed)
+            {
+                return BadRequest(result.Errors.First().Message);
+            }
+
+            return Ok(new { Message = "Favorite toggled successfully." });
+        }
+
+        [HttpPost("archive/{name}/{username}")]
+        public async Task<ActionResult> Archive(string name, string username)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(username))
+            {
+                return BadRequest();
+            }
+
+            var requestingUsername = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (requestingUsername is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var result = await _boardService.Archive(name, username, requestingUsername);
+
+            if (result.IsFailed)
+            {
+                return BadRequest(result.Errors.First().Message);
+            }
+
+            return Ok(new { Message = "Board archived successfully." });
         }
 
         [HttpPost("leave")]

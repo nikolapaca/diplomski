@@ -1,7 +1,10 @@
 <mat-card class="app-card" [class.highlighted-card]="highlightedCardId === card.id" (click)="onCardClick($event)">
   <mat-card-header>
     @if (!showUpdateCardForm){
-      <mat-card-title> {{ card.name }} </mat-card-title>
+      <mat-card-title>
+        @if(card.isPinned){<mat-icon class="pin-badge">push_pin</mat-icon>}
+        {{ card.name }}
+      </mat-card-title>
     }
     @else {
       <form [formGroup]="updateCardForm" (ngSubmit)="updateCard()" class="update-card-form">

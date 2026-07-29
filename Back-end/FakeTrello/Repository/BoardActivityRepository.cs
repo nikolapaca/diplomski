@@ -30,5 +30,15 @@ namespace FakeTrello.Repository
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
         }
+
+        public async Task<List<BoardActivity>> GetByCardId(int cardId)
+        {
+            return await _context.BoardActivities
+                .Include(a => a.CreatingUser)
+                .Include(a => a.Card)
+                .Where(a => a.CardId == cardId)
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

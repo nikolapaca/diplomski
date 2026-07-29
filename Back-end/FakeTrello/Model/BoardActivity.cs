@@ -14,7 +14,12 @@
         LIST_CREATED,
         LIST_UPDATED,
         LIST_DELETED,
-        BOARD_UPDATED
+        BOARD_UPDATED,
+        BOARD_ARCHIVED,
+        LIST_PINNED,
+        LIST_UNPINNED,
+        CARD_PINNED,
+        CARD_UNPINNED
     }
 
     public class BoardActivity

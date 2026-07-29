@@ -224,5 +224,44 @@ namespace FakeTrello.Service
 
             return Result.Ok();
         }
+
+        public async Task<Result> TogglePin(int listId, string username)
+        {
+            var list = await _cardListRepository.GetById(listId);
+            if (list == null)
+            {
+                return Result.Fail("CardList with the given ID was not found.");
+            }
+
+            if (!await _userBoardService.IsUserOwnerOfBoard(username, list.BoardId))
+            {
+                return Result.Fail("Only the board owner can pin or unpin lists.");
+            }
+
+            list.IsPinned = !list.IsPinned;
+            var updatedList = await _cardListRepository.Update(list);
+
+            // Renumber Index across the board so pinned lists keep a lower Index
+            // than unpinned ones, matching how they are displayed and dragged.
+            var boardLists = await _cardListRepository.GetByBoardId(updatedList.BoardId);
+            for (int i = 0; i < boardLists.Count; i++)
+            {
+                boardLists[i].Index = i + 1;
+            }
+            await _cardListRepository.UpdateRangeAsync(boardLists);
+
+            var user = await _userService.GetUserByUsername(username);
+            if (user != null)
+            {
+                await _boardActivityService.Create(
+                    boardId: updatedList.BoardId,
+                    creatingUserId: user.Id,
+                    type: updatedList.IsPinned ? ActivityType.LIST_PINNED : ActivityType.LIST_UNPINNED,
+                    message: $"{user.Username} {(updatedList.IsPinned ? "pinned" : "unpinned")} list '{updatedList.Name}'."
+                );
+            }
+
+            return Result.Ok();
+        }
     }
 }

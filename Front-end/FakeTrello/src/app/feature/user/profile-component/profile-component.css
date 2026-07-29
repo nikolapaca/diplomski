@@ -1,10 +1,8 @@
-/* src/app/pages/profile-page/profile-page.component.css */
-
 .profile-container {
   display: flex;
   justify-content: center;
   padding: 30px;
-  background-color: #f4f7f6; /* Lagana pozadina */
+  background-color: #f4f7f6; 
   min-height: 100vh;
 }
 
@@ -40,12 +38,11 @@
   color: #777;
 }
 
-/* Akcije za formu */
 .form-actions {
   display: flex;
-  justify-content: flex-end; /* Dugme desno */
+  justify-content: flex-end; 
   margin-top: 20px;
-  padding-right: 0 !important; /* Ukloni padding koji MatCardAction može dodati */
+  padding-right: 0 !important;
 }
 
 .spacer {

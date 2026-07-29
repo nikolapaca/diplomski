@@ -13,5 +13,6 @@ namespace FakeTrello.DTO
 
         public BoardStatus Status { get; set; }
         public string OwnerUsername { get; set; }
+        public bool IsFavorite { get; set; }
     }
 }

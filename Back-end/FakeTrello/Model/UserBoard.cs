@@ -16,6 +16,7 @@ namespace FakeTrello.Model
         public User User { get; set; }
         public Board Board { get; set; }
         public UserRole UserRole { get; set; }
+        public bool IsFavorite { get; set; } = false;
         public ICollection<CardAssignee> AssignedCards { get; set; } = new List<CardAssignee>();
         public UserBoard() { }
 

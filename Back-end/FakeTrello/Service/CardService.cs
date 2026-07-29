@@ -567,5 +567,45 @@ namespace FakeTrello.Service
                 return Result.Fail($"An error occurred during deletion: {ex.Message}");
             }
         }
+
+        public async Task<Result> TogglePin(int cardId, string username)
+        {
+            var card = await _cardRepository.GetById(cardId);
+            if (card == null)
+            {
+                return Result.Fail("Card with the given ID was not found.");
+            }
+
+            if (!await _userBoardService.IsUserOwnerOfBoard(username, card.CardList.BoardId))
+            {
+                return Result.Fail("Only the board owner can pin or unpin cards.");
+            }
+
+            card.IsPinned = !card.IsPinned;
+            var updatedCard = await _cardRepository.Update(card);
+
+            // Renumber Index within the list so pinned cards keep a lower Index
+            // than unpinned ones, matching how they are displayed and dragged.
+            var listCards = await _cardRepository.GetByListId(updatedCard.CardListId);
+            for (int i = 0; i < listCards.Count; i++)
+            {
+                listCards[i].Index = i + 1;
+            }
+            await _cardRepository.UpdateRangeAsync(listCards);
+
+            var user = await _userService.GetUserByUsername(username);
+            if (user != null)
+            {
+                await _boardActivityService.Create(
+                    boardId: card.CardList.BoardId,
+                    creatingUserId: user.Id,
+                    type: updatedCard.IsPinned ? ActivityType.CARD_PINNED : ActivityType.CARD_UNPINNED,
+                    message: $"{user.Username} {(updatedCard.IsPinned ? "pinned" : "unpinned")} card '{updatedCard.Name}'.",
+                    cardId: updatedCard.Id
+                );
+            }
+
+            return Result.Ok();
+        }
     }
 }

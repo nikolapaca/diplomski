@@ -14,6 +14,7 @@ namespace FakeTrello.Model
         public User CreatedByUser { get; set; }
         public ICollection<CardAssignee> Assignees { get; set; } = new List<CardAssignee>();
         public EntityStatus Status {  get; set; }
+        public bool IsPinned { get; set; } = false;
 
         public Card() { }
 

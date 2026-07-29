@@ -5,7 +5,7 @@ import { Board } from '../../../core/model/board.model';
 import { BoardActivity } from '../../../core/model/board-activity.model';
 import { BoardActivityService } from '../../../core/service/board-activity-service';
 
-const ACTIVITY_ICONS: Record<number, string> = {
+export const ACTIVITY_ICONS: Record<number, string> = {
   0: 'add_circle',        // CARD_CREATED
   1: 'edit',               // CARD_UPDATED
   2: 'delete',             // CARD_DELETED
@@ -18,7 +18,12 @@ const ACTIVITY_ICONS: Record<number, string> = {
   9: 'playlist_add',       // LIST_CREATED
   10: 'edit_note',         // LIST_UPDATED
   11: 'playlist_remove',   // LIST_DELETED
-  12: 'dashboard_customize' // BOARD_UPDATED
+  12: 'dashboard_customize', // BOARD_UPDATED
+  13: 'archive',           // BOARD_ARCHIVED
+  14: 'push_pin',          // LIST_PINNED
+  15: 'push_pin',          // LIST_UNPINNED
+  16: 'push_pin',          // CARD_PINNED
+  17: 'push_pin'           // CARD_UNPINNED
 };
 
 @Component({

@@ -32,5 +32,9 @@ export class CardListService {
 
     public reorderList(list: CardList | undefined, targetIndex: number) : Observable<void> {
         return this.http.post<void>(`${environment.api}/cardLists/reorderList/${targetIndex}`, list);
-    } 
+    }
+
+    public togglePin(listId: number) : Observable<void> {
+        return this.http.post<void>(`${environment.api}/cardLists/pin/${listId}`, {});
+    }
 }

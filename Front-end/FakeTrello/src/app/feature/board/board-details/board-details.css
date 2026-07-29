@@ -67,3 +67,7 @@ mat-card-actions {
   display: flex;
   justify-content: flex-end;
 }
+
+.favorite-active {
+  color: #f5b301;
+}

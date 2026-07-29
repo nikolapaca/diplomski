@@ -3,7 +3,6 @@
   background: #fff;
 }
 
-/* HEADER */
 .dlg-header {
   display: flex;
   align-items: center;
@@ -23,6 +22,22 @@
   font-size: 18px;
 }
 
+.hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pin-indicator {
+  color: #e67e22;
+  transform: rotate(45deg);
+  font-size: 20px;
+}
+
+.pin-active {
+  color: #e67e22;
+}
+
 .dlg-content {
   padding: 16px 16px 96px;
 }
@@ -31,21 +46,19 @@
   width: 100%;
 }
 
-/* AI AKCIJE */
 .ai-actions {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-top: 8px; 
-  margin-bottom: 24px; /* Veći razmak do sekcije Assigned To */
+  margin-bottom: 24px; 
 }
 
-/* PRIKAZ AI REZULTATA */
 .ai-result {
     margin-top: 20px;
     padding: 15px;
     border-radius: 8px;
-    background-color: #f0f8ff; /* Vrlo svijetlo plava za AI rezultat */
+    background-color: #f0f8ff; 
     border: 1px solid #cceeff;
     
     h4 {
@@ -53,11 +66,11 @@
         margin-bottom: 10px;
         font-weight: 600;
         font-size: 16px;
-        color: #1a73e8; /* Plava boja naslova */
+        color: #1a73e8; 
     }
 }
 .ai-result p { margin: 4px 0; }
-.ai-result div { white-space: pre-wrap; } /* Sačuvaj formatiranje ako ga AI vrati */
+.ai-result div { white-space: pre-wrap; } 
 
 
 /* ASSIGNED TO */
@@ -107,7 +120,6 @@ mat-chip {
   margin-top: 8px;
 }
 
-/* FOOTER */
 .dlg-footer {
   position: sticky;
   bottom: 0;
@@ -128,19 +140,16 @@ mat-chip {
   color: #b00020;
 }
 
-/* Lepsi "pill" chip sa avatarom */
 .assignee-chip {
   border-radius: 999px !important;
   font-weight: 600;
 }
 
-/* popuni chip nežno plavom kad je selected */
 .assignee-chip.mat-mdc-standard-chip.mdc-evolution-chip--selected {
   background: #e8f0fe !important;
   color: #1a73e8 !important;
 }
 
-/* avatar krug */
 .assignee-chip .mat-icon[matChipAvatar] {
   width: 22px; height: 22px;
   border-radius: 50%;
@@ -149,9 +158,68 @@ mat-chip {
   font-size: 16px; line-height: 22px;
 }
 
-/* ukloni malo vizuelnog "šuma" na remove ikoni */
 .chip-remove .mat-icon { font-size: 18px; }
 
-/* Utility klase */
 .mt-8 { margin-top: 8px; }
 .ml-8 { margin-left: 8px; }
+/* Card history section */
+.history-section {
+  margin-top: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.history-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.history-toggle .history-caret {
+  margin-left: auto;
+}
+
+.history-body {
+  padding: 4px 14px 14px 14px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.history-body .activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.history-body .activity-item:first-child {
+  border-top: none;
+}
+
+.history-body .activity-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 2px;
+}
+
+.history-body .activity-content p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.history-body .activity-content span {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.5);
+}

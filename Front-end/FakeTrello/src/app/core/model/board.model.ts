@@ -5,5 +5,6 @@ export interface Board {
     description: string;
     status: BoardStatus;
     ownerUsername: string;
+    isFavorite: boolean;
 }
 

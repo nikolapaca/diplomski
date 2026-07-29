@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Board } from '../../../core/model/board.model';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { BoardActivityPanel } from '../board-activity/board-activity';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CardList } from '../../../core/model/cardList.model';
@@ -24,6 +25,7 @@ import { UpdateBoardDialog } from '../../../core/dialog/update-board-dialog/upda
 import { AuthService } from '../../../core/service/auth-service';
 import { AddCollaboratorsDialog } from '../../../core/dialog/add-collaborators-dialog/add-collaborators-dialog';
 import { RemoveCollaboratorDialog } from '../../../core/dialog/remove-collaborator-dialog/remove-collaborator-dialog';
+import { BoardMembersDialog } from '../../../core/dialog/board-members-dialog/board-members-dialog';
 import {
   CdkDragDrop,
   moveItemInArray,
@@ -37,6 +39,7 @@ import {
   selector: 'app-board-overview',
   imports: [MatDividerModule,
     MatIconModule,
+    MatTooltipModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     CdkDropList, 
@@ -331,6 +334,16 @@ export class BoardOverview implements OnInit {
     });
   }
 
+  public openMembersDialog(): void {
+    if (!this.board) {
+      return;
+    }
+    this.dialog.open(BoardMembersDialog, {
+      width: '480px',
+      data: this.board
+    });
+  }
+
   public removeCollaborator(): void {
     const dialogRef = this.dialog.open(RemoveCollaboratorDialog, {
       width: '1800px',
@@ -481,6 +494,53 @@ export class BoardOverview implements OnInit {
       this.boardService.refreshState();
       this.router.navigate([`home`])
     })
+  }
+
+  public archiveBoard(): void {
+    if (!this.boardName || !this.boardOwnerUsername) {
+      return;
+    }
+    this.boardService.archiveBoard(this.boardName, this.boardOwnerUsername).subscribe((_) => {
+      this.router.navigate([`home`])
+    })
+  }
+
+  public toggleFavorite(): void {
+    if (!this.board) {
+      return;
+    }
+    this.board.isFavorite = !this.board.isFavorite;
+    this.boardService.toggleFavorite(this.board.name, this.board.ownerUsername).subscribe({
+      error: () => {
+        if (this.board) {
+          this.board.isFavorite = !this.board.isFavorite;
+        }
+      }
+    });
+  }
+
+  public togglePinList(list: CardListView): void {
+    this.cardListService.togglePin(list.id).subscribe({
+      next: () => {
+        if (this.board) {
+          this.cardListService.getListsForBoard(this.board.name, this.board.ownerUsername).subscribe((response: CardList[]) => {
+            this.cardLists = response.map(list => ({
+              ...list,
+              showAddCardForm: false,
+              addCardForm: new FormGroup({
+                name: new FormControl('', Validators.required),
+                description: new FormControl('', Validators.required)
+              }),
+              showUpdateListForm: false,
+              updateListForm: new FormGroup({
+                name: new FormControl('', Validators.required)
+              })
+            }));
+            this.cd.markForCheck();
+          });
+        }
+      }
+    });
   }
 }
 

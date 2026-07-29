@@ -35,25 +35,37 @@ namespace FakeTrello.Repository
 
         public async Task<CardList?> GetById(int id)
         {
-            return await _context.CardLists.Include(cl => cl.Cards).ThenInclude(c => c.Assignees).FirstOrDefaultAsync(cl => cl.Id == id);
+            return await _context.CardLists.Include(cl => cl.Cards)
+                .ThenInclude(c => c.Assignees)
+                .ThenInclude(a => a.UserBoard)
+                .ThenInclude(ub => ub.User)
+                .FirstOrDefaultAsync(cl => cl.Id == id);
         }
 
         public async Task<List<CardList>> GetByBoardId(int boardId)
         {
-            return await _context.CardLists.Include(cl => cl.Cards).ThenInclude(c => c.Assignees).Where(b => b.BoardId == boardId).OrderBy(cl => cl.Index).ToListAsync();
+            return await _context.CardLists.Include(cl => cl.Cards).ThenInclude(c => c.Assignees).Where(b => b.BoardId == boardId)
+                // Pinned lists always float to the top of the board.
+                .OrderByDescending(cl => cl.IsPinned)
+                .ThenBy(cl => cl.Index)
+                .ToListAsync();
         }
 
         public async Task<List<CardList>> GetByBoardOwnerAndBoardName(string boardName, string boardOwnerUsername)
         {
             var cardLists = await _context.CardLists
-                                .Include(cl => cl.Cards.Where(c => c.Status != EntityStatus.DELETED).OrderBy(c => c.Index))
+                                // Pinned cards float to the top within each list.
+                                .Include(cl => cl.Cards.Where(c => c.Status != EntityStatus.DELETED).OrderByDescending(c => c.IsPinned).ThenBy(c => c.Index))
                                 .ThenInclude(c => c.Assignees) 
                                 .Include(cl => cl.Board)
                                 .ThenInclude(b => b.UserBoards)
                                 .ThenInclude(ub => ub.User)
                                 .Where(cl => cl.Board.Name == boardName &&
                                              cl.Board.UserBoards.Any(ub => ub.User.Username == boardOwnerUsername) &&
-                                             cl.Status != EntityStatus.DELETED).OrderBy(cl => cl.Index)
+                                             cl.Status != EntityStatus.DELETED)
+                                // Pinned lists always float to the top of the board.
+                                .OrderByDescending(cl => cl.IsPinned)
+                                .ThenBy(cl => cl.Index)
                             .ToListAsync();
 
             return cardLists;

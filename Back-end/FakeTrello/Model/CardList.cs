@@ -10,6 +10,7 @@ namespace FakeTrello.Model
         public EntityStatus Status {  get; set; }
         public Board Board { get; set; }
         public int Index { get; set; }
+        public bool IsPinned { get; set; } = false;
         public ICollection<Card> Cards { get; set; }
         public CardList() { }
         public CardList(string name, EntityStatus status)

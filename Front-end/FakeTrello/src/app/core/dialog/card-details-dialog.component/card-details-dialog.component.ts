@@ -17,6 +17,10 @@ import { Board } from '../../../core/model/board.model';
 import { CardService } from '../../../core/service/card.service';
 import { AssignCardDialog } from '../../../core/dialog/assign-card-dialog/assign-card-dialog';
 import { AiService } from '../../../core/service/ai.service';
+import { UserService } from '../../../core/service/user-service';
+import { BoardActivityService } from '../../../core/service/board-activity-service';
+import { BoardActivity } from '../../../core/model/board-activity.model';
+import { ACTIVITY_ICONS } from '../../../feature/board/board-activity/board-activity';
 
 export interface CardDetailsData {
   card: Card;
@@ -60,6 +64,14 @@ export class CardDetailsDialogComponent {
 
   assignedUserUsernames: string[] = [];
 
+  isPinned = false;
+  loggedInUsername = '';
+
+  showHistory = false;
+  loadingHistory = false;
+  history: BoardActivity[] = [];
+  private historyLoaded = false;
+
   readonly changed = new EventEmitter<Partial<Card>>();
 
   constructor(
@@ -69,11 +81,57 @@ export class CardDetailsDialogComponent {
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private aiService: AiService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private userService: UserService,
+    private boardActivityService: BoardActivityService
   ) {
     this.titleCtrl.setValue(data.card.name ?? '');
     this.descriptionCtrl.setValue(data.card.description ?? '');
     this.assignedUserUsernames = this.data.card.assignedUserUsernames ?? [];
+    this.isPinned = this.data.card.isPinned ?? false;
+    this.loggedInUsername = this.userService.getUsername();
+  }
+
+  get isOwner(): boolean {
+    return !!this.data.board && this.loggedInUsername === this.data.board.ownerUsername;
+  }
+
+  togglePin(): void {
+    this.cardService.togglePin(this.data.card.id).subscribe({
+      next: () => {
+        this.isPinned = !this.isPinned;
+        this.data.card.isPinned = this.isPinned;
+        this.cdr.detectChanges();
+        this.changed.emit({ isPinned: this.isPinned });
+      },
+      error: () => {
+        this.errorMessage = 'Failed to toggle pin.';
+      }
+    });
+  }
+
+  toggleHistory(): void {
+    this.showHistory = !this.showHistory;
+
+    if (this.showHistory && !this.historyLoaded) {
+      this.loadingHistory = true;
+      this.boardActivityService.getActivitiesForCard(this.data.card.id).subscribe({
+        next: (activities) => {
+          this.history = activities;
+          this.historyLoaded = true;
+          this.loadingHistory = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.loadingHistory = false;
+          this.errorMessage = 'Failed to load card history.';
+        }
+      });
+    }
+  }
+
+  iconFor(type: number): string {
+    return ACTIVITY_ICONS[type] || 'history';
   }
 
   suggestTasks(): void {
@@ -118,7 +176,8 @@ export class CardDetailsDialogComponent {
       id: this.data.card.id,
       name: this.titleCtrl.value,
       description: this.descriptionCtrl.value,
-      cardListId: this.data.card.cardListId
+      cardListId: this.data.card.cardListId,
+      isPinned: this.isPinned
     };
 
     this.saving = true;

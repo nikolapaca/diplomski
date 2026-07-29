@@ -21,6 +21,10 @@ export class BoardActivityService {
     return this.http.get<BoardActivity[]>(`${environment.api}/activities/${ownerUsername}/${boardName}`);
   }
 
+  public getActivitiesForCard(cardId: number): Observable<BoardActivity[]> {
+    return this.http.get<BoardActivity[]>(`${environment.api}/activities/card/${cardId}`);
+  }
+
   public loadActivities(ownerUsername: string, boardName: string): void {
     this.getActivitiesForBoard(ownerUsername, boardName).subscribe({
       next: (activities) => {

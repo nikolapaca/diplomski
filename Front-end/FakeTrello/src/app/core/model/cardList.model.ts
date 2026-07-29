@@ -5,5 +5,6 @@ export interface CardList {
     name: string,
     boardName: string,
     boardUsername: string,
-    cards: Card[]
+    cards: Card[],
+    isPinned?: boolean
 }

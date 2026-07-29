@@ -42,7 +42,11 @@ namespace FakeTrello.Repository
                     {
                             Board = b,
                             UserBoard = b.UserBoards.First(ub => ub.UserId == user.Id)
-                    }).OrderBy(item => item.UserBoard.UserRole).Select(item => item.Board).ToListAsync();
+                    })
+                    // Favorite boards always come first, regardless of role.
+                    .OrderByDescending(item => item.UserBoard.IsFavorite)
+                    .ThenBy(item => item.UserBoard.UserRole)
+                    .Select(item => item.Board).ToListAsync();
         }
 
         public async Task<List<Board>> GetBySearchFilter(int userId, string searchTerm)

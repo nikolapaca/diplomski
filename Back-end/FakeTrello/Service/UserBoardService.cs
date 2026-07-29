@@ -1,4 +1,5 @@
-﻿using FakeTrello.Model;
+﻿using FakeTrello.DTO;
+using FakeTrello.Model;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service.Contract;
 
@@ -37,6 +38,23 @@ namespace FakeTrello.Service
             return membership != null;
         }
 
+        public async Task<bool> IsUserOwnerOfBoard(string username, int boardId)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return false;
+            }
+
+            var user = await _userRepository.GetByUsername(username);
+            if (user == null)
+            {
+                return false;
+            }
+
+            var membership = await _userBoardRepository.GetByUserAndBoardId(user.Id, boardId);
+            return membership != null && membership.UserRole == UserRole.OWNER;
+        }
+
         public async Task<UserBoard> Create(UserBoard userBoard)
         {
             return await _userBoardRepository.CreateAsync(userBoard);
@@ -55,6 +73,19 @@ namespace FakeTrello.Service
         public async Task<List<UserBoard>> GetAllByUserId(int userId)
         {
             return await _userBoardRepository.GetAllByUserId(userId);
+        }
+
+        public async Task<List<BoardMemberDTO>> GetMembers(int boardId)
+        {
+            var userBoards = await _userBoardRepository.GetByBoardId(boardId);
+
+            return userBoards.Select(ub => new BoardMemberDTO
+            {
+                Username = ub.User.Username,
+                Name = ub.User.Name,
+                Surname = ub.User.Surname,
+                Role = ub.UserRole
+            }).ToList();
         }
 
         public async Task<string> GetUsernameOfBoardOwner(int boardId)

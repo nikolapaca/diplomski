@@ -4,6 +4,7 @@ import { Board } from "../model/board.model";
 import { environment } from "../../../environment";
 import { BehaviorSubject, catchError, distinctUntilChanged, merge, Observable, of, Subject, switchMap, take, tap } from "rxjs";
 import { BoardUpdate } from "../model/board-update.model";
+import { BoardMember } from "../model/board-member.model";
 
 @Injectable({
   providedIn: 'root'
@@ -63,6 +64,10 @@ export class BoardService {
     return this.http.get<Board>(`${environment.api}/boards/${name}/${username}`)
   }
 
+  public getMembers(name: string, ownerUsername: string): Observable<BoardMember[]> {
+    return this.http.get<BoardMember[]>(`${environment.api}/boards/${name}/${ownerUsername}/members`);
+  }
+
   public removeCollaborator(board: Board | undefined, username: string) : Observable<void>{
     return this.http.post<void>(`${environment.api}/boards/collaborator/remove/${username}`, board);
   }
@@ -73,6 +78,18 @@ export class BoardService {
 
   public leaveBoard(board: Board | undefined): Observable<void> {
     return this.http.post<void>(`${environment.api}/boards/leave`, board);
+  }
+
+  public toggleFavorite(name: string, ownerUsername: string): Observable<void> {
+    return this.http.post<void>(`${environment.api}/boards/favorite/${name}/${ownerUsername}`, {});
+  }
+
+  public archiveBoard(name: string, ownerUsername: string): Observable<void> {
+    return this.http.post<void>(`${environment.api}/boards/archive/${name}/${ownerUsername}`, {}).pipe(
+      tap(() => {
+        this.refreshState();
+      })
+    );
   }
 
   public deleteBoard(name: string | null, username: string | null): Observable<void> {

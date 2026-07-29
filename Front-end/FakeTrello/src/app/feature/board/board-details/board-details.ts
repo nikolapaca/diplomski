@@ -38,6 +38,20 @@ export class BoardDetails implements OnInit {
     this.boardService.deleteBoard(this.board.name, this.board.ownerUsername).subscribe();
   }
 
+  public archiveBoard() : void {
+    this.boardService.archiveBoard(this.board.name, this.board.ownerUsername).subscribe();
+  }
+
+  public toggleFavorite(event: MouseEvent) : void {
+    event.stopPropagation();
+    this.board.isFavorite = !this.board.isFavorite;
+    this.boardService.toggleFavorite(this.board.name, this.board.ownerUsername).subscribe({
+      error: () => {
+        this.board.isFavorite = !this.board.isFavorite;
+      }
+    });
+  }
+
   public leaveBoard() : void {
     this.boardService.removeCollaborator(this.board, this.loggedInUsername).subscribe({
       next: (_) => {
