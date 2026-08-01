@@ -45,7 +45,6 @@ namespace FakeTrello.Repository
         public async Task<List<CardList>> GetByBoardId(int boardId)
         {
             return await _context.CardLists.Include(cl => cl.Cards).ThenInclude(c => c.Assignees).Where(b => b.BoardId == boardId)
-                // Pinned lists always float to the top of the board.
                 .OrderByDescending(cl => cl.IsPinned)
                 .ThenBy(cl => cl.Index)
                 .ToListAsync();
@@ -54,7 +53,6 @@ namespace FakeTrello.Repository
         public async Task<List<CardList>> GetByBoardOwnerAndBoardName(string boardName, string boardOwnerUsername)
         {
             var cardLists = await _context.CardLists
-                                // Pinned cards float to the top within each list.
                                 .Include(cl => cl.Cards.Where(c => c.Status != EntityStatus.DELETED).OrderByDescending(c => c.IsPinned).ThenBy(c => c.Index))
                                 .ThenInclude(c => c.Assignees) 
                                 .Include(cl => cl.Board)
@@ -63,7 +61,6 @@ namespace FakeTrello.Repository
                                 .Where(cl => cl.Board.Name == boardName &&
                                              cl.Board.UserBoards.Any(ub => ub.User.Username == boardOwnerUsername) &&
                                              cl.Status != EntityStatus.DELETED)
-                                // Pinned lists always float to the top of the board.
                                 .OrderByDescending(cl => cl.IsPinned)
                                 .ThenBy(cl => cl.Index)
                             .ToListAsync();

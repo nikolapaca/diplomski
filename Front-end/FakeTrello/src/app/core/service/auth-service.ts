@@ -6,7 +6,6 @@ import { CredentialsDTO } from '../model/login-credentials.model';
 import { AccessToken } from '../model/access-token.model';
 import { jwtDecode } from 'jwt-decode';
 import { isPlatformBrowser } from '@angular/common';
-import { User } from '../model/user.model';
 
 @Injectable({
   providedIn: 'root',
@@ -45,19 +44,33 @@ export class AuthService {
     return false;
   }
 
-public getLoggedInUser(): string | null {
-  if (isPlatformBrowser(this.platformId)) {
-    const token = localStorage.getItem('access-token');
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        return decoded.username;
-      } catch (error) {
-        console.error('Failed to decode token', error);
-        return null;
+  public getLoggedInUser(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      const token = localStorage.getItem('access-token');
+      if (token) {
+        try {
+          const decoded: any = jwtDecode(token);
+          return decoded.username;
+        } catch (error) {
+          console.error('Failed to decode token', error);
+          return null;
+        }
       }
     }
+    return null;
   }
-  return null;
-}
+
+  public confirmEmail(token: string) {
+
+    return this.http.post(
+      `${environment.api}/auth/confirm-email`,
+      JSON.stringify(token),
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+  }
 }

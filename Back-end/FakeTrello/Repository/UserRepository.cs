@@ -107,5 +107,10 @@ namespace FakeTrello.Repository
                 )
                 .ToListAsync();
         }
+
+        public async Task<User?> GetByConfirmationToken(string token)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.EmailConfirmationToken == token);
+        }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using FakeTrello.DTO;
+using FakeTrello.Service;
 using FakeTrello.Service.Contract;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FakeTrello.Controller
@@ -9,6 +11,7 @@ namespace FakeTrello.Controller
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authenticationService;
+        
 
         public AuthController(IAuthService authenticationService)
         {
@@ -28,6 +31,21 @@ namespace FakeTrello.Controller
                 return NotFound("No users in database");
             }
             return Ok(token.Value);
+        }
+
+        [HttpPost("confirm-email")]
+        [AllowAnonymous]
+        public async Task<ActionResult> ConfirmEmail([FromBody] string token)
+        {
+            var result = await _authenticationService.ConfirmEmail(token);
+
+            if (!result.IsSuccess)
+                return BadRequest(result.Errors);
+
+            return Ok(new
+            {
+                message = "Email confirmed!"
+            });
         }
     }
 }

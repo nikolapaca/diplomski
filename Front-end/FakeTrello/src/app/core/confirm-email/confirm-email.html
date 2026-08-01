@@ -1,0 +1,54 @@
+<div class="confirm-container">
+
+    <div class="confirm-card">
+
+        <div class="icon">
+            ✉️
+        </div>
+
+
+        <h1>
+            Email Confirmation
+        </h1>
+
+
+        <p *ngIf="!message && !isConfirmed">
+            Click the button below to confirm your email address.
+        </p>
+
+
+        <button
+            *ngIf="token && !isConfirmed"
+            (click)="confirmEmail()"
+            [disabled]="isLoading">
+
+            {{ 
+              isLoading 
+              ? 'Confirming...' 
+              : 'Confirm Email' 
+            }}
+
+        </button>
+
+
+        <p 
+            class="success"
+            *ngIf="isConfirmed">
+
+            {{ message }}
+
+        </p>
+
+
+        <p 
+            class="error"
+            *ngIf="message && !isConfirmed">
+
+            {{ message }}
+
+        </p>
+
+
+    </div>
+
+</div>

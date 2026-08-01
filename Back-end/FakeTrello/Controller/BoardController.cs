@@ -144,9 +144,9 @@ namespace FakeTrello.Controller
                 return NotFound("Board doesn't exist.");
             }
 
-            if (!await _userBoardService.IsUserMemberOfBoard(requestingUsername, board.Id))
+            if (!string.Equals(requestingUsername, ownerUsername, StringComparison.OrdinalIgnoreCase))
             {
-                return BadRequest("You don't have access to this board.");
+                return BadRequest("Only the board owner can view the member list.");
             }
 
             var members = await _userBoardService.GetMembers(board.Id);

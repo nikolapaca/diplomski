@@ -43,7 +43,7 @@ export class BoardActivityService {
 
     if (!this.connectionStarted) {
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(`${environment.hub}/notificationHub`, {
+        .withUrl(`${environment.hub}`, {
           accessTokenFactory: () => localStorage.getItem('access-token') || ''
         })
         .withAutomaticReconnect()

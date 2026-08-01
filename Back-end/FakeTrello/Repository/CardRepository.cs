@@ -52,7 +52,6 @@ namespace FakeTrello.Repository
                     .ThenInclude(a => a.UserBoard)
                         .ThenInclude(ub => ub.User)
                 .Where(c => c.CardListId == listId && c.Status != EntityStatus.DELETED)
-                // Pinned cards always float to the top of the list.
                 .OrderByDescending(c => c.IsPinned)
                 .ThenBy(c => c.Index)
                 .ToListAsync();

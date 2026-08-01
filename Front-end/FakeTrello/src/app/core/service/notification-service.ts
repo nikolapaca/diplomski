@@ -64,7 +64,7 @@ export class NotificationService {
     this.connectionStarted = true;
 
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.hub}/notificationHub`, {
+      .withUrl(`${environment.hub}`, {
         accessTokenFactory: () => localStorage.getItem('access-token') || ''
       })
       .withAutomaticReconnect()

@@ -13,12 +13,14 @@ namespace FakeTrello.Service
         private readonly IUserRepository _repository;
         private readonly IMapper _mapper;
         private readonly PasswordHasher<User> _passwordHasher;
+        private readonly IEmailService _emailService;
 
-        public UserService(IUserRepository repository, IMapper mapper)
+        public UserService(IUserRepository repository, IMapper mapper, IEmailService emailService)
         {
             _repository = repository;
             _mapper = mapper;
             _passwordHasher = new PasswordHasher<User>();
+            _emailService = emailService;
         }
 
         public async Task<Result<UserDTO>> Create(UserDTO userDto)
@@ -30,7 +32,16 @@ namespace FakeTrello.Service
 
             var newUser = _mapper.Map<UserDTO, User>(userDto);
             newUser.Password = _passwordHasher.HashPassword(newUser, newUser.Password);
+            newUser.EmailConfirmed = false;
+            newUser.EmailConfirmationToken = Guid.NewGuid().ToString();
+            newUser.EmailConfirmationTokenExpiration = DateTime.UtcNow.AddHours(24);
             User user = await _repository.Create(newUser);
+
+            await _emailService.SendConfirmationEmail(
+                user.Email,
+                user.EmailConfirmationToken
+            );
+            
             return Result.Ok(_mapper.Map<User, UserDTO>(user));
         }
 

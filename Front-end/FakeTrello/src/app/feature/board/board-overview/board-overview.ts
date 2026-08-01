@@ -132,6 +132,28 @@ export class BoardOverview implements OnInit {
   return this.cardLists.map(list => list.id.toString());
 }
 
+  // A pinned list/card can only be dropped among other pinned items (top of the
+  // block); a non-pinned one can only be dropped after all pinned items. This
+  // keeps "pinned always first" true even mid-drag, not just after a refetch.
+  public listSortPredicate = (index: number, drag: CdkDrag): boolean => {
+    const dragged = this.currentlyDraggindCardList;
+    if (!dragged) {
+      return true;
+    }
+    const pinnedCount = this.cardLists.filter(l => l.isPinned).length;
+    return dragged.isPinned ? index < pinnedCount : index >= pinnedCount;
+  };
+
+  public cardSortPredicate = (index: number, drag: CdkDrag, drop: CdkDropList): boolean => {
+    const dragged = this.currentlyDraggingCard;
+    if (!dragged) {
+      return true;
+    }
+    const targetCards: Card[] = drop.data || [];
+    const pinnedCount = targetCards.filter(c => c.isPinned).length;
+    return dragged.isPinned ? index < pinnedCount : index >= pinnedCount;
+  };
+
   public dropList(event: CdkDragDrop<any[]>): void {
     moveItemInArray(this.cardLists, event.previousIndex, event.currentIndex);
     const list: CardList = {
@@ -543,4 +565,3 @@ export class BoardOverview implements OnInit {
     });
   }
 }
-

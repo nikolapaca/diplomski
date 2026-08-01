@@ -14,6 +14,9 @@ namespace FakeTrello.Model
         public EntityStatus Status { get; set; }
         public List<UserBoard> UserBoards { get; set; } = new List<UserBoard>();
         public ICollection<Card> Cards { get; set; } = new List<Card>();
+        public bool EmailConfirmed { get; set; } = false;
+        public string? EmailConfirmationToken { get; set; }
+        public DateTime? EmailConfirmationTokenExpiration { get; set; }
         public User() { }
 
         public User(int id, string name, string surname, string email, string username, string password, EntityStatus status)

@@ -584,8 +584,6 @@ namespace FakeTrello.Service
             card.IsPinned = !card.IsPinned;
             var updatedCard = await _cardRepository.Update(card);
 
-            // Renumber Index within the list so pinned cards keep a lower Index
-            // than unpinned ones, matching how they are displayed and dragged.
             var listCards = await _cardRepository.GetByListId(updatedCard.CardListId);
             for (int i = 0; i < listCards.Count; i++)
             {

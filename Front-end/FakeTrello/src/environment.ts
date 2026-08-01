@@ -1,5 +1,5 @@
 export const environment = {
     production: false,
-    api: 'https://localhost:7150/api',
-    hub: 'https://localhost:7150'
+    api: 'http://localhost:5000/api',
+    hub: 'http://localhost:5000/notificationHub'
 }

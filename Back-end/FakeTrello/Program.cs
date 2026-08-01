@@ -1,4 +1,5 @@
 using FakeTrello;
+using FakeTrello.Config;
 using FakeTrello.Data;
 using FakeTrello.Hub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -52,6 +53,8 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddHttpClient();
 builder.Services.AddSignalR();
 builder.Services.ConfigureAuth();
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 
 builder.Services.AddCors(options =>
 {
@@ -113,8 +116,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

@@ -8,6 +8,7 @@ import { GuestGuard } from './core/guard/guest.guard';
 import { NotFound } from './core/not-found/not-found';
 import { ProfileComponent } from './feature/user/profile-component/profile-component';
 import { EditProfileComponent } from './feature/user/edit-profile-component/edit-profile-component';
+import { ConfirmEmail } from './core/confirm-email/confirm-email';
 
 
 export const routes: Routes = [
@@ -17,5 +18,7 @@ export const routes: Routes = [
     { path: 'boards/:username/:boardName', component: BoardOverview, canActivate: [AuthGuard] },
     { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
     { path: 'edit-profile', component: EditProfileComponent, canActivate: [AuthGuard] },
+    { path: 'not-found', component: NotFound },
+    { path: 'confirm-email', component: ConfirmEmail},
     { path: '**', component: NotFound }
 ];

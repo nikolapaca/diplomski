@@ -33,6 +33,7 @@ namespace FakeTrello
             services.AddScoped<ICardAssigneeService, CardAssigneeService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IBoardActivityService, BoardActivityService>();
+            services.AddScoped<IEmailService, EmailService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)

@@ -14,9 +14,11 @@
           (click)="toggleFavorite()">
           <mat-icon [class.favorite-active]="board.isFavorite">{{ board.isFavorite ? 'star' : 'star_border' }}</mat-icon>
         </button>
+        @if(loggedInUsername === board.ownerUsername){
         <button mat-icon-button matTooltip="View board members" (click)="openMembersDialog()">
           <mat-icon>group</mat-icon>
         </button>
+        }
       @if(loggedInUsername === board.ownerUsername){
       <button mat-flat-button color="primary" (click)="updateBoard()">
         <mat-icon>edit</mat-icon>
@@ -62,6 +64,7 @@
     cdkDropListOrientation="horizontal"
     cdkScrollable
     cdkDropListGroup
+    [cdkDropListSortPredicate]="listSortPredicate"
     (cdkDropListDropped)="dropList($event)"
   >
     @for (list of cardLists; track list) {
@@ -116,6 +119,7 @@
           cdkDropList
           [cdkDropListData]="list.cards"
           [cdkDropListConnectedTo]="connectedLists"
+          [cdkDropListSortPredicate]="cardSortPredicate"
           [id]="'list-' + list.id"
           (cdkDropListDropped)="dropCard($event)"
         >

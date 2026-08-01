@@ -4,3 +4,15 @@
 /Front-end/FakeTrello/.vscode
 /Back-end/.vs
 /Front-end/FakeTrello/.angular
+
+/Back-end/FakeTrello/publish
+/Back-end/FakeTrello/**/publish
+/Back-end/FakeTrello/**/*.dll
+/Back-end/FakeTrello/**/*.pdb
+/Back-end/FakeTrello/Migrations
+
+/Front-end/FakeTrello/dist
+
+**/.dockerignore
+Back-end/FakeTrello/appsettings.Development.json
+
