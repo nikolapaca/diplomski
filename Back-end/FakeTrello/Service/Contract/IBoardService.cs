@@ -12,10 +12,10 @@ namespace FakeTrello.Service.Contract
         Task<Board?> GetByNameAndOwnerUsername(string name, string username);
         Task<Result<BoardDTO>> GetResultByNameAndOwnerUsername(string name, string username);
         Task<Result<BoardDTO>> Create(BoardDTO boardDTO, string username);
-        Task<Result<BoardDTO>> Update(BoardUpdateDTO boardDto);
-        Task<Result> Delete(string name, string username);
-        Task<Result> AddCollaboratorToBoard(BoardDTO boardDto, string username);
-        Task<Result> RemoveCollaboratorFromBoard(BoardDTO boardDto, string username);
+        Task<Result<BoardDTO>> Update(BoardUpdateDTO boardDto, string requestingUsername);
+        Task<Result> Delete(string name, string username, string requestingUsername);
+        Task<Result> AddCollaboratorToBoard(BoardDTO boardDto, string username, string requestingUsername);
+        Task<Result> RemoveCollaboratorFromBoard(BoardDTO boardDto, string username, string requestingUsername);
         Task<Result> LeaveBoard(BoardDTO boardDto, string username);
         Task<Result> ToggleFavorite(string boardName, string boardOwnerUsername, string username);
         Task<Result> Archive(string name, string ownerUsername, string requestingUsername);

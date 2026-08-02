@@ -4,6 +4,8 @@
 /Front-end/FakeTrello/.vscode
 /Back-end/.vs
 /Front-end/FakeTrello/.angular
+/Back-end/FakeTrello.Tests/bin
+/Back-end/FakeTrello.Tests/obj
 
 /Back-end/FakeTrello/publish
 /Back-end/FakeTrello/**/publish

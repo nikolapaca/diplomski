@@ -4,12 +4,6 @@ namespace FakeTrello.Data.Contract
 {
     public interface IUnitOfWork : IDisposable
     {
-        IBoardRepository Boards { get; }
-        IUserBoardRepository UserBoards { get; }
-        ICardListRepository CardLists { get; }
-        ICardRepository Cards { get; }
-        ICardAssigneeRepository CardAssignees { get; }
-        INotificationRepository Notifications { get; }
 
         Task BeginTransactionAsync();
         Task CommitAsync();

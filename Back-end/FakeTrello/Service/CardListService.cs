@@ -5,12 +5,14 @@ using FakeTrello.Model;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service.Contract;
 using FluentResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace FakeTrello.Service
 {
     public class CardListService : ICardListService
     {
         private readonly ICardListRepository _cardListRepository;
+        private readonly ICardRepository _cardRepository;
         private readonly IBoardService _boardService;
         private readonly IUserService _userService;
         private readonly IUserBoardService _userBoardService;
@@ -18,9 +20,10 @@ namespace FakeTrello.Service
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
 
-        public CardListService(ICardListRepository cardListRepository, IMapper mapper, IBoardService boardService, IUnitOfWork unitOfWork, IUserService userService, IUserBoardService userBoardService, IBoardActivityService boardActivityService)
+        public CardListService(ICardListRepository cardListRepository, ICardRepository cardRepository, IMapper mapper, IBoardService boardService, IUnitOfWork unitOfWork, IUserService userService, IUserBoardService userBoardService, IBoardActivityService boardActivityService)
         {
             _cardListRepository = cardListRepository;
+            _cardRepository = cardRepository;
             _mapper = mapper;
             _boardService = boardService;
             _unitOfWork = unitOfWork;
@@ -164,9 +167,9 @@ namespace FakeTrello.Service
 
                 foreach (var card in getByIdResult.Value.Cards)
                 {
-                    await _unitOfWork.Cards.Delete(card.Id);
+                    await _cardRepository.Delete(card.Id);
                 }
-                await _unitOfWork.CardLists.Delete(id);
+                await _cardListRepository.Delete(id);
 
                 var user = await _userService.GetUserByUsername(username);
                 if (user != null)
@@ -191,38 +194,62 @@ namespace FakeTrello.Service
 
         public async Task<Result> MoveList(CardListDTO cardList, int targetIndex, string username)
         {
-            var list = await _cardListRepository.GetById(cardList.Id);
-            if (list == null)
-                throw new Exception("List not found");
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (!await _userBoardService.IsUserMemberOfBoard(username, list.BoardId))
+            try
             {
-                return Result.Fail("You don't have access to this board.");
-            }
+                var list = await _cardListRepository.GetById(cardList.Id);
+                if (list == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("List not found.");
+                }
 
-            var lists = await _cardListRepository.GetByBoardId(list.BoardId);
+                if (!await _userBoardService.IsUserMemberOfBoard(username, list.BoardId))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("You don't have access to this board.");
+                }
 
-            int oldIndex = list.Index;
+                var lists = await _cardListRepository.GetByBoardId(list.BoardId);
 
-            if (oldIndex == targetIndex)
+                int oldIndex = list.Index;
+
+                if (oldIndex == targetIndex)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Ok();
+                }
+
+                if (oldIndex < targetIndex)
+                {
+                    foreach (var l in lists.Where(l => l.Id != list.Id && l.Index > oldIndex && l.Index <= targetIndex))
+                        l.Index--;
+                }
+                else
+                {
+                    foreach (var l in lists.Where(l => l.Id != list.Id && l.Index >= targetIndex && l.Index < oldIndex))
+                        l.Index++;
+                }
+
+                list.Index = targetIndex;
+
+                await _cardListRepository.UpdateRangeAsync(lists);
+
+                await _unitOfWork.CommitAsync();
+
                 return Result.Ok();
-
-            if (oldIndex < targetIndex)
-            {
-                foreach (var l in lists.Where(l => l.Id != list.Id && l.Index > oldIndex && l.Index <= targetIndex))
-                    l.Index--;
             }
-            else
+            catch (DbUpdateConcurrencyException)
             {
-                foreach (var l in lists.Where(l => l.Id != list.Id && l.Index >= targetIndex && l.Index < oldIndex))
-                    l.Index++;
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail("This board's lists were changed by someone else while you were reordering. Please refresh and try again.");
             }
-
-            list.Index = targetIndex;
-
-            await _cardListRepository.UpdateRangeAsync(lists);
-
-            return Result.Ok();
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail($"An error occurred during list reorder: {ex.Message}");
+            }
         }
 
         public async Task<Result> TogglePin(int listId, string username)

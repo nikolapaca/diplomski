@@ -102,5 +102,10 @@ namespace FakeTrello.Service
         {
             await _userBoardRepository.DeleteAsync(userBoard.UserId, userBoard.BoardId);
         }
+
+        public void RemoveRange(IEnumerable<UserBoard> userBoards)
+        {
+            _userBoardRepository.RemoveRange(userBoards);
+        }
     }
 }

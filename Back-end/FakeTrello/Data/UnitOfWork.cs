@@ -8,22 +8,9 @@ namespace FakeTrello.Data
     {
         private readonly MyDbContext _context;
 
-        public IBoardRepository Boards { get; private set; }
-        public IUserBoardRepository UserBoards { get; private set; }
-        public ICardListRepository CardLists { get; private set; }
-        public ICardRepository Cards { get; private set; }
-        public ICardAssigneeRepository CardAssignees {  get; private set; }
-        public INotificationRepository Notifications { get; private set; }
-
         public UnitOfWork(MyDbContext context)
         {
             _context = context;
-            Boards = new BoardRepository(_context);
-            UserBoards = new UserBoardRepository(_context);
-            CardLists = new CardListRepository(_context);
-            Cards = new CardRepository(_context);
-            CardAssignees = new CardAssigneeRepository(_context);
-            Notifications = new NotificationRepository(_context);
         }
 
         public async Task BeginTransactionAsync() =>

@@ -1,8 +1,5 @@
 ﻿using FakeTrello.Model;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore;
-using System.Security.Cryptography;
 
 namespace FakeTrello.Data
 {

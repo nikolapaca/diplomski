@@ -1,4 +1,5 @@
 ﻿using FakeTrello.Model.Enum;
+using System.ComponentModel.DataAnnotations;
 
 namespace FakeTrello.Model
 {
@@ -12,6 +13,9 @@ namespace FakeTrello.Model
         public int Index { get; set; }
         public bool IsPinned { get; set; } = false;
         public ICollection<Card> Cards { get; set; }
+
+        [Timestamp]
+        public uint Version { get; set; }
         public CardList() { }
         public CardList(string name, EntityStatus status)
         {

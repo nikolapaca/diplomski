@@ -16,5 +16,6 @@ namespace FakeTrello.Service.Contract
         Task<bool> IsUserOwnerOfBoard(string username, int boardId);
         Task<UserBoard> Update(UserBoard userBoard);
         Task Delete(UserBoard userBoard);
+        void RemoveRange(IEnumerable<UserBoard> userBoards);
     }
 }

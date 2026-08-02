@@ -6,6 +6,7 @@ using FakeTrello.Model.Enum;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service.Contract;
 using FluentResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace FakeTrello.Service
 {
@@ -93,7 +94,7 @@ namespace FakeTrello.Service
                 card.Index = (maxIndex ?? 0) + 1;
                 card.CreatedByUserId = userId;
 
-                await _unitOfWork.Cards.Create(card);
+                await _cardRepository.Create(card);
                 await _unitOfWork.SaveChangesAsync();
 
                 await _boardActivityService.Create(
@@ -165,8 +166,7 @@ namespace FakeTrello.Service
 
                 card.Index = newIndex;
 
-                await _unitOfWork.Cards.UpdateRangeAsync(cards);
-                await _unitOfWork.SaveChangesAsync();
+                await _cardRepository.UpdateRangeAsync(cards);
 
                 await _boardActivityService.Create(
                     boardId: card.CardList.BoardId,
@@ -179,6 +179,11 @@ namespace FakeTrello.Service
                 await _unitOfWork.CommitAsync();
 
                 return Result.Ok();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail("This list was changed by someone else while you were reordering. Please refresh and try again.");
             }
             catch (Exception ex)
             {
@@ -259,8 +264,7 @@ namespace FakeTrello.Service
                     .Append(card)
                     .ToList();
 
-                await _unitOfWork.Cards.UpdateRangeAsync(cardsToUpdate);
-                await _unitOfWork.SaveChangesAsync();
+                await _cardRepository.UpdateRangeAsync(cardsToUpdate);
 
                 await _boardActivityService.Create(
                     boardId: boardId,
@@ -273,6 +277,11 @@ namespace FakeTrello.Service
                 await _unitOfWork.CommitAsync();
 
                 return Result.Ok();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail("This card or list was changed by someone else while you were moving it. Please refresh and try again.");
             }
             catch (Exception ex)
             {
@@ -348,8 +357,7 @@ namespace FakeTrello.Service
                 }
 
                 var cardAssignee = new CardAssignee(card.Id, user.Id, boardId);
-                await _unitOfWork.CardAssignees.CreateAsync(cardAssignee);
-                await _unitOfWork.SaveChangesAsync();
+                await _cardAssigneeService.Create(cardAssignee);
 
                 if (user.Id != creatingUser.Id)
                 {
@@ -424,13 +432,11 @@ namespace FakeTrello.Service
                     return Result.Fail("This user is not assigned to this card!");
                 }
 
-                await _unitOfWork.CardAssignees.Delete(
+                await _cardAssigneeService.Delete(
                     cardAssignee.CardId,
                     cardAssignee.UserId,
                     cardAssignee.BoardId
                 );
-
-                await _unitOfWork.SaveChangesAsync();
 
                 if (user.Id != unassigningUser.Id)
                 {

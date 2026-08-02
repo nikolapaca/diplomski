@@ -18,9 +18,11 @@ namespace FakeTrello.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
         private readonly IBoardActivityService _boardActivityService;
+        private readonly ICardRepository _cardRepository;
+        private readonly ICardListRepository _cardListRepository;
         private readonly IMapper _mapper;
 
-        public BoardService(IBoardRepository boardRepository, IMapper mapper, IUserService userService, IUserBoardService userBoardService, IUnitOfWork uow, INotificationService notificationService, IBoardActivityService boardActivityService)
+        public BoardService(IBoardRepository boardRepository, IMapper mapper, IUserService userService, IUserBoardService userBoardService, IUnitOfWork uow, INotificationService notificationService, IBoardActivityService boardActivityService, ICardRepository cardRepository, ICardListRepository cardListRepository)
         {
             _boardRepository = boardRepository;
             _mapper = mapper;
@@ -29,6 +31,8 @@ namespace FakeTrello.Service
             _unitOfWork = uow;
             _notificationService = notificationService;
             _boardActivityService = boardActivityService;
+            _cardRepository = cardRepository;
+            _cardListRepository = cardListRepository;
         }
 
         public async Task<Result<BoardDTO>> Create(BoardDTO boardDto, string username)
@@ -54,11 +58,9 @@ namespace FakeTrello.Service
                 }
 
                 var board = _mapper.Map<BoardDTO, Board>(boardDto);
-                await _unitOfWork.Boards.Create(board);
-                await _unitOfWork.SaveChangesAsync();
+                await _boardRepository.Create(board);
                 var userBoard = new UserBoard(user.Id, board.Id, UserRole.OWNER);
-                await _unitOfWork.UserBoards.CreateAsync(userBoard);
-                await _unitOfWork.SaveChangesAsync();
+                await _userBoardService.Create(userBoard);
 
                 await _unitOfWork.CommitAsync();
 
@@ -71,13 +73,19 @@ namespace FakeTrello.Service
             }
         }
 
-        public async Task<Result<BoardDTO>> Update(BoardUpdateDTO boardDto)
+        public async Task<Result<BoardDTO>> Update(BoardUpdateDTO boardDto, string requestingUsername)
         {
             Board? board = await GetByNameAndOwnerUsername(boardDto.OldBoardName, boardDto.OwnerUsername);
             if (board == null)
             {
                 return Result.Fail("No board found!");
             }
+
+            if (!await _userBoardService.IsUserOwnerOfBoard(requestingUsername, board.Id))
+            {
+                return Result.Fail("Only the board owner can update this board.");
+            }
+
             board.Name = boardDto.NewBoardName;
             board.Description = boardDto.NewBoardDescription;
             Board updatedBoard = await _boardRepository.Update(board);
@@ -96,7 +104,7 @@ namespace FakeTrello.Service
             return Result.Ok(_mapper.Map<Board, BoardDTO>(updatedBoard));
         }
 
-        public async Task<Result> Delete(string name, string username)
+        public async Task<Result> Delete(string name, string username, string requestingUsername)
         {
             await _unitOfWork.BeginTransactionAsync();
 
@@ -107,6 +115,12 @@ namespace FakeTrello.Service
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("This board doesn't exist!");
+                }
+
+                if (!await _userBoardService.IsUserOwnerOfBoard(requestingUsername, board.Id))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Only the board owner can delete this board.");
                 }
 
                 var owner = await _userService.GetUserByUsername(username);
@@ -123,39 +137,29 @@ namespace FakeTrello.Service
                     if (member.UserId == owner.Id)
                         continue;
 
-                    var notification = new Notification
-                    {
-                        RecipientUserId = member.UserId,
-                        CreatingUserId = owner.Id,
-                        BoardId = board.Id,
-                        Type = NotificationType.BOARD_DELETED,
-                        Message = $"Board '{board.Name}' has been deleted.",
-                        IsRead = false,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    await _unitOfWork.Notifications.Create(notification);
+                    await _notificationService.Create(
+                        recipientUserId: member.UserId,
+                        creatingUserId: owner.Id,
+                        type: NotificationType.BOARD_DELETED,
+                        message: $"Board '{board.Name}' has been deleted.",
+                        boardId: board.Id
+                    );
                 }
 
+                _userBoardService.RemoveRange(board.UserBoards);
                 await _unitOfWork.SaveChangesAsync();
-
-                _unitOfWork.UserBoards.RemoveRange(board.UserBoards);
 
                 foreach (var list in board.Lists)
                 {
                     foreach (var card in list.Cards)
                     {
-                        await _unitOfWork.Cards.Delete(card.Id);
+                        await _cardRepository.Delete(card.Id);
                     }
 
-                    await _unitOfWork.CardLists.Delete(list.Id);
+                    await _cardListRepository.Delete(list.Id);
                 }
 
-                await _unitOfWork.SaveChangesAsync();
-
-                await _unitOfWork.Boards.Delete(board.Id);
-
-                await _unitOfWork.SaveChangesAsync();
+                await _boardRepository.Delete(board.Id);
 
                 await _unitOfWork.CommitAsync();
 
@@ -233,7 +237,7 @@ namespace FakeTrello.Service
             return Result.Ok(boardDTO);
         }
 
-        public async Task<Result> AddCollaboratorToBoard(BoardDTO boardDto, string username)
+        public async Task<Result> AddCollaboratorToBoard(BoardDTO boardDto, string username, string requestingUsername)
         {
             await _unitOfWork.BeginTransactionAsync();
 
@@ -244,6 +248,12 @@ namespace FakeTrello.Service
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("This board doesnt exist!");
+                }
+
+                if (!await _userBoardService.IsUserOwnerOfBoard(requestingUsername, board.Id))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Only the board owner can add collaborators.");
                 }
 
                 var user = await _userService.GetUserByUsername(username);
@@ -268,8 +278,7 @@ namespace FakeTrello.Service
                 }
 
                 UserBoard ub = new UserBoard(user.Id, board.Id, UserRole.COLLABORATOR);
-                await _unitOfWork.UserBoards.CreateAsync(ub);
-                await _unitOfWork.SaveChangesAsync();
+                await _userBoardService.Create(ub);
 
                 await _notificationService.Create(
                     recipientUserId: user.Id,
@@ -297,7 +306,7 @@ namespace FakeTrello.Service
             }
         }
 
-        public async Task<Result> RemoveCollaboratorFromBoard(BoardDTO boardDto, string username)
+        public async Task<Result> RemoveCollaboratorFromBoard(BoardDTO boardDto, string username, string requestingUsername)
         {
             await _unitOfWork.BeginTransactionAsync();
 
@@ -308,6 +317,12 @@ namespace FakeTrello.Service
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("This board doesnt exist!");
+                }
+
+                if (!await _userBoardService.IsUserOwnerOfBoard(requestingUsername, board.Id))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Only the board owner can remove collaborators.");
                 }
 
                 var user = await _userService.GetUserByUsername(username);
@@ -331,8 +346,7 @@ namespace FakeTrello.Service
                     return Result.Fail("This user is not collaborator on this board!");
                 }
 
-                await _unitOfWork.UserBoards.DeleteAsync(ub.UserId, ub.BoardId);
-                await _unitOfWork.SaveChangesAsync();
+                await _userBoardService.Delete(ub);
 
                 await _notificationService.Create(
                     recipientUserId: user.Id,
@@ -399,8 +413,7 @@ namespace FakeTrello.Service
                     return Result.Fail("Owner cannot leave his own board!");
                 }
 
-                await _unitOfWork.UserBoards.DeleteAsync(userBoard.UserId, userBoard.BoardId);
-                await _unitOfWork.SaveChangesAsync();
+                await _userBoardService.Delete(userBoard);
 
                 await _unitOfWork.CommitAsync();
 

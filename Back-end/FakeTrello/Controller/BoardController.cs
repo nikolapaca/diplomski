@@ -161,9 +161,19 @@ namespace FakeTrello.Controller
                 return BadRequest("");
             }
 
+            var requestingUsername = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (requestingUsername is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
             try
             {
-                await _boardService.Delete(name, username);
+                var result = await _boardService.Delete(name, username, requestingUsername);
+                if (result.IsFailed)
+                {
+                    return BadRequest(result.Errors.First().Message);
+                }
                 return Ok(new { Message = "Board deleted successfully." });
             }
             catch (InvalidOperationException ex)
@@ -184,7 +194,13 @@ namespace FakeTrello.Controller
                 return BadRequest("Invalid board!");
             }
 
-            var updatedBoard = await _boardService.Update(boardDTO);
+            var requestingUsername = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (requestingUsername is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var updatedBoard = await _boardService.Update(boardDTO, requestingUsername);
             if (updatedBoard.IsFailed)
             {
                 return BadRequest("Couldn't update!");
@@ -203,9 +219,16 @@ namespace FakeTrello.Controller
             {
                 return BadRequest();
             }
+
+            var requestingUsername = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (requestingUsername is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
             try
             {
-                var result = await _boardService.AddCollaboratorToBoard(boardDto, username);
+                var result = await _boardService.AddCollaboratorToBoard(boardDto, username, requestingUsername);
 
                 if (result.IsFailed)
                 {
@@ -231,9 +254,16 @@ namespace FakeTrello.Controller
             {
                 return BadRequest();
             }
+
+            var requestingUsername = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (requestingUsername is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
             try
             {
-                var result = await _boardService.RemoveCollaboratorFromBoard(boardDto, username);
+                var result = await _boardService.RemoveCollaboratorFromBoard(boardDto, username, requestingUsername);
 
                 if (result.IsFailed)
                 {
