@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Hello {{username}}, update your board!</h2>
+<h2 mat-dialog-title>{{ isOwner ? 'Hello ' + username + ', update your board!' : 'Edit board description' }}</h2>
 
 <form [formGroup]="updateBoardForm" (ngSubmit)="onSubmit()">
   <div class="dialog-content">
@@ -23,6 +23,7 @@
         }
       </mat-form-field>
     </div>
+    <p class="muted-note" *ngIf="!isOwner">Only the board owner can rename the board.</p>
 
     <mat-form-field appearance="fill">
       <mat-label>Board Description</mat-label>
@@ -43,7 +44,7 @@
       type="submit"
       [disabled]="updateBoardForm.invalid"
     >
-      Update Board
+      {{ isOwner ? 'Update Board' : 'Save Description' }}
     </button>
   </div>
 </form>

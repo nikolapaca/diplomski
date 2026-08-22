@@ -3,10 +3,28 @@
     <div class="welcome-section">
       <h1>Your boards</h1>
     </div>
+
+    <div class="tab-toggle">
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'active'"
+        (click)="selectTab('active')"
+      >
+        Active
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'archived'"
+        (click)="selectTab('archived')"
+      >
+        <mat-icon>archive</mat-icon>
+        Archived
+      </button>
+    </div>
   </div>
   <mat-divider></mat-divider>
 
-  <div class="boards-container">
+  <div class="boards-container" *ngIf="activeTab === 'active'">
     <div *ngIf="(boards$ | async)?.length === 0" class="no-boards-message">
       <p>You don't have any boards yet. Create a new board to get started!</p>
     </div>
@@ -14,6 +32,18 @@
     <app-board-card 
       *ngFor="let board of (boards$ | async)" 
       [board]="board">
+    </app-board-card>
+  </div>
+
+  <div class="boards-container" *ngIf="activeTab === 'archived'">
+    <div *ngIf="(archivedBoards$ | async)?.length === 0" class="no-boards-message">
+      <p>You don't have any archived boards.</p>
+    </div>
+
+    <app-board-card 
+      *ngFor="let board of (archivedBoards$ | async)" 
+      [board]="board"
+      [isArchived]="true">
     </app-board-card>
   </div>
 </div>

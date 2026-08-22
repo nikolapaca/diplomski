@@ -1,18 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../service/auth-service';
 
 @Component({
   selector: 'app-confirm-email',
   standalone: true,
   imports: [
-    CommonModule
+    CommonModule,
+    RouterModule
   ],
   templateUrl: './confirm-email.html',
   styleUrl: './confirm-email.css',
 })
-export class ConfirmEmail implements OnInit {
+export class ConfirmEmail implements OnInit, OnDestroy {
 
   token: string | null = null;
 
@@ -21,9 +22,13 @@ export class ConfirmEmail implements OnInit {
   isLoading = false;
 
 
+  public redirectSeconds = 3;
+  private redirectTimer: any;
+
   constructor(
     private route: ActivatedRoute,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
 
@@ -63,6 +68,7 @@ export class ConfirmEmail implements OnInit {
           this.isConfirmed = true;
           this.message = 
             'Your email has been successfully confirmed!';
+          this.startRedirectCountdown();
 
         },
 
@@ -79,6 +85,22 @@ export class ConfirmEmail implements OnInit {
 
       });
 
+  }
+
+  private startRedirectCountdown(): void {
+    this.redirectTimer = setInterval(() => {
+      this.redirectSeconds--;
+      if (this.redirectSeconds <= 0) {
+        clearInterval(this.redirectTimer);
+        this.router.navigate(['/']);
+      }
+    }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.redirectTimer) {
+      clearInterval(this.redirectTimer);
+    }
   }
 
 }

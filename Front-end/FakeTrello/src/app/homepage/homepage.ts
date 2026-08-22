@@ -17,6 +17,8 @@ import { CreateBoardDialog } from '../core/dialog/create-board-dialog/create-boa
 })
 export class Homepage implements OnDestroy, OnInit {
   public boards$!: Observable<Board[]>;
+  public archivedBoards$!: Observable<Board[]>;
+  public activeTab: 'active' | 'archived' = 'active';
   private boardDeletedSubscription: Subscription | undefined;
   public errorMessage: string = '';
 
@@ -25,10 +27,18 @@ export class Homepage implements OnDestroy, OnInit {
     public dialog: MatDialog
   ) {
     this.boards$ = this.boardService.boards$;
+    this.archivedBoards$ = this.boardService.archivedBoards$;
   }
 
   public ngOnInit(): void {
     this.boardService.refreshState();
+  }
+
+  public selectTab(tab: 'active' | 'archived'): void {
+    this.activeTab = tab;
+    if (tab === 'archived') {
+      this.boardService.refreshArchivedBoards();
+    }
   }
 
   public ngOnDestroy(): void {

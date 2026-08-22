@@ -1,16 +1,36 @@
 :host {
   display: block;
   width: 300px;
-  min-height: 180px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-height: 190px;
+  border-radius: var(--ft-radius, 10px);
+  box-shadow: var(--ft-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   cursor: pointer;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 :host:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--ft-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.18));
+}
+
+:host(.archived) {
+  cursor: default;
+}
+
+:host(.archived):hover {
+  transform: none;
+  box-shadow: var(--ft-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+:host(.archived) mat-card {
+  opacity: 0.75;
+  background-color: #f5f5f5;
+}
+
+:host(.archived) .board-thumb {
+  filter: grayscale(0.5);
 }
 
 mat-card {
@@ -19,11 +39,50 @@ mat-card {
   height: 100%;
   width: 100%;
   overflow: hidden !important;
+  border-radius: var(--ft-radius, 10px) !important;
+  padding: 0 !important;
+}
+
+/* Placeholder board "cover" — stands in for a real background image/colour
+   until boards support custom backgrounds. Deterministic per board. */
+.board-thumb {
+  position: relative;
+  height: 78px;
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 4px 6px;
+  box-sizing: border-box;
+}
+
+.thumb-favorite mat-icon,
+.thumb-menu mat-icon {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.thumb-favorite .favorite-active {
+  color: #ffd54a;
+}
+
+.thumb-favorite,
+.thumb-menu {
+  --mdc-icon-button-state-layer-size: 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background-color: rgba(15, 15, 30, 0.16);
+  backdrop-filter: blur(2px);
+}
+
+.thumb-favorite:hover,
+.thumb-menu:hover {
+  background-color: rgba(15, 15, 30, 0.3);
 }
 
 mat-card-header {
-  padding: 16px;
-  border-bottom: 1px solid #ddd;
+  padding: 14px 16px 4px;
   overflow: hidden !important;
   display: flex;
   justify-content: space-between;
@@ -31,12 +90,13 @@ mat-card-header {
 }
 
 mat-card-title {
-  font-size: 1.25rem;
-  font-weight: 500;
+  font-family: var(--ft-font-heading, 'Poppins', sans-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   flex-grow: 1;
-  color: #333;
+  color: var(--ft-ink, #171a35);
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -45,12 +105,13 @@ mat-card-title {
 }
 
 mat-card-content {
-  padding: 16px;
+  padding: 4px 16px 16px;
   flex-grow: 1;
 }
 
 .board-description {
-  color: #555;
+  color: var(--ft-muted, #767c9e);
+  font-size: 0.9rem;
   display: -webkit-box !important;
   -webkit-line-clamp: 3 !important;
   -webkit-box-orient: vertical !important;
@@ -59,11 +120,12 @@ mat-card-content {
   max-height: 4.2em !important;
   word-wrap: break-word !important;
   overflow-wrap: break-word !important;
+  margin: 0;
 }
 
 mat-card-actions {
   padding: 16px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--ft-border, #e3e5f3);
   display: flex;
   justify-content: flex-end;
 }

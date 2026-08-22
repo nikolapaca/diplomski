@@ -129,7 +129,7 @@ h2.mat-dialog-title {
 }
 
 .add-button, .assign-button {
-  color: #1976d2;
+  color: var(--ft-primary, #5b4bf5);
   background-color: transparent;
   border: none;
   cursor: pointer;

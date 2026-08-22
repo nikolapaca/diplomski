@@ -100,7 +100,7 @@ h2.mat-dialog-title {
 }
 
 .add-button {
-  color: #1976d2 !important;
+  color: var(--ft-primary, #5b4bf5) !important;
   background-color: transparent !important;
   border: none !important;
   cursor: pointer !important;
@@ -149,7 +149,7 @@ h2.mat-dialog-title {
 }
 
 .mat-dialog-actions .mat-raised-button {
-  background-color: #1976d2 !important;
+  background-color: var(--ft-primary, #5b4bf5) !important;
   color: white !important;
 }
 

@@ -34,6 +34,8 @@ namespace FakeTrello
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IBoardActivityService, BoardActivityService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<ICommentService, CommentService>();
+            services.AddScoped<ICardImageService, CardImageService>();
         }
 
         private static void SetupInfrastructure(IServiceCollection services)
@@ -46,6 +48,8 @@ namespace FakeTrello
             services.AddScoped(typeof(ICardAssigneeRepository), typeof(CardAssigneeRepository));
             services.AddScoped(typeof(INotificationRepository), typeof(NotificationRepository));
             services.AddScoped(typeof(IBoardActivityRepository), typeof(BoardActivityRepository));
+            services.AddScoped(typeof(ICommentRepository), typeof(CommentRepository));
+            services.AddScoped(typeof(ICardImageRepository), typeof(CardImageRepository));
         }
     }
 }

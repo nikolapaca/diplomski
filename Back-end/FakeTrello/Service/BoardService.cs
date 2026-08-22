@@ -81,23 +81,38 @@ namespace FakeTrello.Service
                 return Result.Fail("No board found!");
             }
 
-            if (!await _userBoardService.IsUserOwnerOfBoard(requestingUsername, board.Id))
+            var isOwner = await _userBoardService.IsUserOwnerOfBoard(requestingUsername, board.Id);
+
+            if (!isOwner && !await _userBoardService.IsUserMemberOfBoard(requestingUsername, board.Id))
             {
-                return Result.Fail("Only the board owner can update this board.");
+                return Result.Fail("You don't have access to this board.");
             }
 
-            board.Name = boardDto.NewBoardName;
+            var isRenaming = !string.Equals(boardDto.NewBoardName, boardDto.OldBoardName, StringComparison.Ordinal);
+
+            if (isRenaming && !isOwner)
+            {
+                return Result.Fail("Only the board owner can rename the board.");
+            }
+
+            if (isRenaming)
+            {
+                board.Name = boardDto.NewBoardName;
+            }
+
             board.Description = boardDto.NewBoardDescription;
             Board updatedBoard = await _boardRepository.Update(board);
 
-            var owner = await _userService.GetUserByUsername(boardDto.OwnerUsername);
-            if (owner != null)
+            var requestingUser = await _userService.GetUserByUsername(requestingUsername);
+            if (requestingUser != null)
             {
                 await _boardActivityService.Create(
                     boardId: updatedBoard.Id,
-                    creatingUserId: owner.Id,
+                    creatingUserId: requestingUser.Id,
                     type: ActivityType.BOARD_UPDATED,
-                    message: $"{owner.Username} updated board '{updatedBoard.Name}'."
+                    message: isRenaming
+                        ? $"{requestingUser.Username} updated board '{updatedBoard.Name}'."
+                        : $"{requestingUser.Username} updated the board description."
                 );
             }
 
@@ -188,6 +203,20 @@ namespace FakeTrello.Service
             return boardsDto;
         }
 
+        public async Task<Result<List<BoardDTO>>> GetAllArchivedByUsername(string username)
+        {
+            var user = await GetCurrentUser(username);
+            var boards = await _boardRepository.GetAllArchivedOwnedByUser(user);
+            var boardsDto = new List<BoardDTO>();
+            foreach (var board in boards)
+            {
+                var boardDto = _mapper.Map<Board, BoardDTO>(board);
+                boardDto.OwnerUsername = username;
+                boardsDto.Add(boardDto);
+            }
+            return boardsDto;
+        }
+
         public async Task<Result<List<BoardDTO>>> GetBySearchFilter(string username, string searchQuery)
         {
             var user = await GetCurrentUser(username);
@@ -225,7 +254,7 @@ namespace FakeTrello.Service
             return board;
         }
 
-        public async Task<Result<BoardDTO>> GetResultByNameAndOwnerUsername(string name, string username)
+        public async Task<Result<BoardDTO>> GetResultByNameAndOwnerUsername(string name, string username, string? requestingUsername = null)
         {
             var board = await _boardRepository.GetByNameAndOwnerUsername(name, username);
             if (board == null)
@@ -234,6 +263,17 @@ namespace FakeTrello.Service
             }
             var boardDTO = _mapper.Map<Board, BoardDTO>(board);
             boardDTO.OwnerUsername = username;
+
+            if (!string.IsNullOrEmpty(requestingUsername))
+            {
+                var requestingUser = await _userService.GetUserByUsername(requestingUsername);
+                if (requestingUser != null)
+                {
+                    var membership = await _userBoardService.GetByUserIdAndBoardId(requestingUser.Id, board.Id);
+                    boardDTO.IsFavorite = membership?.IsFavorite ?? false;
+                }
+            }
+
             return Result.Ok(boardDTO);
         }
 
@@ -510,6 +550,53 @@ namespace FakeTrello.Service
             {
                 await _unitOfWork.RollbackAsync();
                 return Result.Fail($"Failed to archive the board: {ex.Message}");
+            }
+        }
+
+        public async Task<Result> Unarchive(string name, string ownerUsername, string requestingUsername)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
+            {
+                var board = await _boardRepository.GetArchivedByNameAndOwnerUsername(name, ownerUsername);
+                if (board == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("This archived board doesn't exist!");
+                }
+
+                if (!await _userBoardService.IsUserOwnerOfBoard(requestingUsername, board.Id))
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Only the owner can unarchive this board.");
+                }
+
+                var owner = await _userService.GetUserByUsername(requestingUsername);
+                if (owner == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Owner doesn't exist!");
+                }
+
+                board.Status = BoardStatus.ACTIVE;
+                await _boardRepository.Update(board);
+
+                await _boardActivityService.Create(
+                    boardId: board.Id,
+                    creatingUserId: owner.Id,
+                    type: ActivityType.BOARD_UPDATED,
+                    message: $"{owner.Username} restored board '{board.Name}' from the archive."
+                );
+
+                await _unitOfWork.CommitAsync();
+
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail($"Failed to unarchive the board: {ex.Message}");
             }
         }
     }

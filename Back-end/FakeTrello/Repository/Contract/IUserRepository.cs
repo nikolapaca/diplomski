@@ -15,6 +15,7 @@ namespace FakeTrello.Repository.Contract
         Task<List<User>> GetUsersOnTheBoard(string searchTerm, int boardId);
         Task<List<User>> GetAssignableUsersOnTheBoard(string searchTerm, int boardId, int cardId);
         Task<User?> GetByConfirmationToken(string confirmationToken);
+        Task<User?> GetByResetToken(string resetToken);
 
     }
 }

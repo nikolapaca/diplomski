@@ -135,6 +135,60 @@ namespace FakeTrello.Tests.Services
         }
 
         [Fact]
+        public async Task Unarchive_BoardDoesNotExist_ReturnsFailAndRollsBack()
+        {
+            _boardRepository.Setup(r => r.GetArchivedByNameAndOwnerUsername("Board", "owner")).ReturnsAsync((Board)null);
+
+            var service = CreateService();
+            var result = await service.Unarchive("Board", "owner", "owner");
+
+            Assert.True(result.IsFailed);
+            Assert.Contains(result.Errors, e => e.Message.Contains("doesn't exist"));
+            _unitOfWork.Verify(u => u.RollbackAsync(), Times.Once);
+            _boardRepository.Verify(r => r.Update(It.IsAny<Board>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Unarchive_NonOwner_ReturnsFailAndRollsBack()
+        {
+            var board = MakeBoard(id: 10);
+            board.Status = BoardStatus.ARCHIVED;
+
+            _boardRepository.Setup(r => r.GetArchivedByNameAndOwnerUsername("Board", "owner")).ReturnsAsync(board);
+            _userBoardService.Setup(s => s.IsUserOwnerOfBoard("collaborator", 10)).ReturnsAsync(false);
+
+            var service = CreateService();
+            var result = await service.Unarchive("Board", "owner", "collaborator");
+
+            Assert.True(result.IsFailed);
+            Assert.Contains(result.Errors, e => e.Message.Contains("Only the owner"));
+            _unitOfWork.Verify(u => u.RollbackAsync(), Times.Once);
+            _boardRepository.Verify(r => r.Update(It.IsAny<Board>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Unarchive_Owner_RestoresBoardToActiveAndCommits()
+        {
+            var board = MakeBoard(id: 10);
+            board.Status = BoardStatus.ARCHIVED;
+            var owner = new User { Id = 1, Username = "owner" };
+
+            _boardRepository.Setup(r => r.GetArchivedByNameAndOwnerUsername("Board", "owner")).ReturnsAsync(board);
+            _userBoardService.Setup(s => s.IsUserOwnerOfBoard("owner", 10)).ReturnsAsync(true);
+            _userService.Setup(s => s.GetUserByUsername("owner")).ReturnsAsync(owner);
+            _boardRepository.Setup(r => r.Update(board)).ReturnsAsync(board);
+
+            var service = CreateService();
+            var result = await service.Unarchive("Board", "owner", "owner");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(BoardStatus.ACTIVE, board.Status);
+            _boardActivityService.Verify(a => a.Create(
+                10, 1, ActivityType.BOARD_UPDATED, It.IsAny<string>(), null), Times.Once);
+            _unitOfWork.Verify(u => u.CommitAsync(), Times.Once);
+        }
+
+        [Fact]
         public async Task AddCollaboratorToBoard_AlreadyMember_ReturnsFailAndRollsBack()
         {
             var board = MakeBoard(id: 10);
@@ -160,9 +214,6 @@ namespace FakeTrello.Tests.Services
         [Fact]
         public async Task AddCollaboratorToBoard_RequestedByNonOwner_ReturnsFailAndRollsBack()
         {
-            // Spec 5.b.iv: adding a collaborator is an owner-only action. The requester's
-            // identity must come from the authenticated caller, not from a client-supplied
-            // OwnerUsername field on the DTO.
             var board = MakeBoard(id: 10);
 
             _boardRepository.Setup(r => r.GetByNameAndOwnerUsername("Board", "owner")).ReturnsAsync(board);
@@ -273,8 +324,6 @@ namespace FakeTrello.Tests.Services
         [Fact]
         public async Task Delete_RequestedByNonOwner_ReturnsFailAndRollsBack()
         {
-            // Spec 5.b.ii: deleting a board is an owner-only action; a collaborator
-            // must not be able to delete it even if they know the owner's username.
             var board = MakeBoard(id: 10);
 
             _boardRepository.Setup(r => r.GetByNameAndOwnerUsername("Board", "owner")).ReturnsAsync(board);
@@ -292,11 +341,11 @@ namespace FakeTrello.Tests.Services
         [Fact]
         public async Task Update_RequestedByNonOwner_ReturnsFail()
         {
-            // Spec 5.b.i: renaming a board is an owner-only action.
             var board = MakeBoard(id: 10, name: "Old name");
 
             _boardRepository.Setup(r => r.GetByNameAndOwnerUsername("Old name", "owner")).ReturnsAsync(board);
             _userBoardService.Setup(s => s.IsUserOwnerOfBoard("collaborator", 10)).ReturnsAsync(false);
+            _userBoardService.Setup(s => s.IsUserMemberOfBoard("collaborator", 10)).ReturnsAsync(true);
 
             var service = CreateService();
             var result = await service.Update(new BoardUpdateDTO

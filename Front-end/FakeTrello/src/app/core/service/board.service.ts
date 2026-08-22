@@ -13,6 +13,9 @@ export class BoardService {
   private _boardsSubject = new BehaviorSubject<Board[]>([]);
   public boards$: Observable<Board[]> = this._boardsSubject.asObservable();
 
+  private _archivedBoardsSubject = new BehaviorSubject<Board[]>([]);
+  public archivedBoards$: Observable<Board[]> = this._archivedBoardsSubject.asObservable();
+
   private searchTermSubject = new Subject<string>();
 
   public constructor(
@@ -87,6 +90,27 @@ export class BoardService {
   public archiveBoard(name: string, ownerUsername: string): Observable<void> {
     return this.http.post<void>(`${environment.api}/boards/archive/${name}/${ownerUsername}`, {}).pipe(
       tap(() => {
+        this.refreshState();
+      })
+    );
+  }
+
+  public getArchivedBoards(): Observable<Board[]> {
+    return this.http.get<Board[]>(`${environment.api}/boards/archived`);
+  }
+
+  public refreshArchivedBoards(): void {
+    this.getArchivedBoards()
+      .pipe(take(1), catchError(() => of([])))
+      .subscribe(resp => {
+        this._archivedBoardsSubject.next(resp);
+      });
+  }
+
+  public unarchiveBoard(name: string, ownerUsername: string): Observable<void> {
+    return this.http.post<void>(`${environment.api}/boards/unarchive/${name}/${ownerUsername}`, {}).pipe(
+      tap(() => {
+        this.refreshArchivedBoards();
         this.refreshState();
       })
     );

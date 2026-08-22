@@ -23,14 +23,17 @@ import { BoardUpdate } from '../../../core/model/board-update.model';
 import { MatDialog } from '@angular/material/dialog';
 import { UpdateBoardDialog } from '../../../core/dialog/update-board-dialog/update-board-dialog';
 import { AuthService } from '../../../core/service/auth-service';
+import { getBoardTheme } from '../../../core/util/board-theme.util';
 import { AddCollaboratorsDialog } from '../../../core/dialog/add-collaborators-dialog/add-collaborators-dialog';
 import { RemoveCollaboratorDialog } from '../../../core/dialog/remove-collaborator-dialog/remove-collaborator-dialog';
+import { ConfirmDialog } from '../../../core/dialog/confirm-dialog/confirm-dialog';
 import { BoardMembersDialog } from '../../../core/dialog/board-members-dialog/board-members-dialog';
 import {
   CdkDragDrop,
   moveItemInArray,
   transferArrayItem,
   CdkDrag,
+  CdkDragHandle,
   CdkDropList,
   DragDropModule,
 } from '@angular/cdk/drag-drop';
@@ -45,6 +48,7 @@ import {
     CdkDropList, 
     DragDropModule,
     CdkDrag,
+    CdkDragHandle,
     MatInputModule,
     MatMenuModule,
     CommonModule,
@@ -106,31 +110,54 @@ export class BoardOverview implements OnInit {
         this.boardService.getBoardByNameAndOwnerUsername(this.boardName, this.boardOwnerUsername).subscribe({
           next: (board) => {
             this.board = board;
-            this.cardListService.getListsForBoard(board.name, board.ownerUsername).subscribe((response: CardList[]) => {
-              console.log('ove kartice koje su', response)
-              this.cardLists = response.map(list => ({
-                ...list,
-                showAddCardForm: false,
-                addCardForm: new FormGroup({
-                  name: new FormControl('', Validators.required),
-                  description: new FormControl('', Validators.required)
-                }),
-                showUpdateListForm: false,
-                updateListForm: new FormGroup({
-                  name: new FormControl('', Validators.required)
-                })
-              }));
-              this.cd.markForCheck();
-            });
+            this.refreshLists();
           }
         });
       }
     });
   }
 
+  public get boardBackground(): string {
+    return getBoardTheme(this.boardOwnerUsername + '/' + this.boardName).gradient;
+  }
+
   public get connectedLists(): string[] {
   return this.cardLists.map(list => list.id.toString());
 }
+
+  // Builds the CardListView wrapper (adds per-list forms/UI flags) around
+  // raw CardList data coming back from the API.
+  private wrapCardLists(response: CardList[]): CardListView[] {
+    return response.map(list => ({
+      ...list,
+      showAddCardForm: false,
+      addCardForm: new FormGroup({
+        name: new FormControl('', Validators.required),
+        description: new FormControl('', Validators.required)
+      }),
+      showUpdateListForm: false,
+      updateListForm: new FormGroup({
+        name: new FormControl('', Validators.required)
+      })
+    }));
+  }
+
+  // Refetches lists+cards from the backend and rebuilds cardLists. Used for
+  // the initial load and to resync after a failed mutation. NOT called after
+  // a successful drag-and-drop move anymore, since the CDK drag helpers
+  // (moveItemInArray/transferArrayItem) already put the local state in the
+  // right shape instantly - refetching there just caused a visible re-render
+  // "jump" and reset every other list's in-progress add/edit forms.
+  private refreshLists(onDone?: () => void): void {
+    if (!this.board) {
+      return;
+    }
+    this.cardListService.getListsForBoard(this.board.name, this.board.ownerUsername).subscribe((response: CardList[]) => {
+      this.cardLists = this.wrapCardLists(response);
+      this.cd.markForCheck();
+      onDone?.();
+    });
+  }
 
   // A pinned list/card can only be dropped among other pinned items (top of the
   // block); a non-pinned one can only be dropped after all pinned items. This
@@ -155,34 +182,25 @@ export class BoardOverview implements OnInit {
   };
 
   public dropList(event: CdkDragDrop<any[]>): void {
-    moveItemInArray(this.cardLists, event.previousIndex, event.currentIndex);
+    const previousIndex = event.previousIndex;
+    const currentIndex = event.currentIndex;
+    moveItemInArray(this.cardLists, previousIndex, currentIndex);
     const list: CardList = {
       id: this.currentlyDraggindCardList?.id || 0,
       name: this.currentlyDraggindCardList?.name || '',
       boardName: this.currentlyDraggindCardList?.boardName || '',
       boardUsername: this.currentlyDraggindCardList?.boardUsername || '',
       cards: this.currentlyDraggindCardList?.cards || []
-    } 
-    this.cardListService.reorderList(list || undefined, event.currentIndex+1).subscribe({
-          next: () => {
-            this.cardListService.getListsForBoard(this.board?.name, this.board?.ownerUsername).subscribe((response: CardList[]) => {
-              console.log('ove kartice koje su', response)
-              this.cardLists = response.map(list => ({
-                ...list,
-                showAddCardForm: false,
-                addCardForm: new FormGroup({
-                  name: new FormControl('', Validators.required),
-                  description: new FormControl('', Validators.required)
-                }),
-                showUpdateListForm: false,
-                updateListForm: new FormGroup({
-                  name: new FormControl('', Validators.required)
-                })
-              }));
-              this.cd.markForCheck();
-            });
-          }
-        });
+    }
+    this.cardListService.reorderList(list || undefined, currentIndex + 1).subscribe({
+      error: () => {
+        // Backend rejected the move (e.g. stale data) - undo the optimistic
+        // local reorder and resync with the server's actual state.
+        moveItemInArray(this.cardLists, currentIndex, previousIndex);
+        this.errorMessage = 'Could not reorder the list. Refreshing...';
+        this.refreshLists(() => { this.errorMessage = ''; });
+      }
+    });
   }
 
   public onListDragStarted(list:CardListView) : void {
@@ -197,7 +215,6 @@ export class BoardOverview implements OnInit {
   public onCardDragStarted(card: Card): void {
     this.isDraggingCard = true;
     this.currentlyDraggingCard = card;
-    console.log('Drag started, isDraggingCard:', this.isDraggingCard);
   }
 
   public onCardDragEnded(): void {
@@ -205,65 +222,47 @@ export class BoardOverview implements OnInit {
   }
 
   public dropCard(event: CdkDragDrop<any[]>): void {
-    console.log('Previous container:', event.previousContainer);
-    console.log('Current container:', event.container);
-    console.log('Previous container ID:', event.previousContainer.id);
-    console.log('Current container ID:', event.container.id);
-    console.log('current index:', event.currentIndex);
-    console.log('previous index: ', event.previousIndex);
+    const draggedCard = this.currentlyDraggingCard;
+    const previousIndex = event.previousIndex;
+    const currentIndex = event.currentIndex;
+
     if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-      this.cardService.reorderCardInsideList(this.currentlyDraggingCard || undefined, event.currentIndex + 1).subscribe({
-          next: () => {
-            this.cardListService.getListsForBoard(this.board?.name, this.board?.ownerUsername).subscribe((response: CardList[]) => {
-              console.log('ove kartice koje su', response)
-              this.cardLists = response.map(list => ({
-                ...list,
-                showAddCardForm: false,
-                addCardForm: new FormGroup({
-                  name: new FormControl('', Validators.required),
-                  description: new FormControl('', Validators.required)
-                }),
-                showUpdateListForm: false,
-                updateListForm: new FormGroup({
-                  name: new FormControl('', Validators.required)
-                })
-              }));
-              this.cd.markForCheck();
-            });
-          }
-        });
+      moveItemInArray(event.container.data, previousIndex, currentIndex);
+      this.cardService.reorderCardInsideList(draggedCard || undefined, currentIndex + 1).subscribe({
+        error: () => {
+          moveItemInArray(event.container.data, currentIndex, previousIndex);
+          this.errorMessage = 'Could not reorder the card. Refreshing...';
+          this.refreshLists(() => { this.errorMessage = ''; });
+        }
+      });
     } else {
-      console.log('prethodni: ', event.previousContainer.data)
-      console.log('trenutni: ', event.container.data)
+      const previousListId = draggedCard?.cardListId;
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
-        event.previousIndex,
-        event.currentIndex,
+        previousIndex,
+        currentIndex,
       );
       const targetList = this.cardLists.find(l => l.id.toString() === event.container.id.replace('list-', ''));
-      
-      this.cardService.reorderCardOutsideList(this.currentlyDraggingCard || undefined, targetList?.id, event.currentIndex + 1).subscribe({
-          next: () => {
-            this.cardListService.getListsForBoard(this.board?.name, this.board?.ownerUsername).subscribe((response: CardList[]) => {
-              console.log('ove kartice koje su', response)
-              this.cardLists = response.map(list => ({
-                ...list,
-                showAddCardForm: false,
-                addCardForm: new FormGroup({
-                  name: new FormControl('', Validators.required),
-                  description: new FormControl('', Validators.required)
-                }),
-                showUpdateListForm: false,
-                updateListForm: new FormGroup({
-                  name: new FormControl('', Validators.required)
-                })
-              }));
-              this.cd.markForCheck();
-            });
+      if (draggedCard && targetList) {
+        draggedCard.cardListId = targetList.id;
+      }
+
+      this.cardService.reorderCardOutsideList(draggedCard || undefined, targetList?.id, currentIndex + 1).subscribe({
+        error: () => {
+          transferArrayItem(
+            event.container.data,
+            event.previousContainer.data,
+            currentIndex,
+            previousIndex,
+          );
+          if (draggedCard && previousListId !== undefined) {
+            draggedCard.cardListId = previousListId;
           }
-        });
+          this.errorMessage = 'Could not move the card. Refreshing...';
+          this.refreshLists(() => { this.errorMessage = ''; });
+        }
+      });
     }
   }
   
@@ -392,53 +391,21 @@ export class BoardOverview implements OnInit {
       }
 
       this.cardListService.addList(cardList).subscribe({
-      next: (response) => {
-        this.showAddListForm = false;
-        this.cd.markForCheck();
-        this.addListForm.reset();
-        if(this.board){
-        this.cardListService.getListsForBoard(this.board.name, this.board.ownerUsername).subscribe((response: CardList[]) => {
-          this.cardLists = response.map(list => ({
-            ...list,
-            showAddCardForm: false,
-            addCardForm: new FormGroup({
-              name: new FormControl('', Validators.required),
-              description: new FormControl('', Validators.required)
-            }),
-            showUpdateListForm: false,
-            updateListForm: new FormGroup({
-              name: new FormControl('', Validators.required)
-            })
-          }));
-          this.cd.markForCheck();
-        });
-      }
-      }
-    });
+        next: () => {
+          this.showAddListForm = false;
+          this.addListForm.reset();
+          this.refreshLists();
+        }
+      });
     }
   }
 
   public deleteList(list: CardList) {
     this.cardListService.deleteList(list.id).subscribe({
-      next: (response) => {
-        if(this.board){
-        this.cardListService.getListsForBoard(this.board.name, this.board.ownerUsername).subscribe((response: CardList[]) => {
-          this.cardLists = response.map(list => ({
-            ...list,
-            showAddCardForm: false,
-            addCardForm: new FormGroup({
-              name: new FormControl('', Validators.required),
-              description: new FormControl('', Validators.required)
-            }),
-            showUpdateListForm: false,
-            updateListForm: new FormGroup({
-              name: new FormControl('', Validators.required)
-            })
-          }));
-          this.cd.markForCheck();
-        });
+      next: () => {
+        this.refreshLists();
       }
-    }});
+    });
   }
 
   public updateList(list: CardListView): void {
@@ -453,24 +420,9 @@ export class BoardOverview implements OnInit {
     this.cardListService.updateList(cardList).subscribe({
       next: () => {
         list.showUpdateListForm = false;
-        if(this.board){
-        this.cardListService.getListsForBoard(this.board.name, this.board.ownerUsername).subscribe((response: CardList[]) => {
-          this.cardLists = response.map(list => ({
-            ...list,
-            showAddCardForm: false,
-            addCardForm: new FormGroup({
-              name: new FormControl('', Validators.required),
-              description: new FormControl('', Validators.required)
-            }),
-            showUpdateListForm: false,
-            updateListForm: new FormGroup({
-              name: new FormControl('', Validators.required)
-            })
-          }));
-          this.cd.markForCheck();
-        });
+        this.refreshLists();
       }
-    }});}
+    });}
   }
   public updateBoard(): void {
     if(this.board){
@@ -479,7 +431,8 @@ export class BoardOverview implements OnInit {
       newBoardName: '',
       oldBoardDescription: this.board.description,
       newBoardDescription: '',
-      ownerUsername: this.board.ownerUsername
+      ownerUsername: this.board.ownerUsername,
+      isOwner: true
     }
     
     const dialogRef = this.dialog.open(UpdateBoardDialog, {
@@ -492,8 +445,58 @@ export class BoardOverview implements OnInit {
       this.boardService.updateBoard(board).subscribe({
         next: () => {
           this.boardService.refreshState();
-          this.router.navigate([`boards/${board.ownerUsername}/${board.newBoardName}`])
+          if (this.board) {
+            this.board.name = board.newBoardName;
+            this.board.description = board.newBoardDescription;
+          }
+          this.boardName = board.newBoardName;
+          if (board.oldBoardName !== board.newBoardName) {
+            this.router.navigate([`boards/${board.ownerUsername}/${board.newBoardName}`]);
+          }
           dialogRef.close();
+          this.cd.markForCheck();
+        },
+        error: (error) => {
+          let errorMessage = 'Something went wrong. Please try again.';
+          if (error.error && typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error && error.error.errors) {
+            const firstError = Object.values(error.error.errors)[0] as string[];
+            if (firstError && firstError.length > 0) {
+              errorMessage = firstError[0];
+            }
+          }
+          dialogRef.componentInstance.setBackendError(errorMessage);
+        }
+      });
+    });
+  }}
+
+  public editDescription(): void {
+    if (this.board) {
+    const boardUpdate: BoardUpdate = {
+      oldBoardName: this.board.name,
+      newBoardName: this.board.name,
+      oldBoardDescription: this.board.description,
+      newBoardDescription: '',
+      ownerUsername: this.board.ownerUsername,
+      isOwner: false
+    }
+
+    const dialogRef = this.dialog.open(UpdateBoardDialog, {
+      width: '1800px',
+      data: boardUpdate
+    });
+
+    dialogRef.componentInstance.boardSubmitted.subscribe((board: BoardUpdate) => {
+      this.boardService.updateBoard(board).subscribe({
+        next: () => {
+          if (this.board) {
+            this.board.description = board.newBoardDescription;
+          }
+          this.boardService.refreshState();
+          dialogRef.close();
+          this.cd.markForCheck();
         },
         error: (error) => {
           let errorMessage = 'Something went wrong. Please try again.';
@@ -512,10 +515,24 @@ export class BoardOverview implements OnInit {
   }}
 
   public deleteBoard(): void {
-    this.boardService.deleteBoard(this.boardName, this.boardOwnerUsername).subscribe((_) => {
-      this.boardService.refreshState();
-      this.router.navigate([`home`])
-    })
+    const dialogRef = this.dialog.open(ConfirmDialog, {
+      width: '420px',
+      data: {
+        title: 'Delete board?',
+        message: `Are you sure you want to delete "${this.boardName}"? This action cannot be undone and all lists and cards will be permanently deleted.`,
+        confirmText: 'Delete board'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) {
+        return;
+      }
+      this.boardService.deleteBoard(this.boardName, this.boardOwnerUsername).subscribe((_) => {
+        this.boardService.refreshState();
+        this.router.navigate([`home`])
+      })
+    });
   }
 
   public archiveBoard(): void {
@@ -544,23 +561,7 @@ export class BoardOverview implements OnInit {
   public togglePinList(list: CardListView): void {
     this.cardListService.togglePin(list.id).subscribe({
       next: () => {
-        if (this.board) {
-          this.cardListService.getListsForBoard(this.board.name, this.board.ownerUsername).subscribe((response: CardList[]) => {
-            this.cardLists = response.map(list => ({
-              ...list,
-              showAddCardForm: false,
-              addCardForm: new FormGroup({
-                name: new FormControl('', Validators.required),
-                description: new FormControl('', Validators.required)
-              }),
-              showUpdateListForm: false,
-              updateListForm: new FormGroup({
-                name: new FormControl('', Validators.required)
-              })
-            }));
-            this.cd.markForCheck();
-          });
-        }
+        this.refreshLists();
       }
     });
   }

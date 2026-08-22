@@ -10,17 +10,21 @@ import { ReactiveFormsModule, FormControl, Validators, FormGroup } from '@angula
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { Card } from '../../../core/model/card.model';
 import { Board } from '../../../core/model/board.model';
 import { CardService } from '../../../core/service/card.service';
 import { AssignCardDialog } from '../../../core/dialog/assign-card-dialog/assign-card-dialog';
-import { AiService } from '../../../core/service/ai.service';
 import { UserService } from '../../../core/service/user-service';
 import { BoardActivityService } from '../../../core/service/board-activity-service';
 import { BoardActivity } from '../../../core/model/board-activity.model';
 import { ACTIVITY_ICONS } from '../../../feature/board/board-activity/board-activity';
+import { CommentService } from '../../../core/service/comment-service';
+import { Comment } from '../../../core/model/comment.model';
+import { CardImageService } from '../../service/card-image-service';
+import { CardImage } from '../../../core/model/card-image.model';
+import { environment } from '../../../../environment';
+import { DueDateStatus, getDueDateStatus, toDatetimeLocalValue, fromDatetimeLocalValue } from '../../../core/util/due-date.util';
 
 export interface CardDetailsData {
   card: Card;
@@ -41,8 +45,7 @@ export interface CardDetailsData {
     ReactiveFormsModule,
     MatChipsModule,
     MatTooltipModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatProgressSpinnerModule
   ],
   templateUrl: './card-details-dialog.component.html',
   styleUrls: ['./card-details-dialog.component.css']
@@ -59,18 +62,30 @@ export class CardDetailsDialogComponent {
   saving = false;
   errorMessage = '';
 
-  aiGenerating = false;
-  aiGeneratedTasks: string = '';
-
   assignedUserUsernames: string[] = [];
 
   isPinned = false;
   loggedInUsername = '';
 
+  showDueDateEditor = false;
+  dueDateCtrl = new FormControl<string>('', { nonNullable: true });
+  savingDueDate = false;
+
   showHistory = false;
   loadingHistory = false;
   history: BoardActivity[] = [];
   private historyLoaded = false;
+
+  comments: Comment[] = [];
+  loadingComments = false;
+  postingComment = false;
+  newCommentCtrl = new FormControl<string>('', { nonNullable: true });
+
+  images: CardImage[] = [];
+  loadingImages = false;
+  uploadingImage = false;
+  imageErrorMessage = '';
+  readonly assetsBase = environment.api.replace(/\/api$/, '');
 
   readonly changed = new EventEmitter<Partial<Card>>();
 
@@ -80,16 +95,65 @@ export class CardDetailsDialogComponent {
     private cardService: CardService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-    private aiService: AiService,
-    private snackBar: MatSnackBar,
     private userService: UserService,
-    private boardActivityService: BoardActivityService
+    private boardActivityService: BoardActivityService,
+    private commentService: CommentService,
+    private cardImageService: CardImageService
   ) {
     this.titleCtrl.setValue(data.card.name ?? '');
     this.descriptionCtrl.setValue(data.card.description ?? '');
     this.assignedUserUsernames = this.data.card.assignedUserUsernames ?? [];
     this.isPinned = this.data.card.isPinned ?? false;
+    this.dueDateCtrl.setValue(toDatetimeLocalValue(this.data.card.dueDate));
     this.loggedInUsername = this.userService.getUsername();
+    this.loadComments();
+    this.loadImages();
+  }
+
+  get dueDateStatus(): DueDateStatus | null {
+    return getDueDateStatus(this.data.card.dueDate);
+  }
+
+  toggleDueDateEditor(): void {
+    this.dueDateCtrl.setValue(toDatetimeLocalValue(this.data.card.dueDate));
+    this.showDueDateEditor = !this.showDueDateEditor;
+  }
+
+  saveDueDate(): void {
+    const isoDueDate = fromDatetimeLocalValue(this.dueDateCtrl.value);
+    this.applyDueDate(isoDueDate);
+  }
+
+  clearDueDate(): void {
+    this.dueDateCtrl.setValue('');
+    this.applyDueDate(null);
+  }
+
+  private applyDueDate(isoDueDate: string | null): void {
+    const updated: Card = {
+      id: this.data.card.id,
+      name: this.titleCtrl.value,
+      description: this.descriptionCtrl.value,
+      cardListId: this.data.card.cardListId,
+      isPinned: this.isPinned,
+      dueDate: isoDueDate
+    };
+
+    this.savingDueDate = true;
+
+    this.cardService.updateCard(updated).subscribe({
+      next: () => {
+        this.savingDueDate = false;
+        this.data.card.dueDate = isoDueDate;
+        this.showDueDateEditor = false;
+        this.cdr.detectChanges();
+        this.changed.emit({ dueDate: isoDueDate });
+      },
+      error: () => {
+        this.savingDueDate = false;
+        this.errorMessage = 'Failed to update due date.';
+      }
+    });
   }
 
   get isOwner(): boolean {
@@ -134,38 +198,6 @@ export class CardDetailsDialogComponent {
     return ACTIVITY_ICONS[type] || 'history';
   }
 
-  suggestTasks(): void {
-    const description = this.descriptionCtrl.value.trim();
-
-    if (description.length < 20) {
-      this.snackBar.open(
-        'Opis je prekratak za smisleno generiranje zadataka (min. 20 znakova).',
-        'Zatvori',
-        { duration: 3000 }
-      );
-      return;
-    }
-
-    this.aiGenerating = true;
-    this.errorMessage = '';
-    this.aiGeneratedTasks = '';
-
-    this.aiService.extractTasks(description).subscribe({
-      next: (tasks) => {
-        this.aiGeneratedTasks = tasks;
-        this.descriptionCtrl.patchValue(this.aiGeneratedTasks);
-        this.aiGenerating = false;
-        this.snackBar.open('Zadaci uspješno generirani!', 'OK', { duration: 3000 });
-      },
-      error: (err) => {
-        this.aiGenerating = false;
-        this.errorMessage = err.error?.message || 'Greška u komunikaciji s AI servisom. Provjerite Ollamu/Backend.';
-        this.snackBar.open(this.errorMessage, 'Zatvori', { duration: 5000 });
-        console.error(err);
-      }
-    });
-  }
-
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -177,19 +209,20 @@ export class CardDetailsDialogComponent {
       name: this.titleCtrl.value,
       description: this.descriptionCtrl.value,
       cardListId: this.data.card.cardListId,
-      isPinned: this.isPinned
+      isPinned: this.isPinned,
+      dueDate: this.data.card.dueDate
     };
 
     this.saving = true;
 
     this.cardService.updateCard(updated).subscribe({
-      next: (res) => {
+      next: () => {
         this.saving = false;
 
-        const merged = {
-          ...(res ?? updated),
+        const merged: Card = {
+          ...updated,
           assignedUserUsernames: this.assignedUserUsernames
-        } as Card;
+        };
 
         this.ref.close(merged);
       },
@@ -270,6 +303,125 @@ export class CardDetailsDialogComponent {
         this.errorMessage = 'Failed to unassign user.';
       }
     });
+  }
+
+  loadComments(): void {
+    this.loadingComments = true;
+    this.commentService.getByCard(this.data.card.id).subscribe({
+      next: (comments) => {
+        this.comments = comments;
+        this.loadingComments = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loadingComments = false;
+      }
+    });
+  }
+
+  addComment(): void {
+    const text = this.newCommentCtrl.value.trim();
+    if (!text) {
+      return;
+    }
+
+    this.postingComment = true;
+
+    this.commentService.addComment(this.data.card.id, text).subscribe({
+      next: (comment) => {
+        this.comments = [...this.comments, comment];
+        this.newCommentCtrl.setValue('');
+        this.postingComment = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.postingComment = false;
+        this.errorMessage = 'Failed to add comment.';
+      }
+    });
+  }
+
+  deleteComment(commentId: number): void {
+    this.commentService.deleteComment(commentId).subscribe({
+      next: () => {
+        this.comments = this.comments.filter(c => c.id !== commentId);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to delete comment.';
+      }
+    });
+  }
+
+  canDeleteComment(comment: Comment): boolean {
+    return comment.username === this.loggedInUsername || this.isOwner;
+  }
+
+  loadImages(): void {
+    this.loadingImages = true;
+    this.cardImageService.getByCard(this.data.card.id).subscribe({
+      next: (images) => {
+        this.images = images;
+        this.loadingImages = false;
+        this.emitCoverChange();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loadingImages = false;
+      }
+    });
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files.length > 0 ? input.files[0] : null;
+    if (!file) {
+      return;
+    }
+
+    this.uploadingImage = true;
+    this.imageErrorMessage = '';
+
+    this.cardImageService.upload(this.data.card.id, file).subscribe({
+      next: (image) => {
+        this.images = [...this.images, image];
+        this.uploadingImage = false;
+        input.value = '';
+        this.emitCoverChange();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.uploadingImage = false;
+        this.imageErrorMessage = err.error?.message || err.error || 'Failed to upload image.';
+        input.value = '';
+      }
+    });
+  }
+
+  deleteImage(imageId: number): void {
+    this.cardImageService.delete(imageId).subscribe({
+      next: () => {
+        this.images = this.images.filter(i => i.id !== imageId);
+        this.emitCoverChange();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.imageErrorMessage = 'Failed to delete image.';
+      }
+    });
+  }
+
+  private emitCoverChange(): void {
+    const coverImageUrl = this.images.length === 1 ? this.images[0].filePath : null;
+    this.changed.emit({ coverImageUrl, attachmentCount: this.images.length });
+  }
+
+  canDeleteImage(image: CardImage): boolean {
+    return image.uploadedByUsername === this.loggedInUsername || this.isOwner;
+  }
+
+  imageUrl(image: CardImage): string {
+    return `${this.assetsBase}${image.filePath}`;
   }
 
   close(): void {

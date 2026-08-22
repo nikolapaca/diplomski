@@ -17,13 +17,15 @@ namespace FakeTrello.Service
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly PasswordHasher<User> _passwordHasher;
+        private readonly IEmailService _emailService;
 
-        public AuthService(ITokenGenerator tokenGenerator, IUserRepository userReposiory, IMapper mapper)
+        public AuthService(ITokenGenerator tokenGenerator, IUserRepository userReposiory, IMapper mapper, IEmailService emailService)
         {
             _tokenGenerator = tokenGenerator;
             _userRepository = userReposiory;
             _mapper = mapper;
             _passwordHasher = new PasswordHasher<User>();
+            _emailService = emailService;
         }
 
         public async Task<Result<AuthenticationTokenDTO>> LogIn(CredentialsDTO credentialsDTO)
@@ -54,6 +56,42 @@ namespace FakeTrello.Service
             user.EmailConfirmationToken = null;
             user.EmailConfirmationTokenExpiration = null;
 
+
+            await _userRepository.Update(user);
+
+            return Result.Ok();
+        }
+
+        public async Task<Result> ForgotPassword(string email)
+        {
+            var user = await _userRepository.GetByEmail(email);
+
+            if (user == null || !user.EmailConfirmed)
+                return Result.Ok();
+
+            user.PasswordResetToken = Guid.NewGuid().ToString();
+            user.PasswordResetTokenExpiration = DateTime.UtcNow.AddHours(1);
+
+            await _userRepository.Update(user);
+
+            await _emailService.SendPasswordResetEmail(user.Email, user.PasswordResetToken);
+
+            return Result.Ok();
+        }
+
+        public async Task<Result> ResetPassword(ResetPasswordDTO resetPasswordDto)
+        {
+            var user = await _userRepository.GetByResetToken(resetPasswordDto.Token);
+
+            if (user == null)
+                return Result.Fail("Invalid or expired reset link.");
+
+            if (user.PasswordResetTokenExpiration < DateTime.UtcNow)
+                return Result.Fail("Invalid or expired reset link.");
+
+            user.Password = _passwordHasher.HashPassword(user, resetPasswordDto.NewPassword);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiration = null;
 
             await _userRepository.Update(user);
 

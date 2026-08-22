@@ -42,6 +42,7 @@ namespace FakeTrello.Repository
                 .Include(c => c.Assignees)
                     .ThenInclude(a => a.UserBoard)
                         .ThenInclude(ub => ub.User)
+                .Include(c => c.Images)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
@@ -51,6 +52,7 @@ namespace FakeTrello.Repository
                 .Include(c => c.Assignees)
                     .ThenInclude(a => a.UserBoard)
                         .ThenInclude(ub => ub.User)
+                .Include(c => c.Images)
                 .Where(c => c.CardListId == listId && c.Status != EntityStatus.DELETED)
                 .OrderByDescending(c => c.IsPinned)
                 .ThenBy(c => c.Index)

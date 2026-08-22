@@ -102,6 +102,9 @@ namespace FakeTrello.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Index")
                         .HasColumnType("integer");
 
@@ -111,6 +114,9 @@ namespace FakeTrello.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -148,6 +154,40 @@ namespace FakeTrello.Migrations
                     b.ToTable("CardAssignees");
                 });
 
+            modelBuilder.Entity("FakeTrello.Model.CardImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UploadedByUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.ToTable("CardImages");
+                });
+
             modelBuilder.Entity("FakeTrello.Model.CardList", b =>
                 {
                     b.Property<int>("Id")
@@ -183,6 +223,36 @@ namespace FakeTrello.Migrations
                     b.HasIndex("BoardId");
 
                     b.ToTable("CardLists");
+                });
+
+            modelBuilder.Entity("FakeTrello.Model.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("FakeTrello.Model.Notification", b =>
@@ -259,6 +329,12 @@ namespace FakeTrello.Migrations
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiration")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -360,6 +436,25 @@ namespace FakeTrello.Migrations
                     b.Navigation("UserBoard");
                 });
 
+            modelBuilder.Entity("FakeTrello.Model.CardImage", b =>
+                {
+                    b.HasOne("FakeTrello.Model.Card", "Card")
+                        .WithMany("Images")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FakeTrello.Model.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Card");
+
+                    b.Navigation("UploadedByUser");
+                });
+
             modelBuilder.Entity("FakeTrello.Model.CardList", b =>
                 {
                     b.HasOne("FakeTrello.Model.Board", "Board")
@@ -369,6 +464,25 @@ namespace FakeTrello.Migrations
                         .IsRequired();
 
                     b.Navigation("Board");
+                });
+
+            modelBuilder.Entity("FakeTrello.Model.Comment", b =>
+                {
+                    b.HasOne("FakeTrello.Model.Card", "Card")
+                        .WithMany("Comments")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FakeTrello.Model.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Card");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FakeTrello.Model.Notification", b =>
@@ -431,6 +545,10 @@ namespace FakeTrello.Migrations
             modelBuilder.Entity("FakeTrello.Model.Card", b =>
                 {
                     b.Navigation("Assignees");
+
+                    b.Navigation("Comments");
+
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("FakeTrello.Model.CardList", b =>

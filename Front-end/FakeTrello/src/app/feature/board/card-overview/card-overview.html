@@ -1,13 +1,24 @@
-<mat-card class="app-card" [class.highlighted-card]="highlightedCardId === card.id" (click)="onCardClick($event)">
+<mat-card class="app-card" [class.highlighted-card]="highlightedCardId === card.id" [class.pinned-card]="card.isPinned" (click)="onCardClick($event)">
+  @if (coverImageUrl && !showUpdateCardForm) {
+    <img class="card-cover" [src]="coverImageUrl" alt="" />
+  }
   <mat-card-header>
     @if (!showUpdateCardForm){
       <mat-card-title>
         @if(card.isPinned){<mat-icon class="pin-badge">push_pin</mat-icon>}
         {{ card.name }}
       </mat-card-title>
+      <div class="quick-actions" (click)="$event.stopPropagation()">
+        <button mat-icon-button matTooltip="Edit card" (click)="toggleUpdateCardForm()">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Delete card" (click)="confirmDeleteCard()">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
     }
     @else {
-      <form [formGroup]="updateCardForm" (ngSubmit)="updateCard()" class="update-card-form">
+      <form [formGroup]="updateCardForm" (ngSubmit)="updateCard()" class="update-card-form" (click)="$event.stopPropagation()" (mousedown)="$event.stopPropagation()">
         <mat-form-field appearance="outline" class="full-width">
           <input required matInput
                  type="text"
@@ -36,8 +47,17 @@
   </mat-card-header>
   @if(card.description && !showUpdateCardForm) {
     <mat-card-content>
-      <p>{{ card.description }}</p>
+      <p class="card-description">{{ card.description }}</p>
     </mat-card-content>
+  }
+  @if(card.dueDate && !showUpdateCardForm) {
+    <div class="due-date-badge"
+      [class.overdue]="dueDateStatus === 'overdue'"
+      [class.soon]="dueDateStatus === 'soon'"
+      [class.upcoming]="dueDateStatus === 'upcoming'">
+      <mat-icon>schedule</mat-icon>
+      <span>{{ card.dueDate | date:'MMM d, h:mm a' }}</span>
+    </div>
   }
   <mat-card-footer class="card-footer">
     Assigned to:

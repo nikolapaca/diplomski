@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Board } from '../../../core/model/board.model';
 import { BoardActivity } from '../../../core/model/board-activity.model';
@@ -23,7 +23,9 @@ export const ACTIVITY_ICONS: Record<number, string> = {
   14: 'push_pin',          // LIST_PINNED
   15: 'push_pin',          // LIST_UNPINNED
   16: 'push_pin',          // CARD_PINNED
-  17: 'push_pin'           // CARD_UNPINNED
+  17: 'push_pin',          // CARD_UNPINNED
+  18: 'attach_file',       // ATTACHMENT_ADDED
+  19: 'attachment'         // ATTACHMENT_REMOVED
 };
 
 @Component({
@@ -37,7 +39,14 @@ export class BoardActivityPanel implements OnChanges, OnDestroy {
 
   public showActivity = false;
 
-  public constructor(public boardActivityService: BoardActivityService) {}
+  public constructor(public boardActivityService: BoardActivityService, private elementRef: ElementRef) {}
+
+  @HostListener('document:click', ['$event'])
+  public onDocumentClick(event: MouseEvent): void {
+    if (this.showActivity && !this.elementRef.nativeElement.contains(event.target)) {
+      this.showActivity = false;
+    }
+  }
 
   public ngOnChanges(changes: SimpleChanges): void {
     if (changes['board'] && this.board) {

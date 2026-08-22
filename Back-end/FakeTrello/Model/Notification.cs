@@ -8,7 +8,8 @@
         ASSIGNED_TO_CARD,
         UNASSIGNED_FROM_CARD,
         BOARD_DELETED,
-        BOARD_ARCHIVED
+        BOARD_ARCHIVED,
+        NEW_COMMENT_ON_CARD
     }
 
     public class Notification

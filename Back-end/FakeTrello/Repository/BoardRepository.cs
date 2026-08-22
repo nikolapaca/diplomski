@@ -35,13 +35,21 @@ namespace FakeTrello.Repository
             return await _context.Boards.Where(b => b.UserBoards.Any(ub => ub.UserId == user.Id && ub.UserRole == UserRole.OWNER) && b.Status == BoardStatus.ACTIVE).ToListAsync();
         }
 
+        public async Task<List<Board>> GetAllArchivedOwnedByUser(User user)
+        {
+            return await _context.Boards
+                .Where(b => b.UserBoards.Any(ub => ub.UserId == user.Id && ub.UserRole == UserRole.OWNER) && b.Status == BoardStatus.ARCHIVED)
+                .OrderByDescending(b => b.Id)
+                .ToListAsync();
+        }
+
         public async Task<List<Board>> GetAllByUserIdOrdered(User user)
         {
             return await _context.Boards.Include(b => b.UserBoards).Where(b => b.UserBoards.Any(ub => ub.UserId == user.Id) && b.Status == BoardStatus.ACTIVE)
                     .Select(b => new
                     {
-                            Board = b,
-                            UserBoard = b.UserBoards.First(ub => ub.UserId == user.Id)
+                        Board = b,
+                        UserBoard = b.UserBoards.First(ub => ub.UserId == user.Id)
                     })
                     .OrderByDescending(item => item.UserBoard.IsFavorite)
                     .ThenBy(item => item.UserBoard.UserRole)
@@ -54,7 +62,7 @@ namespace FakeTrello.Repository
 
             return await _context.Boards.Include(b => b.UserBoards)
                 .Where(b => b.UserBoards.Any(ub => ub.UserId == userId) && b.Status == BoardStatus.ACTIVE)
-                .Where(b => searchTerms.All(term => b.Name.ToLower().Contains(term) || b.Description.ToLower().Contains(term) 
+                .Where(b => searchTerms.All(term => b.Name.ToLower().Contains(term) || b.Description.ToLower().Contains(term)
                 || b.UserBoards.Any(ub => ub.UserRole == UserRole.OWNER && ub.User.Username.ToLower().Contains(term))))
                 .OrderByDescending(b => b.UserBoards.Any(ub => ub.UserId == userId && ub.UserRole == UserRole.OWNER))
                 .ThenByDescending(b => (
@@ -68,6 +76,13 @@ namespace FakeTrello.Repository
         {
             return await _context.Boards.Include(ub => ub.UserBoards).Include(ub => ub.Lists).ThenInclude(c => c.Cards).FirstOrDefaultAsync(board =>
                 board.Name.Equals(name) && board.Status == BoardStatus.ACTIVE &&
+                board.UserBoards.Any(ub => ub.User.Username == username && ub.UserRole == UserRole.OWNER));
+        }
+
+        public async Task<Board?> GetArchivedByNameAndOwnerUsername(string name, string username)
+        {
+            return await _context.Boards.Include(ub => ub.UserBoards).FirstOrDefaultAsync(board =>
+                board.Name.Equals(name) && board.Status == BoardStatus.ARCHIVED &&
                 board.UserBoards.Any(ub => ub.User.Username == username && ub.UserRole == UserRole.OWNER));
         }
 

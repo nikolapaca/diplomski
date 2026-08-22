@@ -4,4 +4,5 @@ export interface BoardUpdate {
     oldBoardDescription: string;
     newBoardDescription: string;
     ownerUsername: string;
+    isOwner?: boolean;
 }

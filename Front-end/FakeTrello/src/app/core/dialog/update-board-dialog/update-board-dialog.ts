@@ -1,5 +1,6 @@
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { Component, EventEmitter, Inject, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -15,6 +16,7 @@ import { BoardUpdate } from '../../model/board-update.model';
     MatInputModule,
     ReactiveFormsModule,
     MatFormFieldModule,
+    CommonModule,
     TextFieldModule],
   templateUrl: './update-board-dialog.html',
   styleUrl: './update-board-dialog.css'
@@ -23,6 +25,7 @@ export class UpdateBoardDialog implements OnInit{
   public username: string = '';
   public updateBoardForm: FormGroup;
   public errorMessage: string = '';
+  public isOwner: boolean = true;
   @Output() public boardSubmitted = new EventEmitter<BoardUpdate>();
 
   public constructor(@Inject(MAT_DIALOG_DATA) public data: BoardUpdate, 
@@ -36,13 +39,18 @@ export class UpdateBoardDialog implements OnInit{
   }
 
   public ngOnInit(): void {
-    console.log('vrednost', this.data)
     if (this.data) {
-    this.updateBoardForm.patchValue({
-      boardName: this.data.oldBoardName,
-      boardDescription: this.data.oldBoardDescription
-    });
-  }
+      this.isOwner = this.data.isOwner ?? true;
+
+      this.updateBoardForm.patchValue({
+        boardName: this.data.oldBoardName,
+        boardDescription: this.data.oldBoardDescription
+      });
+
+      if (!this.isOwner) {
+        this.updateBoardForm.get('boardName')?.disable();
+      }
+    }
   }
 
   public setBackendError(message: string): void {
@@ -53,11 +61,12 @@ export class UpdateBoardDialog implements OnInit{
     }
   
   public onSubmit(): void {
+      const rawValue = this.updateBoardForm.getRawValue();
       const board: BoardUpdate = {
         oldBoardDescription: this.data.oldBoardDescription,
-        newBoardDescription: this.updateBoardForm.value.boardDescription,
+        newBoardDescription: rawValue.boardDescription,
         oldBoardName: this.data.oldBoardName,
-        newBoardName: this.updateBoardForm.value.boardName,
+        newBoardName: this.isOwner ? rawValue.boardName : this.data.oldBoardName,
         ownerUsername: this.data.ownerUsername
       }
       this.boardSubmitted.emit(board);

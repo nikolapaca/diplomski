@@ -15,6 +15,8 @@ namespace FakeTrello.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<CardAssignee> CardAssignees { get; set; }
         public DbSet<BoardActivity> BoardActivities { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<CardImage> CardImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,6 +35,30 @@ namespace FakeTrello.Data
                 .HasOne(ca => ca.Card)
                 .WithMany(c => c.Assignees)
                 .HasForeignKey(ca => ca.CardId);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Card)
+                .WithMany(card => card.Comments)
+                .HasForeignKey(c => c.CardId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CardImage>()
+                .HasOne(i => i.Card)
+                .WithMany(card => card.Images)
+                .HasForeignKey(i => i.CardId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CardImage>()
+                .HasOne(i => i.UploadedByUser)
+                .WithMany()
+                .HasForeignKey(i => i.UploadedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
     }

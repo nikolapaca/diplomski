@@ -1,6 +1,10 @@
 <div class="login-form-container">
   <div class="login-card">
-    <h2 class="login-title">Login Here</h2>
+    <div class="login-brand-mark" aria-hidden="true">
+      <span></span>
+      <span></span>
+    </div>
+    <h2 class="login-title">Welcome back</h2>
     <form [formGroup]="loginForm" (ngSubmit)="OnSubmit()">
       <mat-form-field appearance="fill" class="full-width-field">
         <mat-label>Username</mat-label>
@@ -29,8 +33,11 @@
         </mat-error>
         }
       </mat-form-field>
-      <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid">Login</button>
+      <button mat-raised-button color="primary" class="ft-gradient-button" type="submit" [disabled]="loginForm.invalid">Login</button>
     </form>
+    <p class="forgot-password-link">
+      <a [routerLink]="['/forgot-password']">Forgot password?</a>
+    </p>
     <p class="register-link">
       Need an account? <a [routerLink]="['/register']">Register Here</a>
     </p>

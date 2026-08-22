@@ -1,4 +1,88 @@
 /* You can add global styles to this file, and also import other style files */
 
+:root {
+  /* ---- Brand palette -----------------------------------------------
+     A distinct "FakeTrello" identity: indigo/violet -> cyan gradient,
+     instead of a flat single-colour copy of Trello's blue. Everything
+     else (layout, list/card metaphors) is intentionally Trello-like,
+     the colour language is our own. */
+  --ft-primary: #5b4bf5;
+  --ft-primary-dark: #4433d6;
+  --ft-primary-light: #7c6dff;
+  --ft-accent: #12c2c2;
+  --ft-gradient: linear-gradient(135deg, #5b4bf5 0%, #12c2c2 100%);
+  --ft-gradient-soft: linear-gradient(135deg, rgba(91, 75, 245, 0.12) 0%, rgba(18, 194, 194, 0.12) 100%);
+
+  --ft-ink: #171a35;
+  --ft-ink-soft: #4a4f76;
+  --ft-muted: #767c9e;
+  --ft-border: #e3e5f3;
+  --ft-surface: #ffffff;
+  --ft-surface-alt: #f5f6fc;
+  --ft-bg: #eef0fb;
+
+  --ft-success: #1cbf73;
+  --ft-warning: #f5a623;
+  --ft-danger: #eb5a46;
+
+  --ft-radius-sm: 6px;
+  --ft-radius: 10px;
+  --ft-radius-lg: 16px;
+
+  --ft-shadow-sm: 0 1px 3px rgba(23, 26, 53, 0.1);
+  --ft-shadow: 0 4px 14px rgba(23, 26, 53, 0.1);
+  --ft-shadow-lg: 0 12px 32px rgba(23, 26, 53, 0.18);
+
+  --ft-font-heading: 'Poppins', 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  color: var(--ft-ink);
+  background-color: var(--ft-bg);
+}
+
+h1, h2, h3, .ft-heading {
+  font-family: var(--ft-font-heading);
+}
+
+::selection {
+  background: var(--ft-primary-light);
+  color: #fff;
+}
+
+/* Thin, brand-coloured scrollbars app-wide */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ft-primary-light) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #c7c9ea;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ft-primary-light);
+}
+
+.card-details-panel .mat-mdc-dialog-container {
+  padding: 0;
+}
+
+.card-details-panel .mdc-dialog__surface {
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--ft-radius-lg);
+}
+
+/* Buttons that opt in to the brand gradient look */
+.ft-gradient-button {
+  background: var(--ft-gradient) !important;
+  color: #fff !important;
+  border: none !important;
+}

@@ -137,9 +137,6 @@ export class Navbar implements OnInit {
   }
 
   public openNotification(notification: Notification): void {
-    console.log('CLICKED NOTIFICATION:', notification);
-    console.log('NOTIFICATION CLICK:', notification);
-
     if (!notification.isRead) {
       this.notificationService.markAsRead(notification.id).subscribe({
         next: () => {
@@ -156,17 +153,16 @@ export class Navbar implements OnInit {
       });
     }
 
-    this.showNotifications = false;
-    this.clearBadge();
-
     if (!notification.boardOwnerUsername || !notification.boardName) {
-      console.log('Missing board redirect data', notification);
       return;
     }
 
     const type = notification.type;
 
     if (notification.type === 'ADDED_TO_BOARD' || notification.type === 0) {
+      this.showNotifications = false;
+      this.clearBadge();
+
       this.router.navigate([
         '/boards',
         notification.boardOwnerUsername,
@@ -177,6 +173,9 @@ export class Navbar implements OnInit {
     }
 
     if (type === 'ASSIGNED_TO_CARD' || type === 2) {
+      this.showNotifications = false;
+      this.clearBadge();
+
       this.router.navigate(
         [`/boards/${notification.boardOwnerUsername}/${notification.boardName}`],
         {

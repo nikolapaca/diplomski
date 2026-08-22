@@ -1,4 +1,7 @@
-<div class="page-container">
+<div class="page-container" [style.background]="boardBackground">
+  @if(errorMessage){
+  <div class="drag-error-toast">{{ errorMessage }}</div>
+  }
   <div class="page-header">
     @if(board){
     <div class="board-name-section">
@@ -37,6 +40,10 @@
         Delete board
       </button>
       }@else{
+      <button mat-flat-button color="primary" (click)="editDescription()">
+        <mat-icon>edit</mat-icon>
+        Edit description
+      </button>
       <button mat-flat-button color="primary" (click)="leaveBoard()">
         <mat-icon>delete_forever</mat-icon>
         Leave board
@@ -68,9 +75,9 @@
     (cdkDropListDropped)="dropList($event)"
   >
     @for (list of cardLists; track list) {
-    <mat-card class="list-card" (cdkDragStarted)="onListDragStarted(list)"
-          (cdkDragEnded)="onListDragEnded()" cdkDrag [cdkDragDisabled]="isDraggingCard">
-      <mat-card-header class="list-header-flex">
+    <mat-card class="list-card" [class.pinned-list]="list.isPinned" (cdkDragStarted)="onListDragStarted(list)"
+          (cdkDragEnded)="onListDragEnded()" cdkDrag [cdkDragDisabled]="list.isPinned || isDraggingCard">
+      <mat-card-header class="list-header-flex" cdkDragHandle [matTooltip]="list.isPinned ? 'Unpin the list to move it' : ''" matTooltipPosition="above">
         @if (!list.showUpdateListForm) {
         <mat-card-title class="list-title">
           @if(list.isPinned){<mat-icon class="pin-badge" matTooltip="Pinned">push_pin</mat-icon>}
@@ -81,6 +88,7 @@
           [formGroup]="list.updateListForm"
           (submit)="updateList(list)"
           class="update-list-form"
+          (mousedown)="$event.stopPropagation()"
         >
           <mat-form-field appearance="outline" class="full-width">
             <input
@@ -98,7 +106,7 @@
         </form>
         }
         @if(list.showUpdateListForm){
-        <div class="update-list-actions">
+        <div class="update-list-actions" (mousedown)="$event.stopPropagation()">
         <button mat-icon-button (click)="updateList(list)">
           <mat-icon>edit</mat-icon>
         </button>
@@ -107,7 +115,7 @@
         </button>
         </div>
         }@else{
-        <button mat-icon-button [matMenuTriggerFor]="listMenu">
+        <button mat-icon-button [matMenuTriggerFor]="listMenu" (mousedown)="$event.stopPropagation()">
           <mat-icon>more_vert</mat-icon>
         </button>
         }
@@ -132,6 +140,9 @@
           @for (card of list.cards; track card.id) {
           <app-card-overview
             cdkDrag
+            [cdkDragDisabled]="card.isPinned"
+            [matTooltip]="card.isPinned ? 'Unpin the card to move it' : ''"
+            matTooltipPosition="above"
             (cdkDragStarted)="onCardDragStarted(card)"
             (cdkDragEnded)="onCardDragEnded()"
             (cardDeleted)="onCardDeleted(list.id)"
@@ -161,7 +172,6 @@
         <form [formGroup]="list.addCardForm" class="add-card-form">
           <mat-form-field appearance="outline" class="full-width">
             <input
-              required
               matInput
               type="text"
               placeholder="Enter card title..."
@@ -176,20 +186,19 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <textarea
-              required
               matInput
               placeholder="Enter description..."
               formControlName="description"
-            >
+            ></textarea>
             @if(list.addCardForm.get('description')?.errors?.['required'] &&
             list.addCardForm.get('description')?.touched){
             <mat-error>Description is required!</mat-error>
             }
-            </textarea>
           </mat-form-field>
 
           <div class="form-actions">
             <button
+              type="button"
               mat-flat-button
               color="primary"
               [disabled]="!list.addCardForm.valid"
@@ -237,7 +246,6 @@
       <form [formGroup]="addListForm" class="add-list-form">
         <mat-form-field class="full-width" appearance="outline">
           <input
-            required
             matInput
             type="text"
             placeholder="Enter list name.."

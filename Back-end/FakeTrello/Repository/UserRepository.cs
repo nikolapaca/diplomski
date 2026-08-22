@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FakeTrello.Repository
 {
-    public class UserRepository  : IUserRepository
+    public class UserRepository : IUserRepository
     {
 
         private readonly MyDbContext _context;
@@ -64,7 +64,7 @@ namespace FakeTrello.Repository
 
         public async Task<List<User>> GetUsersNotOnTheBoard(string searchTerm, int boardId)
         {
-            if(searchTerm == null || searchTerm == "")
+            if (searchTerm == null || searchTerm == "")
             {
                 return await _context.Users.Where(u => !_context.UserBoards.Any(ub => ub.BoardId == boardId && ub.UserId == u.Id)).ToListAsync();
             }
@@ -82,7 +82,7 @@ namespace FakeTrello.Repository
             }
             else
             {
-                return await _context.Users.Where(u => _context.UserBoards.Any(ub => ub.BoardId == boardId && ub.UserId == u.Id && ub.UserRole != UserRole.OWNER) && 
+                return await _context.Users.Where(u => _context.UserBoards.Any(ub => ub.BoardId == boardId && ub.UserId == u.Id && ub.UserRole != UserRole.OWNER) &&
                 u.Username.Contains(searchTerm)).ToListAsync();
             }
         }
@@ -93,8 +93,7 @@ namespace FakeTrello.Repository
                 .Where(u =>
                     _context.UserBoards.Any(ub =>
                         ub.BoardId == boardId &&
-                        ub.UserId == u.Id &&
-                        ub.UserRole != UserRole.OWNER
+                        ub.UserId == u.Id
                     )
                     &&
                     !_context.CardAssignees.Any(ca =>
@@ -111,6 +110,11 @@ namespace FakeTrello.Repository
         public async Task<User?> GetByConfirmationToken(string token)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.EmailConfirmationToken == token);
+        }
+
+        public async Task<User?> GetByResetToken(string token)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token);
         }
     }
 }

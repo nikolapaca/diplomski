@@ -107,7 +107,9 @@ namespace FakeTrello.Service
 
                 await _unitOfWork.CommitAsync();
 
-                return Result.Ok(_mapper.Map<Card, CardDTO>(card));
+                var createdDto = _mapper.Map<Card, CardDTO>(card);
+                ApplyCoverImage(card, createdDto);
+                return Result.Ok(createdDto);
             }
             catch (Exception ex)
             {
@@ -295,9 +297,23 @@ namespace FakeTrello.Service
             return _mapper.Map<List<Card>, List<CardDTO>>(await _cardRepository.GetAll());
         }
 
+        private static void ApplyCoverImage(Card card, CardDTO dto)
+        {
+            var images = card.Images;
+            dto.AttachmentCount = images?.Count ?? 0;
+            dto.CoverImageUrl = dto.AttachmentCount == 1 ? images!.First().FilePath : null;
+        }
+
         public async Task<Result<CardDTO>> GetById(int id)
         {
-            return _mapper.Map<Card?, CardDTO>(await _cardRepository.GetById(id));
+            var card = await _cardRepository.GetById(id);
+            if (card == null)
+            {
+                return Result.Fail("Card doesn't exist.");
+            }
+            var dto = _mapper.Map<Card, CardDTO>(card);
+            ApplyCoverImage(card, dto);
+            return dto;
         }
 
         public async Task<Result<List<CardDTO>>> GetByListId(int listId)
@@ -309,6 +325,7 @@ namespace FakeTrello.Service
             {
                 var cardDTO = _mapper.Map<Card, CardDTO>(card);
                 cardDTO.AssignedUserUsernames = card.Assignees.Select(a => a.UserBoard.User.Username).ToList();
+                ApplyCoverImage(card, cardDTO);
                 cardsDTO.Add(cardDTO);
             }
 
@@ -506,6 +523,8 @@ namespace FakeTrello.Service
             {
                 existingCard.Name = cardDTO.Name;
                 existingCard.Description = cardDTO.Description;
+                existingCard.DueDate = cardDTO.DueDate;
+                existingCard.Priority = cardDTO.Priority;
 
                 var updatedCard = await _cardRepository.Update(existingCard);
 
@@ -526,7 +545,9 @@ namespace FakeTrello.Service
                     );
                 }
 
-                return Result.Ok(_mapper.Map<Card, CardDTO>(updatedCard));
+                var updatedDto = _mapper.Map<Card, CardDTO>(updatedCard);
+                ApplyCoverImage(updatedCard, updatedDto);
+                return Result.Ok(updatedDto);
             }
             catch (Exception ex)
             {

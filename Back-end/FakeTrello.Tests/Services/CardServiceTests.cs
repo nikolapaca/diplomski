@@ -109,8 +109,6 @@ namespace FakeTrello.Tests.Services
             _userBoardService.Setup(s => s.IsUserMemberOfBoard("member", 10)).ReturnsAsync(true);
             _cardRepository.Setup(r => r.GetByListId(1)).ReturnsAsync(new List<Card> { card, otherCard });
 
-            // Simulates another user having reordered the same list a moment earlier:
-            // EF detects the stale xmin on SaveChanges and throws.
             _cardRepository
                 .Setup(r => r.UpdateRangeAsync(It.IsAny<List<Card>>()))
                 .ThrowsAsync(new DbUpdateConcurrencyException());
@@ -123,8 +121,6 @@ namespace FakeTrello.Tests.Services
             _unitOfWork.Verify(u => u.RollbackAsync(), Times.Once);
             _unitOfWork.Verify(u => u.CommitAsync(), Times.Never);
         }
-
-        // ----- Create -----
 
         [Fact]
         public async Task Create_ListDoesNotExist_ReturnsFailAndRollsBack()
@@ -173,12 +169,10 @@ namespace FakeTrello.Tests.Services
             _userBoardService.Setup(s => s.IsUserMemberOfBoard("member", 10)).ReturnsAsync(true);
             _cardRepository.Setup(r => r.GetMaxIndexForCardAsync(1)).ReturnsAsync(3);
 
-            // Without this, the mock returns null for Map<CardDTO, Card>, and
-            // CardService.Create throws a NullReferenceException on
-            // "card.CardListId = list.Id" - which gets swallowed by the catch block
-            // and turns into a failed Result instead of a thrown exception.
             _mapper.Setup(m => m.Map<CardDTO, Card>(It.IsAny<CardDTO>()))
                 .Returns((CardDTO dto) => new Card { Name = dto.Name });
+            _mapper.Setup(m => m.Map<Card, CardDTO>(It.IsAny<Card>()))
+                .Returns((Card c) => new CardDTO { Id = c.Id, Name = c.Name });
 
             Card createdCard = null;
             _cardRepository.Setup(r => r.Create(It.IsAny<Card>()))
@@ -197,12 +191,10 @@ namespace FakeTrello.Tests.Services
             _unitOfWork.Verify(u => u.CommitAsync(), Times.Once);
         }
 
-        // ----- AssignCardToUser -----
 
         [Fact]
         public async Task AssignCardToUser_SelfAssign_DoesNotSendNotification()
         {
-            // Spec 9.b.ii: "ukoliko je korisnik sam sebe assigned ? notifikacija ne sti?e"
             var card = MakeCard(id: 5, boardId: 10);
             var user = new User { Id = 1, Username = "member" };
 
@@ -263,8 +255,6 @@ namespace FakeTrello.Tests.Services
             _unitOfWork.Verify(u => u.RollbackAsync(), Times.Once);
             _cardAssigneeService.Verify(a => a.Create(It.IsAny<CardAssignee>()), Times.Never);
         }
-
-        // ----- UnassignCardToUser -----
 
         [Fact]
         public async Task UnassignCardToUser_NotAssigned_ReturnsFailAndRollsBack()
@@ -331,8 +321,6 @@ namespace FakeTrello.Tests.Services
                 2, 1, NotificationType.UNASSIGNED_FROM_CARD, It.IsAny<string>(), 10, 5), Times.Once);
         }
 
-        // ----- ReorderCardOutsideList -----
-
         [Fact]
         public async Task ReorderCardOutsideList_TargetListOnDifferentBoard_ReturnsFailAndRollsBack()
         {
@@ -344,7 +332,7 @@ namespace FakeTrello.Tests.Services
             _cardRepository.Setup(r => r.GetById(5)).ReturnsAsync(card);
             _userBoardService.Setup(s => s.IsUserMemberOfBoard("member", 10)).ReturnsAsync(true);
             _cardListService.Setup(s => s.GetById(2)).ReturnsAsync(FluentResults.Result.Ok(targetList));
-            _cardListService.Setup(s => s.GetBoardIdByListId(2)).ReturnsAsync(99); // different board
+            _cardListService.Setup(s => s.GetBoardIdByListId(2)).ReturnsAsync(99);
 
             var service = CreateService();
             var result = await service.ReorderCardOutsideList(5, 2, 1, "member");
@@ -377,13 +365,11 @@ namespace FakeTrello.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.Equal(2, card.CardListId);
             Assert.Equal(1, card.Index);
-            Assert.Equal(2, existingCardInTargetList.Index); // pushed down to make room at index 1
+            Assert.Equal(2, existingCardInTargetList.Index);
             _boardActivityService.Verify(a => a.Create(
                 10, 1, ActivityType.CARD_MOVED, It.IsAny<string>(), 5), Times.Once);
             _unitOfWork.Verify(u => u.CommitAsync(), Times.Once);
         }
-
-        // ----- Update -----
 
         [Fact]
         public async Task Update_UserNotBoardMember_ReturnsFail()
@@ -409,6 +395,8 @@ namespace FakeTrello.Tests.Services
             _userBoardService.Setup(s => s.IsUserMemberOfBoard("member", 10)).ReturnsAsync(true);
             _cardRepository.Setup(r => r.Update(card)).ReturnsAsync(card);
             _userService.Setup(s => s.GetUserByUsername("member")).ReturnsAsync(user);
+            _mapper.Setup(m => m.Map<Card, CardDTO>(It.IsAny<Card>()))
+                .Returns((Card c) => new CardDTO { Id = c.Id, Name = c.Name, Description = c.Description });
 
             var service = CreateService();
             var result = await service.Update(
@@ -420,8 +408,6 @@ namespace FakeTrello.Tests.Services
             _boardActivityService.Verify(a => a.Create(
                 10, 1, ActivityType.CARD_UPDATED, It.IsAny<string>(), 5), Times.Once);
         }
-
-        // ----- Delete -----
 
         [Fact]
         public async Task Delete_UserNotBoardMember_ReturnsFail()
@@ -455,8 +441,6 @@ namespace FakeTrello.Tests.Services
             _boardActivityService.Verify(a => a.Create(
                 10, 1, ActivityType.CARD_DELETED, It.IsAny<string>(), null), Times.Once);
         }
-
-        // ----- GetUsersAssignedToCard -----
 
         [Fact]
         public async Task GetUsersAssignedToCard_CardDoesNotExist_ReturnsFail()

@@ -83,8 +83,6 @@ namespace FakeTrello.Tests.Services
             _userBoardService.Setup(s => s.IsUserMemberOfBoard("member", 10)).ReturnsAsync(true);
             _cardListRepository.Setup(r => r.GetByBoardId(10)).ReturnsAsync(new List<CardList> { list, otherList });
 
-            // Simulates another user having reordered the same board's lists a moment
-            // earlier: EF detects the stale xmin on SaveChanges and throws.
             _cardListRepository
                 .Setup(r => r.UpdateRangeAsync(It.IsAny<List<CardList>>()))
                 .ThrowsAsync(new DbUpdateConcurrencyException());
@@ -114,8 +112,8 @@ namespace FakeTrello.Tests.Services
             var result = await service.MoveList(new CardListDTO { Id = 1 }, 3, "member");
 
             Assert.True(result.IsSuccess);
-            Assert.Equal(3, list.Index);   // moved list now at target index
-            Assert.Equal(1, list2.Index);  // shifted down since it was between old and new index
+            Assert.Equal(3, list.Index); 
+            Assert.Equal(1, list2.Index);  
             Assert.Equal(2, list3.Index);
             _unitOfWork.Verify(u => u.CommitAsync(), Times.Once);
         }
@@ -258,9 +256,6 @@ namespace FakeTrello.Tests.Services
             list.Cards = new List<Card>();
 
             _cardListRepository.Setup(r => r.GetById(3)).ReturnsAsync(list);
-            // Delete() first calls the service's own GetById(), which maps the entity to a
-            // DTO and probes the board — these must be wired or the mapper mock returns
-            // null and the method throws before reaching the authorization check.
             _mapper.Setup(m => m.Map<CardList, CardListDTO>(list))
                 .Returns(new CardListDTO { Id = list.Id, Name = list.Name, Cards = new List<CardDTO>() });
             _boardService.Setup(s => s.GetById(10)).ReturnsAsync(Result.Fail<BoardDTO>("n/a"));

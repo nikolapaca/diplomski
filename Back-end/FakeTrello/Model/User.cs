@@ -17,6 +17,8 @@ namespace FakeTrello.Model
         public bool EmailConfirmed { get; set; } = false;
         public string? EmailConfirmationToken { get; set; }
         public DateTime? EmailConfirmationTokenExpiration { get; set; }
+        public string? PasswordResetToken { get; set; }
+        public DateTime? PasswordResetTokenExpiration { get; set; }
         public User() { }
 
         public User(int id, string name, string surname, string email, string username, string password, EntityStatus status)

@@ -39,6 +39,18 @@ namespace FakeTrello.Mapper
                     opt => opt.MapFrom(src => src.CreatingUser.Username)
                 );
             CreateMap<BoardActivityDTO, BoardActivity>();
+
+            CreateMap<Comment, CommentDTO>()
+                .ForMember(
+                    dest => dest.Username,
+                    opt => opt.MapFrom(src => src.User.Username)
+                );
+
+            CreateMap<CardImage, CardImageDTO>()
+                .ForMember(
+                    dest => dest.UploadedByUsername,
+                    opt => opt.MapFrom(src => src.UploadedByUser.Username)
+                );
         }
     }
 }

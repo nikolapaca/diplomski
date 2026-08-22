@@ -1,4 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {MatCardModule} from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Board } from '../../../core/model/board.model';
@@ -11,20 +12,28 @@ import { MatDialog } from '@angular/material/dialog';
 import { UpdateBoardDialog } from '../../../core/dialog/update-board-dialog/update-board-dialog';
 import { BoardUpdate } from '../../../core/model/board-update.model';
 import { AuthService } from '../../../core/service/auth-service';
+import { getBoardTheme } from '../../../core/util/board-theme.util';
 
 @Component({
   selector: 'app-board-card',
-  imports: [MatCardModule, MatTooltipModule, MatIcon, MatIconButton, MatMenuModule, MatButtonModule],
+  imports: [CommonModule, MatCardModule, MatTooltipModule, MatIcon, MatIconButton, MatMenuModule, MatButtonModule],
   templateUrl: './board-details.html',
-  styleUrl: './board-details.css'
+  styleUrl: './board-details.css',
+  host: {
+    '[class.archived]': 'isArchived'
+  }
 })
 export class BoardDetails implements OnInit {
   @Input() board!: Board;
+  @Input() isArchived = false;
   public loggedInUsername = '';
 
   public constructor(private router: Router, private boardService: BoardService, private matDialog: MatDialog, private authService: AuthService) { }
 
   public navigateToBoard(): void {
+    if (this.isArchived) {
+      return;
+    }
     this.router.navigate(['/boards', this.board.ownerUsername, this.board.name], {
       state: { board: this.board }
     });
@@ -34,12 +43,20 @@ export class BoardDetails implements OnInit {
     this.loggedInUsername = this.authService.getLoggedInUser() || '';
   }
 
+  public get boardBackground(): string {
+    return getBoardTheme(this.board?.ownerUsername + '/' + this.board?.name).gradient;
+  }
+
   public deleteBoard() : void {
     this.boardService.deleteBoard(this.board.name, this.board.ownerUsername).subscribe();
   }
 
   public archiveBoard() : void {
     this.boardService.archiveBoard(this.board.name, this.board.ownerUsername).subscribe();
+  }
+
+  public unarchiveBoard(): void {
+    this.boardService.unarchiveBoard(this.board.name, this.board.ownerUsername).subscribe();
   }
 
   public toggleFavorite(event: MouseEvent) : void {

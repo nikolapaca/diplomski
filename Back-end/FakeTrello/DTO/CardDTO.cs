@@ -16,5 +16,9 @@ namespace FakeTrello.DTO
         public List<string?> AssignedUserUsernames { get; set; } = new();
         public int Index { get; set; }
         public bool IsPinned { get; set; }
+        public DateTime? DueDate { get; set; }
+        public CardPriority Priority { get; set; }
+        public string? CoverImageUrl { get; set; }
+        public int AttachmentCount { get; set; }
     }
 }

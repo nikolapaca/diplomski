@@ -4,6 +4,7 @@ using FakeTrello.DTO;
 using FakeTrello.Model;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service;
+using FakeTrello.Service.Contract;
 using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using Moq;
@@ -16,12 +17,14 @@ namespace FakeTrello.Tests.Services
         private readonly Mock<ITokenGenerator> _tokenGenerator = new();
         private readonly Mock<IUserRepository> _userRepository = new();
         private readonly Mock<IMapper> _mapper = new();
+        private readonly Mock<IEmailService> _emailService = new();
         private readonly PasswordHasher<User> _passwordHasher = new();
 
         private AuthService CreateService() => new(
             _tokenGenerator.Object,
             _userRepository.Object,
-            _mapper.Object);
+            _mapper.Object,
+            _emailService.Object);
 
         private User MakeConfirmedUser(string username, string plainPassword)
         {

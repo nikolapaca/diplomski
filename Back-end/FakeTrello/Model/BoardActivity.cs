@@ -19,7 +19,9 @@
         LIST_PINNED,
         LIST_UNPINNED,
         CARD_PINNED,
-        CARD_UNPINNED
+        CARD_UNPINNED,
+        ATTACHMENT_ADDED,
+        ATTACHMENT_REMOVED
     }
 
     public class BoardActivity

@@ -1,6 +1,6 @@
-<header class="dlg-header mat-elevation-z1">
+<header class="dlg-header">
   <div class="hdr-left">
-    <mat-icon class="hdr-icon" color="primary">view_kanban</mat-icon>
+    <mat-icon class="hdr-icon">view_kanban</mat-icon>
     <h2 class="hdr-title">Card details</h2>
     <mat-icon *ngIf="isPinned" class="pin-indicator" matTooltip="Pinned">push_pin</mat-icon>
   </div>
@@ -15,114 +15,224 @@
   </div>
 </header>
 
-<mat-divider></mat-divider>
+<section class="dlg-body">
 
-<section class="dlg-content">
-  <form [formGroup]="form" class="form">
-    
-    <mat-form-field appearance="outline" class="w100">
-      <mat-label>Title</mat-label>
-      <input matInput formControlName="name" placeholder="Enter card title..." required />
-      <mat-error *ngIf="titleCtrl.hasError('required')">Title is required</mat-error>
-    </mat-form-field>
+  <!-- LEFT COLUMN: title, due date, description, attachments, assignment, history -->
+  <div class="dlg-col dlg-col-left">
+    <form [formGroup]="form" class="form">
 
-    <mat-form-field appearance="outline" class="w100">
-      <mat-label>Description</mat-label>
-      <textarea matInput formControlName="description" rows="6" placeholder="Add a short description..."></textarea>
-    </mat-form-field>
+      <input
+        type="text"
+        class="title-input"
+        formControlName="name"
+        placeholder="Enter card title..."
+        required
+      />
+      <mat-error class="title-error" *ngIf="titleCtrl.hasError('required') && titleCtrl.touched">Title is required</mat-error>
 
-    <div class="ai-actions">
-      <button 
-        mat-stroked-button 
-        color="accent" 
-        (click)="suggestTasks()" 
-        [disabled]="saving || aiGenerating || form.controls['description'].value.length < 20"
-        matTooltip="Generiraj listu zadataka iz opisa koristeći AI (Ollama)"
-      >
-        <mat-icon>auto_fix_high</mat-icon>
-        AI Predloži Zadatke
-      </button>
-
-      <mat-spinner *ngIf="aiGenerating" diameter="20" color="accent"></mat-spinner>
-    </div>
-    <div *ngIf="aiGeneratedTasks" class="ai-result mat-elevation-z1">
-      <h4><mat-icon color="accent" style="vertical-align: middle;">check_box</mat-icon> Predloženi zadaci:</h4>
-      <div [innerHTML]="aiGeneratedTasks"></div> 
-      
-      <button mat-flat-button color="primary" class="mt-8">
-        <mat-icon>add</mat-icon> Dodaj kao Checklistu
-      </button>
-      <button mat-button class="mt-8 ml-8" (click)="aiGeneratedTasks = ''">
-        Zatvori
-      </button>
-    </div>
-    <div class="assigned-section mat-elevation-z1">
-      <div class="assigned-header">
-        <mat-icon color="primary">person</mat-icon>
-        <span class="assigned-title">Assigned to</span>
-      </div>
-
-      <div class="assigned-body">
-        <ng-container *ngIf="assignedUserUsernames.length > 0; else notAssigned">
-          <mat-chip-listbox>
-            <mat-chip-option 
-              *ngFor="let username of assignedUserUsernames"
-              class="assignee-chip" 
-              [selected]="true" 
-              removable
-            >
-              <mat-icon matChipAvatar>person</mat-icon>
-
-              {{ username }}
-
-              <button 
-                mat-icon-button 
-                matChipRemove 
-                class="chip-remove" 
-                matTooltip="Unassign"
-                (click)="unassign(username)"
-              >
-                <mat-icon>person_remove</mat-icon>
-              </button>
-            </mat-chip-option>
-          </mat-chip-listbox>
-        </ng-container>
-
-        <ng-template #notAssigned>
-          <p class="muted">Not assigned</p>
-        </ng-template>
-
-        <button mat-stroked-button color="primary" (click)="assign()" [disabled]="saving">
-          <mat-icon>person_add</mat-icon>
-          Assign
+      <div class="meta-row">
+        <button
+          type="button"
+          class="due-date-chip"
+          [class.overdue]="dueDateStatus === 'overdue'"
+          [class.soon]="dueDateStatus === 'soon'"
+          [class.upcoming]="dueDateStatus === 'upcoming'"
+          [class.unset]="!dueDateStatus"
+          (click)="toggleDueDateEditor()"
+        >
+          <mat-icon>schedule</mat-icon>
+          <span *ngIf="data.card.dueDate">
+            {{ dueDateStatus === 'overdue' ? 'Overdue: ' : (dueDateStatus === 'soon' ? 'Due soon: ' : 'Due ') }}{{ data.card.dueDate | date:'MMM d, y, h:mm a' }}
+          </span>
+          <span *ngIf="!data.card.dueDate">Add due date</span>
         </button>
       </div>
+
+      <div class="due-date-editor mat-elevation-z1" *ngIf="showDueDateEditor">
+        <input type="datetime-local" [formControl]="dueDateCtrl" class="due-date-input" />
+        <div class="due-date-editor-actions">
+          <button mat-flat-button color="primary" (click)="saveDueDate()" [disabled]="savingDueDate || !dueDateCtrl.value">
+            Save
+          </button>
+          <button mat-button (click)="clearDueDate()" *ngIf="data.card.dueDate" [disabled]="savingDueDate">
+            Remove
+          </button>
+          <button mat-button (click)="showDueDateEditor = false" [disabled]="savingDueDate">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <div class="section-label">
+        <mat-icon>subject</mat-icon>
+        <span>Description</span>
+      </div>
+      <textarea
+        class="description-input"
+        formControlName="description"
+        rows="4"
+        placeholder="Add a more detailed description..."
+      ></textarea>
+
+      <div class="assigned-section mat-elevation-z1">
+        <div class="assigned-header">
+          <mat-icon>person</mat-icon>
+          <span class="assigned-title">Assigned to</span>
+        </div>
+
+        <div class="assigned-body">
+          <ng-container *ngIf="assignedUserUsernames.length > 0; else notAssigned">
+            <mat-chip-listbox>
+              <mat-chip-option 
+                *ngFor="let username of assignedUserUsernames"
+                class="assignee-chip" 
+                [selected]="true" 
+                removable
+              >
+                <mat-icon matChipAvatar>person</mat-icon>
+
+                {{ username }}
+
+                <button 
+                  mat-icon-button 
+                  matChipRemove 
+                  class="chip-remove" 
+                  matTooltip="Unassign"
+                  (click)="unassign(username)"
+                >
+                  <mat-icon>person_remove</mat-icon>
+                </button>
+              </mat-chip-option>
+            </mat-chip-listbox>
+          </ng-container>
+
+          <ng-template #notAssigned>
+            <p class="muted">Not assigned</p>
+          </ng-template>
+
+          <button mat-stroked-button color="primary" (click)="assign()" [disabled]="saving">
+            <mat-icon>person_add</mat-icon>
+            Assign
+          </button>
+        </div>
+      </div>
+      </form>
+
+    <div class="images-section mat-elevation-z1">
+      <div class="images-header">
+        <mat-icon>attach_file</mat-icon>
+        <span class="images-title">Attachments</span>
+        <span class="spacer"></span>
+        <button mat-stroked-button color="primary" (click)="fileInput.click()" [disabled]="uploadingImage">
+          <mat-icon>upload</mat-icon>
+          {{ uploadingImage ? 'Uploading...' : 'Upload image' }}
+        </button>
+        <input #fileInput type="file" accept=".jpg,.jpeg,.png,.gif,.webp" hidden (change)="onImageSelected($event)" />
+      </div>
+
+      <mat-spinner *ngIf="loadingImages" diameter="20"></mat-spinner>
+
+      <p class="muted" *ngIf="!loadingImages && images.length === 0">No images attached yet.</p>
+
+      <div class="image-grid" *ngIf="!loadingImages && images.length > 0">
+        <div class="image-item" *ngFor="let image of images">
+          <a [href]="imageUrl(image)" target="_blank">
+            <img [src]="imageUrl(image)" [alt]="image.fileName" />
+          </a>
+          <div class="image-meta">
+            <span class="image-name" [matTooltip]="image.fileName">{{ image.fileName }}</span>
+            <button
+              mat-icon-button
+              *ngIf="canDeleteImage(image)"
+              matTooltip="Delete image"
+              (click)="deleteImage(image.id)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="error" *ngIf="imageErrorMessage">{{ imageErrorMessage }}</p>
     </div>
-    </form>
 
-  <div class="history-section mat-elevation-z1">
-    <button class="history-toggle" (click)="toggleHistory()">
-      <mat-icon>history</mat-icon>
-      <span>Card history</span>
-      <mat-icon class="history-caret">{{ showHistory ? 'expand_less' : 'expand_more' }}</mat-icon>
-    </button>
+    <div class="history-section mat-elevation-z1">
+      <button class="history-toggle" (click)="toggleHistory()">
+        <mat-icon>history</mat-icon>
+        <span>Card history</span>
+        <mat-icon class="history-caret">{{ showHistory ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
 
-    <div class="history-body" *ngIf="showHistory">
-      <mat-spinner *ngIf="loadingHistory" diameter="20"></mat-spinner>
+      <div class="history-body" *ngIf="showHistory">
+        <mat-spinner *ngIf="loadingHistory" diameter="20"></mat-spinner>
 
-      <p class="muted" *ngIf="!loadingHistory && history.length === 0">No history yet for this card.</p>
+        <p class="muted" *ngIf="!loadingHistory && history.length === 0">No history yet for this card.</p>
 
-      <div class="activity-item" *ngFor="let activity of history">
-        <mat-icon class="activity-icon">{{ iconFor(activity.type) }}</mat-icon>
-        <div class="activity-content">
-          <p>{{ activity.message }}</p>
-          <span>{{ activity.createdAt | date:'short' }}</span>
+        <div class="activity-item" *ngFor="let activity of history">
+          <mat-icon class="activity-icon">{{ iconFor(activity.type) }}</mat-icon>
+          <div class="activity-content">
+            <p>{{ activity.message }}</p>
+            <span>{{ activity.createdAt | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  </div>
+
+  <!-- RIGHT COLUMN: comments -->
+  <div class="dlg-col dlg-col-right">
+    <div class="comments-section">
+      <div class="comments-header">
+        <mat-icon>comment</mat-icon>
+        <span class="comments-title">Comments</span>
+      </div>
+
+      <div class="add-comment">
+        <mat-form-field appearance="outline" class="w100">
+          <mat-label>Write a comment...</mat-label>
+          <textarea matInput [formControl]="newCommentCtrl" rows="2"></textarea>
+        </mat-form-field>
+        <button
+          mat-flat-button
+          color="primary"
+          (click)="addComment()"
+          [disabled]="postingComment || !newCommentCtrl.value.trim()"
+        >
+          <mat-icon>send</mat-icon>
+          Comment
+        </button>
+      </div>
+
+      <div class="comments-list">
+        <mat-spinner *ngIf="loadingComments" diameter="20"></mat-spinner>
+
+        <p class="muted" *ngIf="!loadingComments && comments.length === 0">No comments yet.</p>
+
+        <div class="comment-item" *ngFor="let comment of comments">
+          <mat-icon class="comment-icon">account_circle</mat-icon>
+          <div class="comment-content">
+            <div class="comment-meta">
+              <span class="comment-author">{{ comment.username }}</span>
+              <span class="comment-date">{{ comment.createdAt | date:'short' }}</span>
+            </div>
+            <p class="comment-text">{{ comment.text }}</p>
+          </div>
+          <button
+            mat-icon-button
+            class="comment-delete"
+            *ngIf="canDeleteComment(comment)"
+            matTooltip="Delete comment"
+            (click)="deleteComment(comment.id)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
 </section>
 
 <mat-divider></mat-divider>

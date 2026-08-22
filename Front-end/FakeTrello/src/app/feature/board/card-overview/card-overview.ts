@@ -14,6 +14,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { AssignCardDialog } from '../../../core/dialog/assign-card-dialog/assign-card-dialog';
 import { UserService } from '../../../core/service/user-service';
 import { CardDetailsDialogComponent } from '../../../core/dialog/card-details-dialog.component/card-details-dialog.component';
+import { DueDateStatus, getDueDateStatus } from '../../../core/util/due-date.util';
+import { ConfirmDialog } from '../../../core/dialog/confirm-dialog/confirm-dialog';
+import { environment } from '../../../../environment';
 
 @Component({
   selector: 'app-card-overview',
@@ -34,6 +37,14 @@ export class CardOverview implements OnInit {
   public updateCardForm!: FormGroup;
   public errorMessage = '';
   public loggedInUsername = '';
+  public readonly assetsBase = environment.api.replace(/\/api$/, '');
+
+  public get coverImageUrl(): string | null {
+    if (!this.card.coverImageUrl) {
+      return null;
+    }
+    return `${this.assetsBase}${this.card.coverImageUrl}`;
+  }
 
   public constructor(private cardService: CardService, private userService: UserService, private matDialog: MatDialog, private cdr: ChangeDetectorRef) {
   }
@@ -41,6 +52,10 @@ export class CardOverview implements OnInit {
   public ngOnInit(): void 
   {
     this.loggedInUsername = this.userService.getUsername();
+  }
+
+  public get dueDateStatus(): DueDateStatus | null {
+    return getDueDateStatus(this.card.dueDate);
   }
 
   public onCardClick(event: MouseEvent): void {
@@ -56,6 +71,22 @@ export class CardOverview implements OnInit {
       next: () => {
         this.cardDeleted.emit(this.card.cardListId);
       }})
+  }
+
+  public confirmDeleteCard(): void {
+    const dialogRef = this.matDialog.open(ConfirmDialog, {
+      width: '420px',
+      data: {
+        title: 'Delete card?',
+        message: `Are you sure you want to delete "${this.card.name}"? This action cannot be undone.`,
+        confirmText: 'Delete card'
+      }
+    });
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.deleteCard();
+      }
+    });
   }
 
   public openAssingCardDialog() : void {
@@ -93,10 +124,9 @@ export class CardOverview implements OnInit {
 
   public updateCard() : void {
     const updatedCard: Card = {
-      id: this.card.id,
+      ...this.card,
       name: this.updateCardForm.value.name,
-      description: this.updateCardForm.value.description,
-      cardListId: this.card.cardListId
+      description: this.updateCardForm.value.description
     }
 
     this.cardService.updateCard(updatedCard).subscribe({
@@ -106,6 +136,7 @@ export class CardOverview implements OnInit {
             this.closeUpdateCardForm();
 
             this.cardUpdated.emit();
+            this.cdr.markForCheck();
           },
           error: (error) => {
     
@@ -119,6 +150,7 @@ export class CardOverview implements OnInit {
               this.errorMessage = firstError[0];
             }
           }
+          this.cdr.markForCheck();
         }
       });
   }
@@ -143,8 +175,11 @@ export class CardOverview implements OnInit {
 
   const dialogRef = this.matDialog.open(CardDetailsDialogComponent, {
     data: { card: this.card, board: this.board },
-    width: '720px',
-    maxWidth: '95vw'
+    width: '960px',
+    maxWidth: '95vw',
+    height: '640px',
+    maxHeight: '90vh',
+    panelClass: 'card-details-panel'
   });
 
   const inst = dialogRef.componentInstance;

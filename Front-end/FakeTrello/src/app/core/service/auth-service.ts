@@ -6,6 +6,8 @@ import { CredentialsDTO } from '../model/login-credentials.model';
 import { AccessToken } from '../model/access-token.model';
 import { jwtDecode } from 'jwt-decode';
 import { isPlatformBrowser } from '@angular/common';
+import { ForgotPasswordRequest } from '../model/forgot-password-request.model';
+import { ResetPassword } from '../model/reset-password.model';
 
 @Injectable({
   providedIn: 'root',
@@ -72,5 +74,13 @@ export class AuthService {
       }
     );
 
+  }
+
+  public forgotPassword(request: ForgotPasswordRequest): Observable<any> {
+    return this.http.post(`${environment.api}/auth/forgot-password`, request);
+  }
+
+  public resetPassword(request: ResetPassword): Observable<any> {
+    return this.http.post(`${environment.api}/auth/reset-password`, request);
   }
 }

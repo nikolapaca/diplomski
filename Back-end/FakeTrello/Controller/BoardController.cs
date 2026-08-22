@@ -40,6 +40,27 @@ namespace FakeTrello.Controller
             return Ok(boards.Value);
         }
 
+        [HttpGet("archived")]
+        public async Task<ActionResult<List<BoardDTO>>> GetAllArchived()
+        {
+            var username = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (username is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var boards = await _boardService.GetAllArchivedByUsername(username);
+            if (!boards.IsSuccess)
+            {
+                return StatusCode(500, "Error on server!");
+            }
+            if (boards.Value == null || boards.Value.Count == 0)
+            {
+                return Ok(new List<BoardDTO>());
+            }
+            return Ok(boards.Value);
+        }
+
         [HttpGet]
         [Route("{id:int}")]
         public async Task<ActionResult<BoardDTO>> GetById(int id)
@@ -112,7 +133,9 @@ namespace FakeTrello.Controller
                 return BadRequest("");
             }
 
-            var board = await _boardService.GetResultByNameAndOwnerUsername(name, username);
+            var requestingUsername = User.FindFirst("username")?.Value;
+
+            var board = await _boardService.GetResultByNameAndOwnerUsername(name, username, requestingUsername);
             if (board.IsFailed)
             {
                 return BadRequest(board.Errors.Select(e => e.Message).ToList());
@@ -328,6 +351,30 @@ namespace FakeTrello.Controller
             }
 
             return Ok(new { Message = "Board archived successfully." });
+        }
+
+        [HttpPost("unarchive/{name}/{username}")]
+        public async Task<ActionResult> Unarchive(string name, string username)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(username))
+            {
+                return BadRequest();
+            }
+
+            var requestingUsername = User.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+            if (requestingUsername is null)
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var result = await _boardService.Unarchive(name, username, requestingUsername);
+
+            if (result.IsFailed)
+            {
+                return BadRequest(result.Errors.First().Message);
+            }
+
+            return Ok(new { Message = "Board unarchived successfully." });
         }
 
         [HttpPost("leave")]
