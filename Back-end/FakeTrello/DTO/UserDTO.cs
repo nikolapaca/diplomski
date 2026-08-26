@@ -5,11 +5,11 @@ namespace FakeTrello.DTO
     public class UserDTO
     {
         [Required]
-        [MinLength(1, ErrorMessage = "Name cannot be empty.")]
+        [MinLength(2, ErrorMessage = "Name must be at least 2 characters long.")]
         public string Name { get; set; }
 
         [Required]
-        [MinLength(1, ErrorMessage = "Surname cannot be empty.")]
+        [MinLength(2, ErrorMessage = "Surname must be at least 2 characters long.")]
         public string Surname { get; set; }
 
         [Required]
@@ -17,6 +17,7 @@ namespace FakeTrello.DTO
         public string Email { get; set; }
 
         [Required]
+        [MinLength(2, ErrorMessage = "Username must be at least 2 characters long.")]
         public string Username {  get; set; }
 
         [Required]

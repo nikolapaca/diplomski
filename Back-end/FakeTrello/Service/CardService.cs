@@ -296,8 +296,7 @@ namespace FakeTrello.Service
         {
             return _mapper.Map<List<Card>, List<CardDTO>>(await _cardRepository.GetAll());
         }
-
-        private static void ApplyCoverImage(Card card, CardDTO dto)
+        public static void ApplyCoverImage(Card card, CardDTO dto)
         {
             var images = card.Images;
             dto.AttachmentCount = images?.Count ?? 0;

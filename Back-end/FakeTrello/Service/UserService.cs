@@ -45,23 +45,6 @@ namespace FakeTrello.Service
             return Result.Ok(_mapper.Map<User, UserDTO>(user));
         }
 
-        public async Task<Result<UserDTO>> Update(string currentUsername, UserDTO userDto)
-        {
-            var user = await _repository.GetByUsername(currentUsername);
-
-            if (user == null)
-                return Result.Fail("User not found.");
-
-            user.Name = userDto.Name;
-            user.Surname = userDto.Surname;
-            user.Email = userDto.Email;
-            user.Username = userDto.Username;
-
-            var updatedUser = await _repository.Update(user);
-
-            return Result.Ok(_mapper.Map<UserDTO>(updatedUser));
-        }
-
         public async Task<Result<UserDTO>> Delete (int id)
         {
             var user = await _repository.GetById(id);

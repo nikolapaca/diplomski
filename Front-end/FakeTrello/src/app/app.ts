@@ -9,5 +9,5 @@ import { Navbar } from "./core/navbar/navbar";
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('FakeTrello');
+  protected readonly title = signal('Pivot');
 }

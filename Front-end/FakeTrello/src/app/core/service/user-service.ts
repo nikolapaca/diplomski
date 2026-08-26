@@ -54,14 +54,6 @@ export class UserService {
     return this.http.get<User[]>(`${environment.api}/users/search/assignableOnBoard`, { params })
   }
 
-  public getProfile() : Observable<User> {
-    return this.http.get<User>(`${environment.api}/users/profile`);
-  }
-
-  public updateProfile(user: User) : Observable<User> {
-    return this.http.put<User>(`${environment.api}/users/profile`, user);
-  }
-
   public changePassword(change: PasswordChange) : Observable<void> {
     return this.http.put<void>(`${environment.api}/users/changePassword`, change);
   }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ChangeDetectorRef } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../service/auth-service';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,6 +13,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { NotificationService } from '../service/notification-service';
 import { Notification } from '../model/notification.model';
 import { CommonModule } from '@angular/common';
+import { MatMenuModule } from '@angular/material/menu';
+import { UserService } from '../service/user-service';
 
 @Component({
   selector: 'app-navbar',
@@ -23,6 +25,7 @@ import { CommonModule } from '@angular/common';
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
+    MatMenuModule,
     RouterModule
   ],
   templateUrl: './navbar.html',
@@ -34,6 +37,7 @@ export class Navbar implements OnInit {
   public errorMessage = '';
   public hideSearch = false;
   public showNotifications = false;
+  public loggedInUsername = '';
 
   public constructor(
     private router: Router,
@@ -41,7 +45,9 @@ export class Navbar implements OnInit {
     private matDialog: MatDialog,
     private boardService: BoardService,
     public notificationService: NotificationService,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private userService: UserService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   public ngOnInit(): void {
@@ -56,9 +62,11 @@ export class Navbar implements OnInit {
       this.isLoggedIn = status;
 
       if (this.isLoggedIn) {
+        this.loggedInUsername = this.userService.getUsername();
         this.notificationService.loadNotifications();
         this.notificationService.startConnection();
       }
+      this.cdr.markForCheck();
     });
 
     this.searchControl.valueChanges

@@ -54,7 +54,9 @@ namespace FakeTrello.Repository
         {
             var cardLists = await _context.CardLists
                                 .Include(cl => cl.Cards.Where(c => c.Status != EntityStatus.DELETED).OrderByDescending(c => c.IsPinned).ThenBy(c => c.Index))
-                                .ThenInclude(c => c.Assignees) 
+                                .ThenInclude(c => c.Assignees)
+                                .Include(cl => cl.Cards)
+                                .ThenInclude(c => c.Images)
                                 .Include(cl => cl.Board)
                                 .ThenInclude(b => b.UserBoards)
                                 .ThenInclude(ub => ub.User)
@@ -78,7 +80,7 @@ namespace FakeTrello.Repository
         public async Task Delete(int id)
         {
             CardList? cardList = await GetById(id);
-            if(cardList == null)
+            if (cardList == null)
             {
                 throw new KeyNotFoundException();
             }

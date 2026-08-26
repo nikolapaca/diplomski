@@ -424,6 +424,10 @@ export class BoardOverview implements OnInit {
       }
     });}
   }
+  public goToHome(): void {
+    this.router.navigate(['/home']);
+  }
+
   public updateBoard(): void {
     if(this.board){
     const boardUpdate: BoardUpdate = {

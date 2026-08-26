@@ -84,7 +84,11 @@ export class BoardService {
   }
 
   public toggleFavorite(name: string, ownerUsername: string): Observable<void> {
-    return this.http.post<void>(`${environment.api}/boards/favorite/${name}/${ownerUsername}`, {});
+    return this.http.post<void>(`${environment.api}/boards/favorite/${name}/${ownerUsername}`, {}).pipe(
+      tap(() => {
+        this.refreshState();
+      })
+    );
   }
 
   public archiveBoard(name: string, ownerUsername: string): Observable<void> {
@@ -128,7 +132,8 @@ export class BoardService {
     this.fetchBoards("")
       .pipe(take(1))
       .subscribe(resp => {
-        this._boardsSubject.next(resp);
+        const sorted = [...resp].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
+        this._boardsSubject.next(sorted);
       });
   }
 }

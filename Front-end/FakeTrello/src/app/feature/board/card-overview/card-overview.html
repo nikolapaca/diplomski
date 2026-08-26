@@ -9,9 +9,6 @@
         {{ card.name }}
       </mat-card-title>
       <div class="quick-actions" (click)="$event.stopPropagation()">
-        <button mat-icon-button matTooltip="Edit card" (click)="toggleUpdateCardForm()">
-          <mat-icon>edit</mat-icon>
-        </button>
         <button mat-icon-button matTooltip="Delete card" (click)="confirmDeleteCard()">
           <mat-icon>delete</mat-icon>
         </button>

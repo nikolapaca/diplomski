@@ -18,7 +18,9 @@
 .profile-card {
   width: 100%;
   padding: 28px;
-  border-radius: 18px;
+  border-radius: var(--ft-radius-lg, 16px) !important;
+  box-shadow: var(--ft-shadow, 0 4px 14px rgba(23, 26, 53, 0.1)) !important;
+  border: 1px solid var(--ft-border, #e3e5f3);
 }
 
 .password-card {
@@ -36,15 +38,33 @@
   align-items: flex-start;
 }
 
+.header-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--ft-gradient-soft, rgba(91, 75, 245, 0.12));
+  flex-shrink: 0;
+}
+
+.header-icon-badge mat-icon {
+  color: var(--ft-primary, #5b4bf5);
+}
+
 .header h1 {
   margin: 0;
-  font-size: 28px;
-  font-weight: 700;
+  font-family: var(--ft-font-heading, 'Poppins', sans-serif);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ft-ink, #171a35);
 }
 
 .header p {
   margin: 4px 0 0;
-  color: #666;
+  color: var(--ft-muted, #767c9e);
+  font-size: 0.9rem;
 }
 
 .form {
@@ -55,23 +75,23 @@
 
 .loading {
   padding: 24px 0;
-  color: #666;
+  color: var(--ft-muted, #767c9e);
 }
 
 .message {
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: var(--ft-radius-sm, 8px);
   font-size: 14px;
 }
 
 .error {
-  background: #ffe5e5;
-  color: #b00020;
+  background: rgba(235, 90, 70, 0.12);
+  color: var(--ft-danger, #eb5a46);
 }
 
 .success {
-  background: #e6f7ec;
-  color: #176b36;
+  background: rgba(28, 191, 115, 0.12);
+  color: var(--ft-success, #1cbf73);
 }
 
 .actions {
@@ -95,6 +115,6 @@ button mat-icon {
   }
 
   .header h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
 }

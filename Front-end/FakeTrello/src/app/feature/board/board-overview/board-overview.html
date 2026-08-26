@@ -3,6 +3,9 @@
   <div class="drag-error-toast">{{ errorMessage }}</div>
   }
   <div class="page-header">
+    <button mat-icon-button class="back-to-home-button" matTooltip="Back to boards" (click)="goToHome()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
     @if(board){
     <div class="board-name-section">
       <h1>{{ boardOwnerUsername }}/{{ board.name }}</h1>
@@ -12,57 +15,57 @@
     <div class="header-actions">
       @if(board){
         <app-board-activity [board]="board"></app-board-activity>
-        <button mat-icon-button
-          matTooltip="{{ board.isFavorite ? 'Unfavorite' : 'Mark as favorite' }}"
-          (click)="toggleFavorite()">
-          <mat-icon [class.favorite-active]="board.isFavorite">{{ board.isFavorite ? 'star' : 'star_border' }}</mat-icon>
+        <button mat-icon-button matTooltip="Board options" [matMenuTriggerFor]="boardOptionsMenu">
+          <mat-icon>more_vert</mat-icon>
         </button>
-        @if(loggedInUsername === board.ownerUsername){
-        <button mat-icon-button matTooltip="View board members" (click)="openMembersDialog()">
-          <mat-icon>group</mat-icon>
-        </button>
-        }
-      @if(loggedInUsername === board.ownerUsername){
-      <button mat-flat-button color="primary" (click)="updateBoard()">
-        <mat-icon>edit</mat-icon>
-        Update board
-      </button>
-      <button mat-flat-button color="primary" [matMenuTriggerFor]="manageMenu">
-        <mat-icon>settings</mat-icon>
-        Manage
-      </button>
-      <button mat-flat-button color="accent" (click)="archiveBoard()">
-        <mat-icon>archive</mat-icon>
-        Archive board
-      </button>
-      <button mat-flat-button color="warn" (click)="deleteBoard()">
-        <mat-icon>delete_forever</mat-icon>
-        Delete board
-      </button>
-      }@else{
-      <button mat-flat-button color="primary" (click)="editDescription()">
-        <mat-icon>edit</mat-icon>
-        Edit description
-      </button>
-      <button mat-flat-button color="primary" (click)="leaveBoard()">
-        <mat-icon>delete_forever</mat-icon>
-        Leave board
-      </button>
-      }
       }
     </div>
   </div>
   <mat-divider></mat-divider>
 
-  <mat-menu #manageMenu="matMenu">
-    <button mat-menu-item (click)="addCollaborator()">
-      <mat-icon>person_add</mat-icon>
-      <span>Add collaborator</span>
-    </button>
-    <button mat-menu-item (click)="removeCollaborator()">
-      <mat-icon>person_remove</mat-icon>
-      <span>Remove collaborator</span>
-    </button>
+  <mat-menu #boardOptionsMenu="matMenu">
+    @if(board){
+      <button mat-menu-item (click)="toggleFavorite()">
+        <mat-icon [class.favorite-active]="board.isFavorite">{{ board.isFavorite ? 'star' : 'star_border' }}</mat-icon>
+        <span>{{ board.isFavorite ? 'Unfavorite' : 'Mark as favorite' }}</span>
+      </button>
+
+      @if(loggedInUsername === board.ownerUsername){
+        <button mat-menu-item (click)="openMembersDialog()">
+          <mat-icon>group</mat-icon>
+          <span>View board members</span>
+        </button>
+        <button mat-menu-item (click)="updateBoard()">
+          <mat-icon>edit</mat-icon>
+          <span>Update board</span>
+        </button>
+        <button mat-menu-item (click)="addCollaborator()">
+          <mat-icon>person_add</mat-icon>
+          <span>Add collaborator</span>
+        </button>
+        <button mat-menu-item (click)="removeCollaborator()">
+          <mat-icon>person_remove</mat-icon>
+          <span>Remove collaborator</span>
+        </button>
+        <button mat-menu-item (click)="archiveBoard()">
+          <mat-icon>archive</mat-icon>
+          <span>Archive board</span>
+        </button>
+        <button mat-menu-item (click)="deleteBoard()">
+          <mat-icon>delete_forever</mat-icon>
+          <span>Delete board</span>
+        </button>
+      }@else{
+        <button mat-menu-item (click)="editDescription()">
+          <mat-icon>edit</mat-icon>
+          <span>Edit description</span>
+        </button>
+        <button mat-menu-item (click)="leaveBoard()">
+          <mat-icon>exit_to_app</mat-icon>
+          <span>Leave board</span>
+        </button>
+      }
+    }
   </mat-menu>
 
   <div

@@ -1,7 +1,7 @@
 .navbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: flex-start; 
   padding: 8px 24px;
   background: linear-gradient(100deg, #4433d6 0%, #5b4bf5 45%, #12c2c2 130%);
   color: white;
@@ -33,7 +33,7 @@
 .logo-mark {
   display: flex;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
   width: 30px;
   height: 30px;
   padding: 5px;
@@ -43,32 +43,41 @@
   flex-shrink: 0;
 }
 
-.logo-mark-bar {
+.logo-mark-diamond {
   display: block;
-  width: 6px;
-  border-radius: 2px;
+  width: 15px;
+  height: 15px;
   background: #ffffff;
-}
-
-.logo-mark-bar-tall {
-  height: 20px;
-}
-
-.logo-mark-bar-short {
-  height: 12px;
-  align-self: flex-start;
+  border-radius: 3px;
+  transform: rotate(45deg);
 }
 
 .logo-wordmark {
   font-family: 'Poppins', 'Roboto', sans-serif;
   font-size: 19px;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-  color: white;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #FFC857;
 }
 
-.logo-wordmark strong {
-  font-weight: 700;
+.navbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.logged-in-as {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logged-in-as strong {
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .search-bar {
@@ -109,12 +118,9 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  margin-left: auto;
 }
 
 .create-button,
-.edit-profile-button,
-.sign-out-button,
 .notification-button {
   padding: 8px 14px;
   border: none;
@@ -125,6 +131,30 @@
   cursor: pointer;
   margin-left: 10px;
   transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.account-menu-button {
+  padding: 8px;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.16);
+  color: white;
+  cursor: pointer;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.account-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.26);
+}
+
+.account-menu-button mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
 }
 
 .create-button {
@@ -139,8 +169,6 @@
   transform: translateY(-1px);
 }
 
-.edit-profile-button:hover,
-.sign-out-button:hover,
 .notification-button:hover {
   background-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);

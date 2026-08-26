@@ -32,10 +32,9 @@
 }
 
 .activity-dropdown {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  top: auto;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
   width: 380px;
   max-width: calc(100vw - 48px);
   max-height: 60vh;

@@ -98,7 +98,18 @@ namespace FakeTrello.Service
 
         public async Task<Result<List<CardListDTO>>> GetByBoardNameAndBoardOwner(string boardName, string boardOwnerUsername)
         {
-            return _mapper.Map<List<CardList>, List<CardListDTO>>(await _cardListRepository.GetByBoardOwnerAndBoardName(boardName, boardOwnerUsername));
+            var cardLists = await _cardListRepository.GetByBoardOwnerAndBoardName(boardName, boardOwnerUsername);
+            var cardListDtos = _mapper.Map<List<CardList>, List<CardListDTO>>(cardLists);
+
+            for (int i = 0; i < cardLists.Count; i++)
+            {
+                for (int j = 0; j < cardLists[i].Cards.Count; j++)
+                {
+                    CardService.ApplyCoverImage(cardLists[i].Cards.ElementAt(j), cardListDtos[i].Cards[j]);
+                }
+            }
+
+            return cardListDtos;
         }
 
         public async Task<Result<CardListDTO>> Update(CardListDTO cardListDTO, string username)

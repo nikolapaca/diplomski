@@ -2,35 +2,30 @@
   <div class="navbar-left">
     <a routerLink="/home" class="logo-link" (click)="returnToHome()">
       <span class="logo-mark" aria-hidden="true">
-        <span class="logo-mark-bar logo-mark-bar-tall"></span>
-        <span class="logo-mark-bar logo-mark-bar-short"></span>
+        <span class="logo-mark-diamond"></span>
       </span>
-      <span class="logo-wordmark">Fake<strong>Trello</strong></span>
+      <span class="logo-wordmark">Pivot</span>
     </a>
   </div>
 
   <div class="navbar-center">
+    @if(isLoggedIn){
+    <span class="logged-in-as">Signed in as <strong>{{ loggedInUsername }}</strong></span>
+    }
     @if(isLoggedIn && !hideSearch){
     <div class="search-bar">
       <input type="text" [formControl]="searchControl" placeholder="Search..." />
       <i class="fas fa-search"></i>
     </div>
     }
-  </div>
-
-  <div class="navbar-right">
     @if(isLoggedIn){
     <button class="create-button" (click)="createBoard()">
       Create board
     </button>
     }
+  </div>
 
-    @if(isLoggedIn){
-    <button class="edit-profile-button" routerLink="/edit-profile">
-      Edit profile
-    </button>
-    }
-
+  <div class="navbar-right">
     @if(isLoggedIn){
     <div class="notification-wrapper">
       <button class="notification-button" (click)="toggleNotifications()">
@@ -82,9 +77,20 @@
     }
 
     @if(isLoggedIn){
-    <button class="sign-out-button" (click)="signOut()">
-      Sign out
+    <button class="account-menu-button" matTooltip="Account" [matMenuTriggerFor]="accountMenu">
+      <mat-icon>more_vert</mat-icon>
     </button>
+    <mat-menu #accountMenu="matMenu">
+      <button mat-menu-item routerLink="/edit-profile">
+        <mat-icon>lock_reset</mat-icon>
+        <span>Change password</span>
+      </button>
+      <button mat-menu-item (click)="signOut()">
+        <mat-icon>logout</mat-icon>
+        <span>Log out</span>
+      </button>
+    </mat-menu>
     }
+
   </div>
 </nav>

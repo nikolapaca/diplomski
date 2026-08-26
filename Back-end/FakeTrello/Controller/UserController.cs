@@ -68,22 +68,6 @@ namespace FakeTrello.Controller
             return Ok(user.Value);
         }
 
-        [HttpPut("profile")]
-        public async Task<ActionResult<UserDTO>> UpdateProfile([FromBody] UserDTO userDto)
-        {
-            var usernameClaim = HttpContext.User.FindFirst("username")?.Value;
-
-            if (string.IsNullOrEmpty(usernameClaim))
-                return Unauthorized("Token does not contain required username.");
-
-            var result = await _userService.Update(usernameClaim, userDto);
-
-            if (result.IsFailed)
-                return BadRequest(result.Errors.First().Message);
-
-            return Ok(result.Value);
-        }
-
         [HttpGet("search/offBoard")]
         public async Task<ActionResult<List<UserDTO>>> GetUsersNotOnBoard([FromQuery] string? searchTerm,
             [FromQuery] string boardName,
@@ -147,30 +131,6 @@ namespace FakeTrello.Controller
             {
                 var users = await _collaboratorService.GetAssignableUsersOnBoard(searchTerm, boardName, boardOwnerUsername, cardId);
                 return Ok(users.Value);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
-            }
-        }
-
-        [HttpGet("profile")]
-        public async Task<ActionResult<UserDTO>> GetUserByUsername()
-        {
-            var usernameClaim = HttpContext.User.FindFirst("username")?.Value;
-
-            if (string.IsNullOrEmpty(usernameClaim))
-            {
-                return Unauthorized("Token does not contain required user identifier.");
-            }
-            try
-            {
-                var user = await _userService.GetUserByUsername(usernameClaim);
-                return Ok(user);
             }
             catch (InvalidOperationException ex)
             {

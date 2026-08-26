@@ -1,0 +1,13 @@
+<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="22" cy="22" r="22" fill="#F4B942"/>
+  <g stroke="#123C5A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Rotated square (diamond) pivoting on its bottom vertex -->
+    <path d="M22 9 L31 18 L22 27 L13 18 Z"/>
+    <!-- Sweeping arc rotating around the same pivot point -->
+    <path d="M31.5 24 A11 11 0 0 1 15.5 32"/>
+    <!-- Arrowhead on the arc -->
+    <path d="M12.8 29.7 L15.5 32 L14.6 28.6"/>
+  </g>
+  <!-- Pivot point, coincides with the diamond's bottom tip -->
+  <circle cx="22" cy="27" r="1.9" fill="#123C5A"/>
+</svg>

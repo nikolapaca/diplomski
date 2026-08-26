@@ -38,10 +38,10 @@ export class Register {
 
   public constructor(private userService: UserService, private snackBar: MatSnackBar, private router: Router) {
     this.registerForm = new FormGroup({
-      name: new FormControl('', Validators.required),
-      surname: new FormControl('', Validators.required),
+      name: new FormControl('', [Validators.required, Validators.minLength(2)]),
+      surname: new FormControl('', [Validators.required, Validators.minLength(2)]),
       email: new FormControl('', [Validators.required, Validators.email]),
-      username: new FormControl('', Validators.required),
+      username: new FormControl('', [Validators.required, Validators.minLength(2)]),
       password: new FormControl('', [Validators.required, Validators.minLength(6)]),
       confirmPassword: new FormControl('', [Validators.required, Validators.minLength(6)])
     }, { validators: passwordMatchValidator });

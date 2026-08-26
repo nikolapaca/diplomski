@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/service/auth-service';
 import { ResetPassword as ResetPasswordModel } from '../../../core/model/reset-password.model';
 
@@ -16,7 +16,7 @@ import { ResetPassword as ResetPasswordModel } from '../../../core/model/reset-p
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.css',
 })
-export class ResetPassword implements OnInit {
+export class ResetPassword implements OnInit, OnDestroy {
 
   public token: string | null = null;
   public form: FormGroup;
@@ -24,8 +24,10 @@ export class ResetPassword implements OnInit {
   public isError = false;
   public isSuccess = false;
   public isLoading = false;
+  public redirectSeconds = 3;
+  private redirectTimer: any;
 
-  public constructor(private route: ActivatedRoute, private authService: AuthService) {
+  public constructor(private route: ActivatedRoute, private authService: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = new FormGroup({
       newPassword: new FormControl('', [Validators.required, Validators.minLength(6)]),
       confirmPassword: new FormControl('', [Validators.required])
@@ -38,6 +40,7 @@ export class ResetPassword implements OnInit {
     if (!this.token) {
       this.message = 'Invalid or missing reset link.';
       this.isError = true;
+      this.cdr.markForCheck();
     }
   }
 
@@ -72,12 +75,28 @@ export class ResetPassword implements OnInit {
         this.isLoading = false;
         this.isSuccess = true;
         this.message = response?.message || 'Password has been reset. You can now log in with your new password.';
+        this.cdr.markForCheck();
+        this.redirectTimer = setInterval(() => {
+          this.redirectSeconds--;
+          this.cdr.markForCheck();
+          if (this.redirectSeconds <= 0) {
+            clearInterval(this.redirectTimer);
+            this.router.navigate(['/']);
+          }
+        }, 1000);
       },
       error: (error) => {
         this.isLoading = false;
         this.isError = true;
         this.message = error.error?.message || 'Reset link is invalid or expired.';
+        this.cdr.markForCheck();
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.redirectTimer) {
+      clearInterval(this.redirectTimer);
+    }
   }
 }
