@@ -168,7 +168,7 @@
           (click)="toggleAddCardForm(list)"
         >
           <mat-icon>add</mat-icon>
-          <span>Add card</span>
+          <span>New card</span>
         </button>
         }
         @if (list.showAddCardForm && list.addCardForm) {
@@ -242,7 +242,7 @@
       @if(!showAddListForm){
       <div class="add-list-card" (click)="toggleAddListForm()">
         <mat-icon>add</mat-icon>
-        <span>Add another list</span>
+        <span>New list</span>
       </div>
       }
       @if(showAddListForm && addListForm) {
@@ -266,7 +266,7 @@
             [disabled]="!addListForm.valid"
             (click)="addList()"
           >
-            Add list
+            Create list
           </button>
           <mat-icon class="close-icon" (click)="closeAddListForm()"
             >close</mat-icon

@@ -158,13 +158,13 @@ mat-card-header mat-card-title {
   align-items: center;
   gap: 4px;
   margin: 0 10px 6px;
-  padding: 3px 8px;
-  border-radius: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
   width: fit-content;
-  background: #dfe1e6;
-  color: #44546f;
+  background: #e4e1fb;
+  color: #4433d6;
 }
 
 .due-date-badge .mat-icon {
@@ -174,17 +174,17 @@ mat-card-header mat-card-title {
 }
 
 .due-date-badge.upcoming {
-  background: #dfe1e6;
-  color: #172b4d;
+  background: #e4e1fb;
+  color: #4433d6;
 }
 
 .due-date-badge.soon {
-  background: #f5a623;
+  background: #12c2c2;
   color: #fff;
 }
 
 .due-date-badge.overdue {
-  background: #eb5a46;
+  background: #d6249f;
   color: #fff;
 }
 

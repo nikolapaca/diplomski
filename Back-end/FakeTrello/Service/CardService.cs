@@ -296,6 +296,10 @@ namespace FakeTrello.Service
         {
             return _mapper.Map<List<Card>, List<CardDTO>>(await _cardRepository.GetAll());
         }
+
+        // A card shows a cover image only when it has exactly one attachment -
+        // with zero there's nothing to show, and with two or more it's
+        // ambiguous which one should represent the card, so we show none.
         public static void ApplyCoverImage(Card card, CardDTO dto)
         {
             var images = card.Images;
@@ -377,14 +381,21 @@ namespace FakeTrello.Service
 
                 if (user.Id != creatingUser.Id)
                 {
-                    await _notificationService.Create(
-                        recipientUserId: user.Id,
-                        creatingUserId: creatingUser.Id,
-                        type: NotificationType.ASSIGNED_TO_CARD,
-                        message: $"{creatingUser.Username} assigned you to card '{card.Name}'.",
-                        boardId: boardId,
-                        cardId: card.Id
-                    );
+                    try
+                    {
+                        await _notificationService.Create(
+                            recipientUserId: user.Id,
+                            creatingUserId: creatingUser.Id,
+                            type: NotificationType.ASSIGNED_TO_CARD,
+                            message: $"{creatingUser.Username} assigned you to card '{card.Name}'.",
+                            boardId: boardId,
+                            cardId: card.Id
+                        );
+                    }
+                    catch
+                    {
+                        // A missed notification shouldn't block the assignment itself.
+                    }
                 }
 
                 await _boardActivityService.Create(
@@ -456,14 +467,21 @@ namespace FakeTrello.Service
 
                 if (user.Id != unassigningUser.Id)
                 {
-                    await _notificationService.Create(
-                        recipientUserId: user.Id,
-                        creatingUserId: unassigningUser.Id,
-                        type: NotificationType.UNASSIGNED_FROM_CARD,
-                        message: $"{unassigningUser.Username} unassigned you from card '{card.Name}'.",
-                        boardId: boardId,
-                        cardId: card.Id
-                    );
+                    try
+                    {
+                        await _notificationService.Create(
+                            recipientUserId: user.Id,
+                            creatingUserId: unassigningUser.Id,
+                            type: NotificationType.UNASSIGNED_FROM_CARD,
+                            message: $"{unassigningUser.Username} unassigned you from card '{card.Name}'.",
+                            boardId: boardId,
+                            cardId: card.Id
+                        );
+                    }
+                    catch
+                    {
+                        // A missed notification shouldn't block the unassignment itself.
+                    }
                 }
 
                 await _boardActivityService.Create(

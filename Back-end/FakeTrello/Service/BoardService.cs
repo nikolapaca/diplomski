@@ -152,13 +152,20 @@ namespace FakeTrello.Service
                     if (member.UserId == owner.Id)
                         continue;
 
-                    await _notificationService.Create(
-                        recipientUserId: member.UserId,
-                        creatingUserId: owner.Id,
-                        type: NotificationType.BOARD_DELETED,
-                        message: $"Board '{board.Name}' has been deleted.",
-                        boardId: board.Id
-                    );
+                    try
+                    {
+                        await _notificationService.Create(
+                            recipientUserId: member.UserId,
+                            creatingUserId: owner.Id,
+                            type: NotificationType.BOARD_DELETED,
+                            message: $"Board '{board.Name}' has been deleted.",
+                            boardId: board.Id
+                        );
+                    }
+                    catch
+                    {
+                        // A missed notification shouldn't block the board deletion itself.
+                    }
                 }
 
                 _userBoardService.RemoveRange(board.UserBoards);
@@ -320,13 +327,20 @@ namespace FakeTrello.Service
                 UserBoard ub = new UserBoard(user.Id, board.Id, UserRole.COLLABORATOR);
                 await _userBoardService.Create(ub);
 
-                await _notificationService.Create(
-                    recipientUserId: user.Id,
-                    creatingUserId: owner.Id,
-                    type: NotificationType.ADDED_TO_BOARD,
-                    message: $"{owner.Username} added you to board '{board.Name}'.",
-                    boardId: board.Id
-                );
+                try
+                {
+                    await _notificationService.Create(
+                        recipientUserId: user.Id,
+                        creatingUserId: owner.Id,
+                        type: NotificationType.ADDED_TO_BOARD,
+                        message: $"{owner.Username} added you to board '{board.Name}'.",
+                        boardId: board.Id
+                    );
+                }
+                catch
+                {
+                    // A missed notification shouldn't block adding the collaborator.
+                }
 
                 await _boardActivityService.Create(
                     boardId: board.Id,
@@ -388,13 +402,20 @@ namespace FakeTrello.Service
 
                 await _userBoardService.Delete(ub);
 
-                await _notificationService.Create(
-                    recipientUserId: user.Id,
-                    creatingUserId: owner.Id,
-                    type: NotificationType.REMOVED_FROM_BOARD,
-                    message: $"{owner.Username} removed you from board '{board.Name}'.",
-                    boardId: board.Id
-                );
+                try
+                {
+                    await _notificationService.Create(
+                        recipientUserId: user.Id,
+                        creatingUserId: owner.Id,
+                        type: NotificationType.REMOVED_FROM_BOARD,
+                        message: $"{owner.Username} removed you from board '{board.Name}'.",
+                        boardId: board.Id
+                    );
+                }
+                catch
+                {
+                    // A missed notification shouldn't block removing the collaborator.
+                }
 
                 await _boardActivityService.Create(
                     boardId: board.Id,
@@ -526,13 +547,20 @@ namespace FakeTrello.Service
                     if (member.UserId == owner.Id)
                         continue;
 
-                    await _notificationService.Create(
-                        recipientUserId: member.UserId,
-                        creatingUserId: owner.Id,
-                        type: NotificationType.BOARD_ARCHIVED,
-                        message: $"Board '{board.Name}' has been archived.",
-                        boardId: board.Id
-                    );
+                    try
+                    {
+                        await _notificationService.Create(
+                            recipientUserId: member.UserId,
+                            creatingUserId: owner.Id,
+                            type: NotificationType.BOARD_ARCHIVED,
+                            message: $"Board '{board.Name}' has been archived.",
+                            boardId: board.Id
+                        );
+                    }
+                    catch
+                    {
+                        // A missed notification shouldn't block archiving the board.
+                    }
                 }
 
                 await _boardActivityService.Create(
