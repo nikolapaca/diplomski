@@ -125,8 +125,6 @@ export class BoardOverview implements OnInit {
   return this.cardLists.map(list => list.id.toString());
 }
 
-  // Builds the CardListView wrapper (adds per-list forms/UI flags) around
-  // raw CardList data coming back from the API.
   private wrapCardLists(response: CardList[]): CardListView[] {
     return response.map(list => ({
       ...list,
@@ -142,12 +140,6 @@ export class BoardOverview implements OnInit {
     }));
   }
 
-  // Refetches lists+cards from the backend and rebuilds cardLists. Used for
-  // the initial load and to resync after a failed mutation. NOT called after
-  // a successful drag-and-drop move anymore, since the CDK drag helpers
-  // (moveItemInArray/transferArrayItem) already put the local state in the
-  // right shape instantly - refetching there just caused a visible re-render
-  // "jump" and reset every other list's in-progress add/edit forms.
   private refreshLists(onDone?: () => void): void {
     if (!this.board) {
       return;
@@ -159,9 +151,6 @@ export class BoardOverview implements OnInit {
     });
   }
 
-  // A pinned list/card can only be dropped among other pinned items (top of the
-  // block); a non-pinned one can only be dropped after all pinned items. This
-  // keeps "pinned always first" true even mid-drag, not just after a refetch.
   public listSortPredicate = (index: number, drag: CdkDrag): boolean => {
     const dragged = this.currentlyDraggindCardList;
     if (!dragged) {
@@ -194,8 +183,6 @@ export class BoardOverview implements OnInit {
     }
     this.cardListService.reorderList(list || undefined, currentIndex + 1).subscribe({
       error: () => {
-        // Backend rejected the move (e.g. stale data) - undo the optimistic
-        // local reorder and resync with the server's actual state.
         moveItemInArray(this.cardLists, currentIndex, previousIndex);
         this.errorMessage = 'Could not reorder the list. Refreshing...';
         this.refreshLists(() => { this.errorMessage = ''; });
@@ -222,49 +209,52 @@ export class BoardOverview implements OnInit {
   }
 
   public dropCard(event: CdkDragDrop<any[]>): void {
-    const draggedCard = this.currentlyDraggingCard;
-    const previousIndex = event.previousIndex;
-    const currentIndex = event.currentIndex;
+  const draggedCard = this.currentlyDraggingCard;
+  const previousIndex = event.previousIndex;
+  const currentIndex = event.currentIndex;
 
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, previousIndex, currentIndex);
-      this.cardService.reorderCardInsideList(draggedCard || undefined, currentIndex + 1).subscribe({
-        error: () => {
-          moveItemInArray(event.container.data, currentIndex, previousIndex);
-          this.errorMessage = 'Could not reorder the card. Refreshing...';
-          this.refreshLists(() => { this.errorMessage = ''; });
-        }
-      });
-    } else {
-      const previousListId = draggedCard?.cardListId;
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        previousIndex,
-        currentIndex,
-      );
-      const targetList = this.cardLists.find(l => l.id.toString() === event.container.id.replace('list-', ''));
-      if (draggedCard && targetList) {
-        draggedCard.cardListId = targetList.id;
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, previousIndex, currentIndex);
+    this.cardService.reorderCardInsideList(draggedCard || undefined, currentIndex + 1).subscribe({
+      error: () => {
+        moveItemInArray(event.container.data, currentIndex, previousIndex);
+        this.errorMessage = 'Could not reorder the card. Refreshing...';
+        this.refreshLists(() => { this.errorMessage = ''; });
       }
+    });
+  } else {
+    const previousListId = draggedCard?.cardListId;
+    const targetList = this.cardLists.find(l => l.id.toString() === event.container.id.replace('list-', ''));
 
-      this.cardService.reorderCardOutsideList(draggedCard || undefined, targetList?.id, currentIndex + 1).subscribe({
-        error: () => {
-          transferArrayItem(
-            event.container.data,
-            event.previousContainer.data,
-            currentIndex,
-            previousIndex,
-          );
-          if (draggedCard && previousListId !== undefined) {
-            draggedCard.cardListId = previousListId;
-          }
-          this.errorMessage = 'Could not move the card. Refreshing...';
-          this.refreshLists(() => { this.errorMessage = ''; });
-        }
-      });
+    if (!draggedCard || !targetList) {
+      return;
     }
+
+    transferArrayItem(
+      event.previousContainer.data,
+      event.container.data,
+      previousIndex,
+      currentIndex,
+    );
+    draggedCard.cardListId = targetList.id;
+
+    this.cardService.reorderCardOutsideList(draggedCard, targetList.id, currentIndex + 1).subscribe({
+      error: () => {
+        transferArrayItem(
+          event.container.data,
+          event.previousContainer.data,
+          currentIndex,
+          previousIndex,
+        );
+        if (previousListId !== undefined) {
+          draggedCard.cardListId = previousListId;
+        }
+        this.errorMessage = 'Could not move the card. Refreshing...';
+        this.refreshLists(() => { this.errorMessage = ''; });
+      }
+    });
   }
+}
   
   public closeUpdateListForm(list: CardListView): void {
     list.showUpdateListForm = false;

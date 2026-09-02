@@ -1,4 +1,4 @@
-﻿using FakeTrello.Model;
+﻿using FakeTrello.Model.Enum;
 using System.ComponentModel.DataAnnotations;
 
 namespace FakeTrello.DTO

@@ -11,6 +11,7 @@ namespace FakeTrello.Repository.Contract
         Task<Card> Update(Card cardList);
         Task UpdateRangeAsync(List<Card> cards);
         Task Delete(int id);
+        Task DeleteRange(IEnumerable<int> ids);
         Task MoveToAnotherList(int id, int targetListId);
         Task<int?> GetMaxIndexForCardAsync(int cardListId);
     }

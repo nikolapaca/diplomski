@@ -1,4 +1,5 @@
 ﻿using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 
 namespace FakeTrello.DTO
 {

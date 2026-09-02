@@ -1,5 +1,6 @@
 ﻿using FakeTrello.Data;
 using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 using FakeTrello.Repository.Contract;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,14 +26,14 @@ namespace FakeTrello.Repository
         {
             return await _context.CardImages
                 .Include(i => i.UploadedByUser)
-                .FirstOrDefaultAsync(i => i.Id == id);
+                .FirstOrDefaultAsync(i => i.Id == id && i.Status != EntityStatus.DELETED);
         }
 
         public async Task<List<CardImage>> GetByCardId(int cardId)
         {
             return await _context.CardImages
                 .Include(i => i.UploadedByUser)
-                .Where(i => i.CardId == cardId)
+                .Where(i => i.CardId == cardId && i.Status != EntityStatus.DELETED)
                 .OrderBy(i => i.UploadedAt)
                 .ToListAsync();
         }
@@ -42,7 +43,8 @@ namespace FakeTrello.Repository
             var image = await _context.CardImages.FindAsync(id);
             if (image != null)
             {
-                _context.CardImages.Remove(image);
+                image.Status = EntityStatus.DELETED;
+                _context.CardImages.Update(image);
                 await _context.SaveChangesAsync();
             }
         }

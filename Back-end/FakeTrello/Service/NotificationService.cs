@@ -2,6 +2,7 @@
 using FakeTrello.DTO;
 using FakeTrello.Hub;
 using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service.Contract;
 using FluentResults;
@@ -14,18 +15,20 @@ namespace FakeTrello.Service
         private readonly INotificationRepository _notificationRepository;
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<NotificationService> _logger;
         private readonly IHubContext<NotificationHub> _hubContext;
 
-        public NotificationService(INotificationRepository notificationRepository, IMapper mapper, IUserRepository userRepository, IHubContext<NotificationHub> hubContext)
+        public NotificationService(INotificationRepository notificationRepository, IMapper mapper, IUserRepository userRepository, IHubContext<NotificationHub> hubContext, ILogger<NotificationService> logger)
         {
             _notificationRepository = notificationRepository;
             _mapper = mapper;
             _userRepository = userRepository;
             _hubContext = hubContext;
+            _logger = logger;
         }
 
-        public async Task<Result<NotificationDTO>> Create(int recipientUserId, int creatingUserId, NotificationType type, string message, int? boardId = null, int? cardId = null
-)
+        public async Task<Result<NotificationDTO>> Create(int recipientUserId, int creatingUserId, NotificationType type,
+    string message, int? boardId = null, int? cardId = null)
         {
             if (recipientUserId == creatingUserId)
             {
@@ -51,12 +54,18 @@ namespace FakeTrello.Service
             };
 
             var created = await _notificationRepository.Create(notification);
-
             var notificationDto = _mapper.Map<NotificationDTO>(created);
 
-            await _hubContext.Clients
-                .Group($"user-{recipientUser.Username}")
-                .SendAsync("ReceiveNotification", notificationDto);
+            try
+            {
+                await _hubContext.Clients
+                    .Group($"user-{recipientUser.Username}")
+                    .SendAsync("ReceiveNotification", notificationDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to push notification {NotificationId} to user {Username} in real time.", created.Id, recipientUser.Username);
+            }
 
             return Result.Ok(notificationDto);
         }

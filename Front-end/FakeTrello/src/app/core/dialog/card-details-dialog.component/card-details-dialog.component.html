@@ -1,6 +1,5 @@
 <header class="dlg-header">
   <div class="hdr-left">
-    <mat-icon class="hdr-icon">view_kanban</mat-icon>
     <h2 class="hdr-title">Card details</h2>
     <mat-icon *ngIf="isPinned" class="pin-indicator" matTooltip="Pinned">push_pin</mat-icon>
   </div>
@@ -19,6 +18,10 @@
 
   <!-- LEFT COLUMN: title, due date, description, attachments, assignment, history -->
   <div class="dlg-col dlg-col-left">
+    <p class="created-by-line" *ngIf="data.card.createdByUsername">
+      Created by <strong>{{ data.card.createdByUsername }}</strong>
+    </p>
+
     <form [formGroup]="form" class="form">
 
       <input
@@ -49,7 +52,7 @@
       </div>
 
       <div class="due-date-editor mat-elevation-z1" *ngIf="showDueDateEditor">
-        <input type="datetime-local" [formControl]="dueDateCtrl" class="due-date-input" />
+        <input type="datetime-local" [formControl]="dueDateCtrl" [min]="minDueDate" class="due-date-input" />
         <div class="due-date-editor-actions">
           <button mat-flat-button color="primary" (click)="saveDueDate()" [disabled]="savingDueDate || !dueDateCtrl.value">
             Save
@@ -61,6 +64,7 @@
             Cancel
           </button>
         </div>
+        <span class="due-date-inline-error" *ngIf="dueDateError">{{ dueDateError }}</span>
       </div>
 
       <div class="section-label">

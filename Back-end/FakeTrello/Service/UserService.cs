@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using FakeTrello.Data.Contract;
 using FakeTrello.DTO;
 using FakeTrello.Model;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service.Contract;
 using FluentResults;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace FakeTrello.Service
 {
@@ -14,13 +16,17 @@ namespace FakeTrello.Service
         private readonly IMapper _mapper;
         private readonly PasswordHasher<User> _passwordHasher;
         private readonly IEmailService _emailService;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(IUserRepository repository, IMapper mapper, IEmailService emailService)
+        public UserService(IUserRepository repository, IMapper mapper, IEmailService emailService, IUnitOfWork unitOfWork, ILogger<UserService> logger)
         {
             _repository = repository;
             _mapper = mapper;
             _passwordHasher = new PasswordHasher<User>();
             _emailService = emailService;
+            _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<Result<UserDTO>> Create(UserDTO userDto)
@@ -30,22 +36,35 @@ namespace FakeTrello.Service
             if (existingUserUsername != null || existingUserEmail != null)
                 return Result.Fail("User already exists!");
 
-            var newUser = _mapper.Map<UserDTO, User>(userDto);
-            newUser.Password = _passwordHasher.HashPassword(newUser, newUser.Password);
-            newUser.EmailConfirmed = false;
-            newUser.EmailConfirmationToken = Guid.NewGuid().ToString();
-            newUser.EmailConfirmationTokenExpiration = DateTime.UtcNow.AddHours(24);
-            User user = await _repository.Create(newUser);
+            await _unitOfWork.BeginTransactionAsync();
 
-            await _emailService.SendConfirmationEmail(
-                user.Email,
-                user.EmailConfirmationToken
-            );
-            
-            return Result.Ok(_mapper.Map<User, UserDTO>(user));
+            try
+            {
+                var newUser = _mapper.Map<UserDTO, User>(userDto);
+                newUser.Password = _passwordHasher.HashPassword(newUser, newUser.Password);
+                newUser.EmailConfirmed = false;
+                newUser.EmailConfirmationToken = Guid.NewGuid().ToString();
+                newUser.EmailConfirmationTokenExpiration = DateTime.UtcNow.AddHours(24);
+                User user = await _repository.Create(newUser);
+
+                await _emailService.SendConfirmationEmail(
+                    user.Email,
+                    user.EmailConfirmationToken
+                );
+
+                await _unitOfWork.CommitAsync();
+
+                return Result.Ok(_mapper.Map<User, UserDTO>(user));
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                _logger.LogError(ex, "Registration failed for username {Username}.", userDto.Username);
+                return Result.Fail("Registration failed. Please try again in a moment.");
+            }
         }
 
-        public async Task<Result<UserDTO>> Delete (int id)
+        public async Task<Result<UserDTO>> Delete(int id)
         {
             var user = await _repository.GetById(id);
             if (user == null)
@@ -54,7 +73,7 @@ namespace FakeTrello.Service
             return Result.Ok(_mapper.Map<User, UserDTO>(user));
         }
 
-        public async Task<Result<List<UserDTO>>> GetAll ()
+        public async Task<Result<List<UserDTO>>> GetAll()
         {
             var users = await _repository.GetAll();
             var usersDto = _mapper.Map<List<User>, List<UserDTO>>(users);
@@ -93,9 +112,9 @@ namespace FakeTrello.Service
 
             var passwordCheck = _passwordHasher.VerifyHashedPassword(user, user.Password, dto.CurrentPassword);
 
-            if(passwordCheck == PasswordVerificationResult.Failed)
+            if (passwordCheck == PasswordVerificationResult.Failed)
                 return Result.Fail("Current password is incorrect!");
-            
+
             user.Password = _passwordHasher.HashPassword(user, dto.NewPassword);
 
             await _repository.Update(user);

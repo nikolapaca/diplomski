@@ -1,135 +1,68 @@
 :host {
   display: block;
-  width: 300px;
-  min-height: 190px;
-  border-radius: var(--ft-radius, 10px);
-  box-shadow: var(--ft-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  cursor: pointer;
-  flex-shrink: 0;
-  overflow: hidden;
+  width: 100%;
 }
 
-:host:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--ft-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.18));
-}
-
-:host(.archived) {
+:host(.archived) .board-row {
   cursor: default;
+  opacity: 0.65;
 }
 
-:host(.archived):hover {
-  transform: none;
-  box-shadow: var(--ft-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
-}
-
-:host(.archived) mat-card {
-  opacity: 0.75;
-  background-color: #f5f5f5;
-}
-
-:host(.archived) .board-thumb {
-  filter: grayscale(0.5);
-}
-
-mat-card {
+.board-row {
   display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  overflow: hidden !important;
-  border-radius: var(--ft-radius, 10px) !important;
-  padding: 0 !important;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 10px 14px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
 }
 
-/* Placeholder board "cover" — stands in for a real background image/colour
-   until boards support custom backgrounds. Deterministic per board. */
-.board-thumb {
-  position: relative;
-  height: 78px;
-  width: 100%;
+.board-row:hover {
+  background-color: var(--paper-deep);
+}
+
+.row-tab {
+  align-self: stretch;
+  width: 4px;
+  border-radius: 2px;
   flex-shrink: 0;
+}
+
+.row-favorite,
+.row-menu {
+  flex-shrink: 0;
+  color: var(--ink-faint);
+}
+
+.row-favorite .favorite-active {
+  color: var(--stamp);
+}
+
+.row-main {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 4px 6px;
-  box-sizing: border-box;
+  align-items: baseline;
+  gap: 16px;
 }
 
-.thumb-favorite mat-icon,
-.thumb-menu mat-icon {
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.thumb-favorite .favorite-active {
-  color: #ffd54a;
-}
-
-.thumb-favorite,
-.thumb-menu {
-  --mdc-icon-button-state-layer-size: 34px;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  background-color: rgba(15, 15, 30, 0.16);
-  backdrop-filter: blur(2px);
-}
-
-.thumb-favorite:hover,
-.thumb-menu:hover {
-  background-color: rgba(15, 15, 30, 0.3);
-}
-
-mat-card-header {
-  padding: 14px 16px 4px;
-  overflow: hidden !important;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-mat-card-title {
-  font-family: var(--ft-font-heading, 'Poppins', sans-serif);
-  font-size: 1.05rem;
+.row-name {
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  flex-grow: 1;
-  color: var(--ft-ink, #171a35);
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  width: 250px !important;
-  display: block !important;
+  font-size: 1rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  max-width: 40%;
 }
 
-mat-card-content {
-  padding: 4px 16px 16px;
-  flex-grow: 1;
-}
-
-.board-description {
-  color: var(--ft-muted, #767c9e);
+.row-description {
+  color: var(--ink-soft);
   font-size: 0.9rem;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 3 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
-  line-height: 1.4em !important;
-  max-height: 4.2em !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-  margin: 0;
-}
-
-mat-card-actions {
-  padding: 16px;
-  border-top: 1px solid var(--ft-border, #e3e5f3);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.favorite-active {
-  color: #f5b301;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }

@@ -1,5 +1,6 @@
 ﻿using FakeTrello.Data;
 using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 using FakeTrello.Repository.Contract;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,14 +27,14 @@ namespace FakeTrello.Repository
             return await _context.Comments
                 .Include(c => c.User)
                 .Include(c => c.Card)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.Id == id && c.Status != EntityStatus.DELETED);
         }
 
         public async Task<List<Comment>> GetByCardId(int cardId)
         {
             return await _context.Comments
                 .Include(c => c.User)
-                .Where(c => c.CardId == cardId)
+                .Where(c => c.CardId == cardId && c.Status != EntityStatus.DELETED)
                 .OrderBy(c => c.CreatedAt)
                 .ToListAsync();
         }
@@ -43,7 +44,8 @@ namespace FakeTrello.Repository
             var comment = await _context.Comments.FindAsync(id);
             if (comment != null)
             {
-                _context.Comments.Remove(comment);
+                comment.Status = EntityStatus.DELETED;
+                _context.Comments.Update(comment);
                 await _context.SaveChangesAsync();
             }
         }

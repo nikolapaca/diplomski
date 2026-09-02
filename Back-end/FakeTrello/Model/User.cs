@@ -11,9 +11,7 @@ namespace FakeTrello.Model
         public string Email { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
-        public EntityStatus Status { get; set; }
         public List<UserBoard> UserBoards { get; set; } = new List<UserBoard>();
-        public ICollection<Card> Cards { get; set; } = new List<Card>();
         public bool EmailConfirmed { get; set; } = false;
         public string? EmailConfirmationToken { get; set; }
         public DateTime? EmailConfirmationTokenExpiration { get; set; }
@@ -21,7 +19,7 @@ namespace FakeTrello.Model
         public DateTime? PasswordResetTokenExpiration { get; set; }
         public User() { }
 
-        public User(int id, string name, string surname, string email, string username, string password, EntityStatus status)
+        public User(int id, string name, string surname, string email, string username, string password)
         {
             Id = id;
             Name = name;
@@ -29,7 +27,6 @@ namespace FakeTrello.Model
             Email = email;
             Username = username;
             Password = password;
-            Status = status;
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using FakeTrello.DTO;
 using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service.Contract;
 using FluentResults;

@@ -2,6 +2,7 @@
 using FakeTrello.Data.Contract;
 using FakeTrello.DTO;
 using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 using FakeTrello.Repository.Contract;
 using FakeTrello.Service.Contract;
 using FluentResults;
@@ -94,6 +95,16 @@ namespace FakeTrello.Service
         {
             var cardList = await _cardListRepository.GetById(listId);
             return cardList?.BoardId;
+        }
+
+        public async Task<Result<(string Name, int BoardId)>> GetNameAndBoardId(int listId)
+        {
+            var cardList = await _cardListRepository.GetById(listId);
+            if (cardList == null)
+            {
+                return Result.Fail("Target list doesn't exist.");
+            }
+            return Result.Ok((cardList.Name, cardList.BoardId));
         }
 
         public async Task<Result<List<CardListDTO>>> GetByBoardNameAndBoardOwner(string boardName, string boardOwnerUsername)
@@ -265,6 +276,12 @@ namespace FakeTrello.Service
 
         public async Task<Result> TogglePin(int listId, string username)
         {
+            var user = await _userService.GetUserByUsername(username);
+            if (user == null)
+            {
+                return Result.Fail("This user doesn't exist!");
+            }
+
             var list = await _cardListRepository.GetById(listId);
             if (list == null)
             {
@@ -276,28 +293,39 @@ namespace FakeTrello.Service
                 return Result.Fail("Only the board owner can pin or unpin lists.");
             }
 
-            list.IsPinned = !list.IsPinned;
-            var updatedList = await _cardListRepository.Update(list);
-
-            var boardLists = await _cardListRepository.GetByBoardId(updatedList.BoardId);
-            for (int i = 0; i < boardLists.Count; i++)
+            await _unitOfWork.BeginTransactionAsync();
+            try
             {
-                boardLists[i].Index = i + 1;
-            }
-            await _cardListRepository.UpdateRangeAsync(boardLists);
+                list.IsPinned = !list.IsPinned;
+                var updatedList = await _cardListRepository.Update(list);
 
-            var user = await _userService.GetUserByUsername(username);
-            if (user != null)
-            {
+                var boardLists = await _cardListRepository.GetByBoardId(updatedList.BoardId);
+                for (int i = 0; i < boardLists.Count; i++)
+                {
+                    boardLists[i].Index = i + 1;
+                }
+                await _cardListRepository.UpdateRangeAsync(boardLists);
+
                 await _boardActivityService.Create(
                     boardId: updatedList.BoardId,
                     creatingUserId: user.Id,
                     type: updatedList.IsPinned ? ActivityType.LIST_PINNED : ActivityType.LIST_UNPINNED,
                     message: $"{user.Username} {(updatedList.IsPinned ? "pinned" : "unpinned")} list '{updatedList.Name}'."
                 );
-            }
 
-            return Result.Ok();
+                await _unitOfWork.CommitAsync();
+                return Result.Ok();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail("This list was changed by someone else while you were pinning it. Please refresh and try again.");
+            }
+            catch (Exception)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result.Fail("Failed to pin or unpin this list.");
+            }
         }
     }
 }

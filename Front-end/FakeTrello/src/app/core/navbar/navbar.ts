@@ -36,6 +36,7 @@ export class Navbar implements OnInit {
   public searchControl = new FormControl('');
   public errorMessage = '';
   public hideSearch = false;
+  public isInsideBoard = false;
   public showNotifications = false;
   public loggedInUsername = '';
 
@@ -55,7 +56,8 @@ export class Navbar implements OnInit {
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
         const urlSegments = event.url.split('/');
-        this.hideSearch = urlSegments[1] === 'boards' && urlSegments.length === 4;
+        this.isInsideBoard = urlSegments[1] === 'boards' && urlSegments.length === 4;
+        this.hideSearch = this.isInsideBoard;
       });
 
     this.authService.isLoggedIn$.subscribe(status => {

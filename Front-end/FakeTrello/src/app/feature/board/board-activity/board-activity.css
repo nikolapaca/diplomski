@@ -12,7 +12,7 @@
   height: 36px;
   border: none;
   border-radius: 4px;
-  background-color: var(--ft-primary, #5b4bf5);
+  background-color: var(--pen);
   color: white;
   font-size: 14px;
   font-weight: 500;
@@ -21,7 +21,7 @@
 }
 
 .activity-button:hover {
-  background-color: var(--ft-primary-dark, #4433d6);
+  background-color: var(--pen-deep);
   transform: translateY(-1px);
 }
 
@@ -42,7 +42,7 @@
   background: white;
   color: #222;
   border-radius: 12px;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 6px 20px rgba(23, 22, 19, 0.12);
   z-index: 3000;
 }
 
@@ -71,7 +71,7 @@
 }
 
 .activity-icon {
-  color: var(--ft-primary, #5b4bf5);
+  color: var(--pen);
   font-size: 20px;
   width: 20px;
   height: 20px;

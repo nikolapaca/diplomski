@@ -1,4 +1,6 @@
-﻿namespace FakeTrello.Model
+﻿using FakeTrello.Model.Enum;
+
+namespace FakeTrello.Model
 {
     public class Comment
     {
@@ -13,6 +15,8 @@
         public string Text { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public EntityStatus Status { get; set; } = EntityStatus.ACTIVE;
 
         public Comment() { }
     }

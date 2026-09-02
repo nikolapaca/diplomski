@@ -1,13 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using FakeTrello.Model.Enum;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FakeTrello.Model
 {
-    public enum BoardStatus
-    {
-        ACTIVE,
-        ARCHIVED,
-        DELETED
-    }
     
     public class Board
     {

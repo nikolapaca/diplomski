@@ -22,6 +22,7 @@ namespace FakeTrello.Service
         private readonly IBoardActivityService _boardActivityService;
         private readonly IBoardService _boardService;
         private readonly IUserBoardService _userBoardService;
+        private readonly ILogger<CardService> _logger;
 
         public CardService(
             ICardRepository cardRepository,
@@ -33,7 +34,8 @@ namespace FakeTrello.Service
             INotificationService notificationService,
             IBoardActivityService boardActivityService,
             IBoardService boardService,
-            IUserBoardService userBoardService)
+            IUserBoardService userBoardService,
+            ILogger<CardService> logger)
         {
             _cardRepository = cardRepository;
             _mapper = mapper;
@@ -45,6 +47,7 @@ namespace FakeTrello.Service
             _boardActivityService = boardActivityService;
             _boardService = boardService;
             _userBoardService = userBoardService;
+            _logger = logger;
         }
 
         public async Task<Result<CardDTO>> Create(int cardListId, CardDTO cardDTO, int userId)
@@ -108,6 +111,7 @@ namespace FakeTrello.Service
                 await _unitOfWork.CommitAsync();
 
                 var createdDto = _mapper.Map<Card, CardDTO>(card);
+                createdDto.CreatedByUsername = userResult.Value.Username;
                 ApplyCoverImage(card, createdDto);
                 return Result.Ok(createdDto);
             }
@@ -218,21 +222,26 @@ namespace FakeTrello.Service
                 string oldListName = card.CardList.Name;
                 int boardId = card.CardList.BoardId;
 
+                if (oldListId == targetListId)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return Result.Fail("Card is already in this list. Use reordering within the list instead.");
+                }
+
                 if (!await _userBoardService.IsUserMemberOfBoard(username, boardId))
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("You don't have access to this board.");
                 }
 
-                var targetListResult = await _cardListService.GetById(targetListId);
+                var targetListResult = await _cardListService.GetNameAndBoardId(targetListId);
                 if (targetListResult.IsFailed)
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("Target list doesn't exist.");
                 }
 
-                var targetListBoardId = await _cardListService.GetBoardIdByListId(targetListId);
-                if (targetListBoardId == null || targetListBoardId != boardId)
+                if (targetListResult.Value.BoardId != boardId)
                 {
                     await _unitOfWork.RollbackAsync();
                     return Result.Fail("Cannot move a card to a list on a different board.");
@@ -288,7 +297,8 @@ namespace FakeTrello.Service
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
-                return Result.Fail($"An error occurred during card move: {ex.Message}");
+                _logger.LogError(ex, "An error occurred while moving card {CardId} to list {TargetListId}.", cardId, targetListId);
+                return Result.Fail("An error occurred while moving the card. Please try again.");
             }
         }
 
@@ -472,7 +482,7 @@ namespace FakeTrello.Service
                         await _notificationService.Create(
                             recipientUserId: user.Id,
                             creatingUserId: unassigningUser.Id,
-                            type: NotificationType.UNASSIGNED_FROM_CARD,
+                            type: NotificationType.ASSIGNED_TO_CARD,
                             message: $"{unassigningUser.Username} unassigned you from card '{card.Name}'.",
                             boardId: boardId,
                             cardId: card.Id
@@ -480,7 +490,6 @@ namespace FakeTrello.Service
                     }
                     catch
                     {
-                        // A missed notification shouldn't block the unassignment itself.
                     }
                 }
 
@@ -541,7 +550,6 @@ namespace FakeTrello.Service
                 existingCard.Name = cardDTO.Name;
                 existingCard.Description = cardDTO.Description;
                 existingCard.DueDate = cardDTO.DueDate;
-                existingCard.Priority = cardDTO.Priority;
 
                 var updatedCard = await _cardRepository.Update(existingCard);
 

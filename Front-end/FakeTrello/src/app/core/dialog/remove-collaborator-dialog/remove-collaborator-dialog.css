@@ -69,7 +69,7 @@ h2.mat-dialog-title {
   border-radius: 8px !important;
   padding: 0 !important;
   margin: 0 16px !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  box-shadow: none;
   width: calc(100% - 32px) !important;
 }
 
@@ -100,7 +100,7 @@ h2.mat-dialog-title {
 }
 
 .add-button {
-  color: var(--ft-primary, #5b4bf5) !important;
+  color: var(--pen) !important;
   background-color: transparent !important;
   border: none !important;
   cursor: pointer !important;
@@ -149,7 +149,7 @@ h2.mat-dialog-title {
 }
 
 .mat-dialog-actions .mat-raised-button {
-  background-color: var(--ft-primary, #5b4bf5) !important;
+  background-color: var(--pen) !important;
   color: white !important;
 }
 

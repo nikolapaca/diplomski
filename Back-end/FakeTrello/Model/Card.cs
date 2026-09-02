@@ -17,7 +17,6 @@ namespace FakeTrello.Model
         public EntityStatus Status { get; set; }
         public bool IsPinned { get; set; } = false;
         public DateTime? DueDate { get; set; }
-        public CardPriority Priority { get; set; }
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<CardImage> Images { get; set; } = new List<CardImage>();
 

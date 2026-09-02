@@ -1,4 +1,4 @@
-<div class="page-container" [style.background]="boardBackground">
+<div class="page-container">
   @if(errorMessage){
   <div class="drag-error-toast">{{ errorMessage }}</div>
   }
@@ -8,8 +8,11 @@
     </button>
     @if(board){
     <div class="board-name-section">
-      <h1>{{ boardOwnerUsername }}/{{ board.name }}</h1>
-      <h2>{{ board.description }}</h2>
+      <span class="board-tab" [style.background]="boardBackground" aria-hidden="true"></span>
+      <div class="board-name-text">
+        <h1>{{ boardOwnerUsername }}/{{ board.name }}</h1>
+        <h2>{{ board.description }}</h2>
+      </div>
     </div>
     }
     <div class="header-actions">

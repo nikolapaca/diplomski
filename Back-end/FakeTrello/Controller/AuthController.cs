@@ -24,7 +24,7 @@ namespace FakeTrello.Controller
             var token = await _authenticationService.LogIn(credentialsDTO);
             if (!token.IsSuccess)
             {
-                return BadRequest("Email or password are incorrect, please try again!");
+                return BadRequest("Username or password are incorrect, please try again!");
             }
             if (token.Value == null)
             {

@@ -68,14 +68,14 @@ div[mat-dialog-actions] {
   min-width: 110px !important;
   color: white !important;
   background-color: #3f51b5 !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   transition: all 0.2s ease-in-out !important;
   transform: translateY(0);
 }
 
 .mat-mdc-flat-button.mat-primary:hover {
   background-color: #36469e !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: none;
   transform: translateY(-2px);
 }
 

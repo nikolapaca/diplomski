@@ -56,7 +56,9 @@ namespace FakeTrello.Repository
                                 .Include(cl => cl.Cards.Where(c => c.Status != EntityStatus.DELETED).OrderByDescending(c => c.IsPinned).ThenBy(c => c.Index))
                                 .ThenInclude(c => c.Assignees)
                                 .Include(cl => cl.Cards)
-                                .ThenInclude(c => c.Images)
+                                .ThenInclude(c => c.Images.Where(i => i.Status != EntityStatus.DELETED))
+                                .Include(cl => cl.Cards)
+                                .ThenInclude(c => c.CreatedByUser)
                                 .Include(cl => cl.Board)
                                 .ThenInclude(b => b.UserBoards)
                                 .ThenInclude(ub => ub.User)
@@ -88,6 +90,13 @@ namespace FakeTrello.Repository
             cardList.Status = EntityStatus.DELETED;
             _context.CardLists.Update(cardList);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteRange(IEnumerable<int> ids)
+        {
+            await _context.CardLists
+                .Where(l => ids.Contains(l.Id))
+                .ExecuteUpdateAsync(s => s.SetProperty(l => l.Status, EntityStatus.DELETED));
         }
 
         public async Task UpdateRangeAsync(List<CardList> cardLists)

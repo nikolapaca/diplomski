@@ -98,7 +98,7 @@ h2.mat-dialog-title {
   border-radius: 8px;
   padding: 0;
   margin: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .user-list .mat-list-item {
@@ -129,7 +129,7 @@ h2.mat-dialog-title {
 }
 
 .add-button, .assign-button {
-  color: var(--ft-primary, #5b4bf5);
+  color: var(--pen);
   background-color: transparent;
   border: none;
   cursor: pointer;

@@ -1,51 +1,49 @@
-<mat-card (click)="navigateToBoard()">
-  <div class="board-thumb" [style.background]="boardBackground">
-    <button mat-icon-button
-      class="thumb-favorite"
-      *ngIf="!isArchived"
-      matTooltip="{{ board.isFavorite ? 'Unfavorite' : 'Mark as favorite' }}"
-      (click)="toggleFavorite($event)">
-      <mat-icon [class.favorite-active]="board.isFavorite">{{ board.isFavorite ? 'star' : 'star_border' }}</mat-icon>
-    </button>
+<div class="board-row" (click)="navigateToBoard()">
+  <span class="row-tab" [style.background]="boardBackground" aria-hidden="true"></span>
 
-    <button mat-icon-button class="thumb-menu" [matMenuTriggerFor]="cardMenu" aria-label="Toggle card menu" (click)="$event.stopPropagation()">
-      <mat-icon>more_vert</mat-icon>
-    </button>
-  </div>
-  <mat-card-header class="flex-header">
-    <mat-card-title matTooltip="{{ board.ownerUsername }}/{{ board.name }}"
-      matTooltipPosition="below">
+  <button mat-icon-button
+    class="row-favorite"
+    *ngIf="!isArchived"
+    matTooltip="{{ board.isFavorite ? 'Unfavorite' : 'Mark as favorite' }}"
+    (click)="toggleFavorite($event)">
+    <mat-icon [class.favorite-active]="board.isFavorite">{{ board.isFavorite ? 'star' : 'star_border' }}</mat-icon>
+  </button>
+
+  <div class="row-main">
+    <span class="row-name" matTooltip="{{ board.ownerUsername }}/{{ board.name }}" matTooltipPosition="below">
       {{ board.ownerUsername }}/{{ board.name }}
-    </mat-card-title>
+    </span>
+    <span class="row-description">{{ board.description }}</span>
+  </div>
 
-    <mat-menu #cardMenu="matMenu">
-      @if(isArchived){
-      <button mat-menu-item (click)="unarchiveBoard()">
-        <mat-icon>unarchive</mat-icon>
-        <span>Unarchive board</span>
-      </button>
-      }@else if(loggedInUsername === board.ownerUsername){
-      <button mat-menu-item (click)="deleteBoard()">
-        <mat-icon>delete</mat-icon>
-        <span>Delete board</span>
-      </button>
-      <button mat-menu-item (click)="updateBoard()">
-        <mat-icon>edit</mat-icon>
-        <span>Update board</span>
-      </button>
-      <button mat-menu-item (click)="archiveBoard()">
-        <mat-icon>archive</mat-icon>
-        <span>Archive board</span>
-      </button>
-      }@else{
-      <button mat-menu-item (click)="leaveBoard()">
-        <mat-icon>exit_to_app</mat-icon>
-        <span>Leave board</span>
-      </button>
-      }
-    </mat-menu>
-  </mat-card-header>
-  <mat-card-content>
-    <p class="board-description">{{ board.description }}</p>
-  </mat-card-content>
-</mat-card>
+  <button mat-icon-button class="row-menu" [matMenuTriggerFor]="cardMenu" aria-label="Toggle card menu" (click)="$event.stopPropagation()">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+
+  <mat-menu #cardMenu="matMenu">
+    @if(isArchived){
+    <button mat-menu-item (click)="unarchiveBoard()">
+      <mat-icon>unarchive</mat-icon>
+      <span>Unarchive board</span>
+    </button>
+    }@else if(loggedInUsername === board.ownerUsername){
+    <button mat-menu-item (click)="deleteBoard()">
+      <mat-icon>delete</mat-icon>
+      <span>Delete board</span>
+    </button>
+    <button mat-menu-item (click)="updateBoard()">
+      <mat-icon>edit</mat-icon>
+      <span>Update board</span>
+    </button>
+    <button mat-menu-item (click)="archiveBoard()">
+      <mat-icon>archive</mat-icon>
+      <span>Archive board</span>
+    </button>
+    }@else{
+    <button mat-menu-item (click)="leaveBoard()">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Leave board</span>
+    </button>
+    }
+  </mat-menu>
+</div>

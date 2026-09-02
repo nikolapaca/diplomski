@@ -58,10 +58,6 @@ export class Register {
     };
 
     this.userService.registerUser(user).subscribe(response => {
-      this.snackBar.open('You were registered successfully!', 'Close', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-      });
     this.router.navigate(['']);
     }, error => {
 

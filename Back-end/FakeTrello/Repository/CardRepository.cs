@@ -42,7 +42,8 @@ namespace FakeTrello.Repository
                 .Include(c => c.Assignees)
                     .ThenInclude(a => a.UserBoard)
                         .ThenInclude(ub => ub.User)
-                .Include(c => c.Images)
+                .Include(c => c.Images.Where(i => i.Status != EntityStatus.DELETED))
+                .Include(c => c.CreatedByUser)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
@@ -52,7 +53,8 @@ namespace FakeTrello.Repository
                 .Include(c => c.Assignees)
                     .ThenInclude(a => a.UserBoard)
                         .ThenInclude(ub => ub.User)
-                .Include(c => c.Images)
+                .Include(c => c.Images.Where(i => i.Status != EntityStatus.DELETED))
+                .Include(c => c.CreatedByUser)
                 .Where(c => c.CardListId == listId && c.Status != EntityStatus.DELETED)
                 .OrderByDescending(c => c.IsPinned)
                 .ThenBy(c => c.Index)
@@ -89,6 +91,13 @@ namespace FakeTrello.Repository
                 cards[i].Index = i + 1;
             _context.Cards.UpdateRange(cards);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteRange(IEnumerable<int> ids)
+        {
+            await _context.Cards
+                .Where(c => ids.Contains(c.Id))
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.Status, EntityStatus.DELETED));
         }
 
         public async Task MoveToAnotherList(int id, int targetListId)

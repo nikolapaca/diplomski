@@ -7,10 +7,7 @@ export class JwtInterceptor implements HttpInterceptor {
   public constructor() {
   }
 
-  public intercept(
-    request: HttpRequest<any>,
-    next: HttpHandler
-  ): Observable<HttpEvent<any>> {
+  public intercept( request: HttpRequest<any>,next: HttpHandler): Observable<HttpEvent<any>> {
     const publicRoutes = ['/users/register', '/users/login']
 
     const isPublicRoute = publicRoutes.some(url => request.url.includes(url))

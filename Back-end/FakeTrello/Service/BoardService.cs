@@ -21,8 +21,9 @@ namespace FakeTrello.Service
         private readonly ICardRepository _cardRepository;
         private readonly ICardListRepository _cardListRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<BoardService> _logger;
 
-        public BoardService(IBoardRepository boardRepository, IMapper mapper, IUserService userService, IUserBoardService userBoardService, IUnitOfWork uow, INotificationService notificationService, IBoardActivityService boardActivityService, ICardRepository cardRepository, ICardListRepository cardListRepository)
+        public BoardService(IBoardRepository boardRepository, IMapper mapper, IUserService userService, IUserBoardService userBoardService, IUnitOfWork uow, INotificationService notificationService, IBoardActivityService boardActivityService, ICardRepository cardRepository, ICardListRepository cardListRepository, ILogger<BoardService> logger)
         {
             _boardRepository = boardRepository;
             _mapper = mapper;
@@ -33,6 +34,7 @@ namespace FakeTrello.Service
             _boardActivityService = boardActivityService;
             _cardRepository = cardRepository;
             _cardListRepository = cardListRepository;
+            _logger = logger;
         }
 
         public async Task<Result<BoardDTO>> Create(BoardDTO boardDto, string username)
@@ -162,24 +164,20 @@ namespace FakeTrello.Service
                             boardId: board.Id
                         );
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // A missed notification shouldn't block the board deletion itself.
+                        _logger.LogWarning(ex, "Failed to notify user {UserId} while deleting board {BoardId}.", member.UserId, board.Id);
                     }
                 }
 
                 _userBoardService.RemoveRange(board.UserBoards);
                 await _unitOfWork.SaveChangesAsync();
 
-                foreach (var list in board.Lists)
-                {
-                    foreach (var card in list.Cards)
-                    {
-                        await _cardRepository.Delete(card.Id);
-                    }
+                var cardIds = board.Lists.SelectMany(l => l.Cards).Select(c => c.Id).ToList();
+                var listIds = board.Lists.Select(l => l.Id).ToList();
 
-                    await _cardListRepository.Delete(list.Id);
-                }
+                await _cardRepository.DeleteRange(cardIds);
+                await _cardListRepository.DeleteRange(listIds);
 
                 await _boardRepository.Delete(board.Id);
 
@@ -337,9 +335,9 @@ namespace FakeTrello.Service
                         boardId: board.Id
                     );
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // A missed notification shouldn't block adding the collaborator.
+                    _logger.LogWarning(ex, "Failed to notify user {UserId} about being added to board {BoardId}.", user.Id, board.Id);
                 }
 
                 await _boardActivityService.Create(
@@ -412,9 +410,9 @@ namespace FakeTrello.Service
                         boardId: board.Id
                     );
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // A missed notification shouldn't block removing the collaborator.
+                    _logger.LogWarning(ex, "Failed to notify user {UserId} about being removed from board {BoardId}.", user.Id, board.Id);
                 }
 
                 await _boardActivityService.Create(
@@ -557,9 +555,9 @@ namespace FakeTrello.Service
                             boardId: board.Id
                         );
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // A missed notification shouldn't block archiving the board.
+                        _logger.LogWarning(ex, "Failed to notify user {UserId} while archiving board {BoardId}.", member.UserId, board.Id);
                     }
                 }
 

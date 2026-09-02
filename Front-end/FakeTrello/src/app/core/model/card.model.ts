@@ -7,5 +7,6 @@ export interface Card {
     isPinned?: boolean,
     dueDate?: string | null,
     coverImageUrl?: string | null,
-    attachmentCount?: number
+    attachmentCount?: number,
+    createdByUsername?: string | null
 }

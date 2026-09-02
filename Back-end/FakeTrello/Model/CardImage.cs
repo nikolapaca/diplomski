@@ -1,4 +1,6 @@
-﻿namespace FakeTrello.Model
+﻿using FakeTrello.Model.Enum;
+
+namespace FakeTrello.Model
 {
     public class CardImage
     {
@@ -15,6 +17,8 @@
         public User UploadedByUser { get; set; }
 
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+
+        public EntityStatus Status { get; set; } = EntityStatus.ACTIVE;
 
         public CardImage() { }
     }

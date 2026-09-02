@@ -1,9 +1,6 @@
 <nav class="navbar">
   <div class="navbar-left">
     <a routerLink="/home" class="logo-link" (click)="returnToHome()">
-      <span class="logo-mark" aria-hidden="true">
-        <span class="logo-mark-diamond"></span>
-      </span>
       <span class="logo-wordmark">Pivot</span>
     </a>
   </div>
@@ -18,7 +15,7 @@
       <i class="fas fa-search"></i>
     </div>
     }
-    @if(isLoggedIn){
+    @if(isLoggedIn && !isInsideBoard){
     <button class="create-button" (click)="createBoard()">
       Create board
     </button>

@@ -2,11 +2,6 @@
 
 namespace FakeTrello.Model
 {
-    public enum UserRole
-    {
-        OWNER,
-        COLLABORATOR
-    }
 
     public class UserBoard
     {

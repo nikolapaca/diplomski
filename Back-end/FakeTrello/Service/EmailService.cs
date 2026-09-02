@@ -26,7 +26,7 @@ namespace FakeTrello.Service
 
             message.To.Add(MailboxAddress.Parse(email));
 
-            message.Subject = "Confirm your FakeTrello account";
+            message.Subject = "Confirm your Pivot account";
 
             var confirmationLink =
                 $"http://localhost:4200/confirm-email?token={token}";
@@ -34,7 +34,7 @@ namespace FakeTrello.Service
             message.Body = new TextPart("html")
             {
                 Text = $@"
-                    <h2>Welcome to FakeTrello!</h2>
+                    <h2>Welcome to Pivot!</h2>
 
                     <p>Thank you for registering.</p>
 
@@ -92,7 +92,7 @@ namespace FakeTrello.Service
                 Text = $@"
                     <h2>Password reset requested</h2>
 
-                    <p>We received a request to reset your FakeTrello password.</p>
+                    <p>We received a request to reset your Pivot password.</p>
 
                     <p>Click the button below to choose a new password. This link expires in 1 hour.</p>
 

@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using FakeTrello.DTO;
 using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 
 namespace FakeTrello.Mapper
 {
     public class MappingProfile : Profile
     {
-        public MappingProfile() { 
+        public MappingProfile()
+        {
             CreateMap<UserDTO, User>().ReverseMap();
             CreateMap<BoardDTO, Board>().ReverseMap();
             CreateMap<CardListDTO, CardList>().ReverseMap();
@@ -31,6 +33,9 @@ namespace FakeTrello.Mapper
             CreateMap<CardDTO, Card>().ReverseMap().ForMember(
                 dest => dest.AssignedUserUsernames,
                 opt => opt.MapFrom(src => src.Assignees.Select(a => a.UserBoard.User.Username).ToList())
+            ).ForMember(
+                dest => dest.CreatedByUsername,
+                opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.Username : null)
             );
 
             CreateMap<BoardActivity, BoardActivityDTO>()

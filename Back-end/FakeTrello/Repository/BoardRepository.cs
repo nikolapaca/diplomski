@@ -1,5 +1,6 @@
 ﻿using FakeTrello.Data;
 using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 using FakeTrello.Repository.Contract;
 using Microsoft.EntityFrameworkCore;
 

@@ -10,6 +10,7 @@ namespace FakeTrello.Service.Contract
         Task<Result<CardListDTO>> Create(CardListDTO cardListDTO, string username);
         Task<Result<CardListDTO>> GetById(int id);
         Task<int?> GetBoardIdByListId(int listId);
+        Task<Result<(string Name, int BoardId)>> GetNameAndBoardId(int listId);
         Task<Result<CardListDTO>> Update(CardListDTO cardListDTO, string username);
         Task<Result> Delete(int id, string username);
         Task<Result> MoveList(CardListDTO cardList, int targetIndex, string username);

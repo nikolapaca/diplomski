@@ -1,5 +1,5 @@
 .main-content {
     padding-top: 62px;
     min-height: 100vh;
-    background-color: var(--ft-bg, #eef0fb);
+    background-color: var(--paper);
 }

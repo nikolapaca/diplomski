@@ -1,88 +1,179 @@
 /* You can add global styles to this file, and also import other style files */
 
 :root {
-  /* ---- Brand palette -----------------------------------------------
-     A distinct "FakeTrello" identity: indigo/violet -> cyan gradient,
-     instead of a flat single-colour copy of Trello's blue. Everything
-     else (layout, list/card metaphors) is intentionally Trello-like,
-     the colour language is our own. */
-  --ft-primary: #5b4bf5;
-  --ft-primary-dark: #4433d6;
-  --ft-primary-light: #7c6dff;
-  --ft-accent: #12c2c2;
-  --ft-gradient: linear-gradient(135deg, #5b4bf5 0%, #12c2c2 100%);
-  --ft-gradient-soft: linear-gradient(135deg, rgba(91, 75, 245, 0.12) 0%, rgba(18, 194, 194, 0.12) 100%);
+  /* ---- Pivot design system --------------------------------------------
+     One typeface, one accent colour used only on interactive/active
+     elements, hairline borders instead of shadows, a small monospace
+     used deliberately (and only) for metadata: dates, counts, ids. */
 
-  --ft-ink: #171a35;
-  --ft-ink-soft: #4a4f76;
-  --ft-muted: #767c9e;
-  --ft-border: #e3e5f3;
-  --ft-surface: #ffffff;
-  --ft-surface-alt: #f5f6fc;
-  --ft-bg: #eef0fb;
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --surface-sunken: #f2f1ed;
 
-  --ft-success: #1cbf73;
-  --ft-warning: #f5a623;
-  --ft-danger: #eb5a46;
+  --ink: #171613;
+  --ink-soft: #66645d;
+  --ink-faint: #a7a49b;
 
-  --ft-radius-sm: 6px;
-  --ft-radius: 10px;
-  --ft-radius-lg: 16px;
+  --accent: #1b5e46;
+  --accent-deep: #123f30;
+  --accent-tint: #e6efe9;
 
-  --ft-shadow-sm: 0 1px 3px rgba(23, 26, 53, 0.1);
-  --ft-shadow: 0 4px 14px rgba(23, 26, 53, 0.1);
-  --ft-shadow-lg: 0 12px 32px rgba(23, 26, 53, 0.18);
+  --danger: #a63324;
+  --danger-tint: #f5e6e3;
+  --warning: #8a6d1f;
+  --warning-tint: #f2ecd9;
+  --success: var(--accent);
+  --success-tint: var(--accent-tint);
 
-  --ft-font-heading: 'Poppins', 'Roboto', 'Helvetica Neue', sans-serif;
+  --line: rgba(23, 22, 19, 0.14);
+  --line-soft: rgba(23, 22, 19, 0.08);
+  --line-strong: rgba(23, 22, 19, 0.28);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 40px;
+
+  --radius-sm: 4px;
+  --radius: 6px;
+
+  --font-sans: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+
+  /* legacy aliases kept so components migrated in earlier passes keep
+     working while everything converges on the tokens above */
+  --paper: var(--bg);
+  --paper-deep: var(--surface-sunken);
+  --card: var(--surface);
+  --pen: var(--accent);
+  --pen-deep: var(--accent-deep);
+  --pen-tint: var(--accent-tint);
+  --stamp: var(--danger);
+  --stamp-tint: var(--danger-tint);
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
+  --shadow-card: none;
+  --shadow-lift: none;
+  --shadow-pop: 0 6px 20px rgba(23, 22, 19, 0.14);
+
+  --ft-primary: var(--accent);
+  --ft-primary-dark: var(--accent-deep);
+  --ft-primary-light: var(--accent);
+  --ft-accent: var(--danger);
+  --ft-ink: var(--ink);
+  --ft-ink-soft: var(--ink-soft);
+  --ft-muted: var(--ink-faint);
+  --ft-border: var(--line);
+  --ft-surface: var(--surface);
+  --ft-surface-alt: var(--surface-sunken);
+  --ft-bg: var(--bg);
+  --ft-success: var(--success);
+  --ft-warning: var(--warning);
+  --ft-danger: var(--danger);
+  --ft-radius-sm: var(--radius-sm);
+  --ft-radius: var(--radius);
+  --ft-radius-lg: var(--radius);
+  --ft-shadow-sm: none;
+  --ft-shadow: none;
+  --ft-shadow-lg: var(--shadow-pop);
+  --ft-font-heading: var(--font-sans);
 }
 
 html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-  color: var(--ft-ink);
-  background-color: var(--ft-bg);
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, .ft-heading {
-  font-family: var(--ft-font-heading);
+h1, h2, h3, h4, .ft-heading {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
 }
+
+/* Metadata: dates, counts, ids, timestamps — the one deliberate place
+   monospace shows up in the whole product. */
+.meta, time, .ft-meta {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size 0.15s ease;
+}
+a:hover { background-size: 100% 1px; }
 
 ::selection {
-  background: var(--ft-primary-light);
-  color: #fff;
+  background: var(--accent);
+  color: var(--surface);
 }
 
-/* Thin, brand-coloured scrollbars app-wide */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--ft-primary-light) transparent;
+  scrollbar-color: var(--ink-faint) transparent;
 }
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-thumb {
-  background-color: #c7c9ea;
+  background-color: var(--ink-faint);
   border-radius: 8px;
 }
-*::-webkit-scrollbar-thumb:hover {
-  background-color: var(--ft-primary-light);
-}
+*::-webkit-scrollbar-thumb:hover { background-color: var(--ink-soft); }
 
-.card-details-panel .mat-mdc-dialog-container {
-  padding: 0;
-}
-
+.card-details-panel .mat-mdc-dialog-container { padding: 0; }
 .card-details-panel .mdc-dialog__surface {
   padding: 0;
   overflow: hidden;
-  border-radius: var(--ft-radius-lg);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-pop) !important;
 }
 
-/* Buttons that opt in to the brand gradient look */
-.ft-gradient-button {
-  background: var(--ft-gradient) !important;
-  color: #fff !important;
-  border: none !important;
+/* Primary action button style used app-wide: flat accent, no gradient,
+   no shadow at rest — only a hairline border and a 1px shift on hover. */
+.ft-gradient-button, .pv-button {
+  background: var(--accent) !important;
+  color: var(--surface) !important;
+  border: 1px solid var(--accent-deep) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  box-shadow: none !important;
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+.ft-gradient-button:hover, .pv-button:hover {
+  background: var(--accent-deep) !important;
+}
+.ft-gradient-button:active, .pv-button:active {
+  transform: scale(0.98);
+}
+
+.success-snackbar {
+  --mdc-snackbar-container-color: var(--accent);
+  --mat-mdc-snack-bar-button-color: var(--surface);
+  --mdc-snackbar-supporting-text-color: var(--surface);
+}
+.error-snackbar {
+  --mdc-snackbar-container-color: var(--danger);
+  --mat-mdc-snack-bar-button-color: var(--surface);
+  --mdc-snackbar-supporting-text-color: var(--surface);
 }

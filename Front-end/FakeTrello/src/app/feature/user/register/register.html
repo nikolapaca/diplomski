@@ -1,8 +1,5 @@
 <div class="register-form-container">
   <div class="register-card">
-    <div class="register-brand-mark" aria-hidden="true">
-      <span class="register-brand-diamond"></span>
-    </div>
     <h2 class="register-title">Create your account</h2>
     <form [formGroup]="registerForm" (ngSubmit)="OnSubmit()">
       <div class="form-grid">
@@ -104,7 +101,7 @@
         </mat-form-field>
       </div>
       @if(registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched){
-      <mat-error>
+      <mat-error class="password-mismatch-error">
         Passwords do not match.
       </mat-error>
       }

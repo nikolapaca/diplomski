@@ -24,7 +24,7 @@ import { Comment } from '../../../core/model/comment.model';
 import { CardImageService } from '../../service/card-image-service';
 import { CardImage } from '../../../core/model/card-image.model';
 import { environment } from '../../../../environment';
-import { DueDateStatus, getDueDateStatus, toDatetimeLocalValue, fromDatetimeLocalValue } from '../../../core/util/due-date.util';
+import { DueDateStatus, getDueDateStatus, toDatetimeLocalValue, fromDatetimeLocalValue, nowAsDatetimeLocalValue } from '../../../core/util/due-date.util';
 
 export interface CardDetailsData {
   card: Card;
@@ -70,6 +70,7 @@ export class CardDetailsDialogComponent {
   showDueDateEditor = false;
   dueDateCtrl = new FormControl<string>('', { nonNullable: true });
   savingDueDate = false;
+  dueDateError = '';
 
   showHistory = false;
   loadingHistory = false;
@@ -114,12 +115,22 @@ export class CardDetailsDialogComponent {
     return getDueDateStatus(this.data.card.dueDate);
   }
 
+  get minDueDate(): string {
+    return nowAsDatetimeLocalValue();
+  }
+
   toggleDueDateEditor(): void {
     this.dueDateCtrl.setValue(toDatetimeLocalValue(this.data.card.dueDate));
+    this.dueDateError = '';
     this.showDueDateEditor = !this.showDueDateEditor;
   }
 
   saveDueDate(): void {
+    if (this.dueDateCtrl.value && this.dueDateCtrl.value < this.minDueDate) {
+      this.dueDateError = 'Due date can\'t be in the past.';
+      return;
+    }
+    this.dueDateError = '';
     const isoDueDate = fromDatetimeLocalValue(this.dueDateCtrl.value);
     this.applyDueDate(isoDueDate);
   }

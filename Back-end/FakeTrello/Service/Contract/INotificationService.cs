@@ -1,5 +1,6 @@
 ﻿using FakeTrello.DTO;
 using FakeTrello.Model;
+using FakeTrello.Model.Enum;
 using FluentResults;
 
 namespace FakeTrello.Service.Contract

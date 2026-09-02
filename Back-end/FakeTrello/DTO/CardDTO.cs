@@ -12,12 +12,12 @@ namespace FakeTrello.DTO
         public string Description { get; set; }
         public int CardListId { get; set; }
         public int CreatedByUserId { get; set; }
+        public string? CreatedByUsername { get; set; }
         public EntityStatus Status { get; set; }
         public List<string?> AssignedUserUsernames { get; set; } = new();
         public int Index { get; set; }
         public bool IsPinned { get; set; }
         public DateTime? DueDate { get; set; }
-        public CardPriority Priority { get; set; }
         public string? CoverImageUrl { get; set; }
         public int AttachmentCount { get; set; }
     }

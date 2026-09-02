@@ -1,51 +1,50 @@
 .page-container {
   padding: 40px;
-  background-color: var(--ft-bg, #eef0fb);
   min-height: calc(100vh - 62px);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  align-items: flex-end;
+  margin-bottom: 28px;
 }
 
 .welcome-section h1 {
-  font-family: var(--ft-font-heading, 'Poppins', sans-serif);
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: var(--ft-ink, #171a35);
+  font-family: var(--font-body);
+  font-size: 2.1rem;
+  font-weight: 600;
+  color: var(--ink);
   margin: 0;
 }
 
 .welcome-section p {
   font-size: 1rem;
-  color: var(--ft-muted, #767c9e);
-  margin: 0;
+  color: var(--ink-soft);
+  margin: 4px 0 0;
 }
 
 .tab-toggle {
   display: flex;
-  gap: 4px;
-  background-color: #e4e5f6;
-  padding: 4px;
-  border-radius: 10px;
+  gap: 2px;
+  border-bottom: 1px solid var(--line);
 }
 
 .tab-button {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 18px;
+  padding: 8px 4px;
+  margin-right: 22px;
   border: none;
+  border-bottom: 2px solid transparent;
   background: transparent;
-  border-radius: 8px;
+  font-family: var(--font-body);
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--ft-ink-soft, #4a4f76);
+  color: var(--ink-soft);
   cursor: pointer;
-  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
 .tab-button mat-icon {
@@ -55,37 +54,32 @@
 }
 
 .tab-button:hover {
-  background-color: rgba(23, 26, 53, 0.05);
+  color: var(--ink);
 }
 
 .tab-button.active {
-  background: var(--ft-gradient, linear-gradient(135deg, #5b4bf5, #12c2c2));
-  color: #fff;
-  box-shadow: 0 3px 8px rgba(91, 75, 245, 0.35);
+  color: var(--ink);
+  border-bottom-color: var(--stamp);
 }
 
 mat-divider {
-  margin-bottom: 24px;
-  background-color: var(--ft-border, #e3e5f3);
+  display: none;
 }
 
 .boards-container {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 24px;
+  flex-direction: column;
+  max-width: 780px;
 }
 
 .no-boards-message {
-  grid-column: 1 / -1;
-  text-align: center;
+  text-align: left;
+  font-family: var(--font-body);
   font-size: 1.1rem;
-  color: var(--ft-muted, #888);
-  padding: 50px;
-  width: 100%;
+  color: var(--ink-soft);
+  padding: 40px 0;
 }
 
 ::ng-deep app-board-card {
-  width: 300px;
-  flex-shrink: 0;
+  width: 100%;
 }

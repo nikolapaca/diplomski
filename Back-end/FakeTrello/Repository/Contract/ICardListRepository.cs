@@ -13,6 +13,7 @@ namespace FakeTrello.Repository.Contract
         Task<List<CardList>> GetByBoardOwnerAndBoardName(string boardName, string boardOwnerUsername);
         Task<CardList> Update(CardList cardList);
         Task Delete(int id);
+        Task DeleteRange(IEnumerable<int> ids);
         Task UpdateRangeAsync(List<CardList> cardLists);
     }
 }
