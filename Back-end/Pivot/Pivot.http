@@ -1,0 +1,6 @@
+@Pivot_HostAddress = http://localhost:5241
+
+GET {{Pivot_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

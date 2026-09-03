@@ -2,9 +2,9 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: faketrello-postgres
+    container_name: pivot-postgres
     environment:
-      POSTGRES_DB: fakeTrello
+      POSTGRES_DB: pivot
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: super
     ports:
@@ -19,13 +19,13 @@ services:
 
   backend:
     build:
-      context: ./Back-end/FakeTrello
-    container_name: faketrello-backend
+      context: ./Back-end/Pivot
+    container_name: pivot-backend
     ports:
       - "5000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=postgres;Database=fakeTrello;Username=postgres;Password=super"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=pivot;Username=postgres;Password=super"
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,8 +34,8 @@ services:
 
   frontend:
     build:
-      context: ./Front-end/FakeTrello
-    container_name: faketrello-front
+      context: ./Front-end/Pivot
+    container_name: pivot-front
     ports:
       - "4200:80"
     depends_on:

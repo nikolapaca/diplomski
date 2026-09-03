@@ -1,0 +1,13 @@
+﻿using Pivot.DTO;
+using FluentResults;
+
+namespace Pivot.Service.Contract
+{
+    public interface IAuthService
+    {
+        Task<Result<AuthenticationTokenDTO>> LogIn(CredentialsDTO credentials);
+        Task<Result> ConfirmEmail(string token);
+        Task<Result> ForgotPassword(string email);
+        Task<Result> ResetPassword(ResetPasswordDTO resetPasswordDto);
+    }
+}
