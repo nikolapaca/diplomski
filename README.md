@@ -1,6 +1,6 @@
 # Pivot
 
-Web aplikacija za organizaciju zadataka i timski rad u stilu Trella, urađena kao **diplomski rad**.
+Web aplikacija za organizaciju zadataka i timski rad, urađena kao **diplomski rad**.
 
 ## O projektu
 
